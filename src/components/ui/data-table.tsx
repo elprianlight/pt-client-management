@@ -15,6 +15,7 @@ interface DataTableProps<T extends { id: string }> {
   columns: Column<T>[]
   searchable?: boolean
   searchPlaceholder?: string
+  searchKey?: string
   pageSize?: number
   emptyMessage?: string
   isLoading?: boolean
