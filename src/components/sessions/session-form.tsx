@@ -22,7 +22,7 @@ export function SessionForm({ packages }: { packages: { id: string; name: string
   const [error, setError] = useState<string | null>(null)
   
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormData>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(formSchema) as any,
     defaultValues: {
       duration: 60,
     }
