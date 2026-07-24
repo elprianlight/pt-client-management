@@ -23,7 +23,7 @@ export function ProgressForm({ clients }: { clients: { id: string; name: string 
   const [error, setError] = useState<string | null>(null)
   
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormData>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(formSchema) as any,
     defaultValues: {
       measuredAt: new Date().toISOString().split('T')[0],
     }
