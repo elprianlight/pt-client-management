@@ -310,7 +310,7 @@ body {
 }
 @media (max-width: 640px) {
   .stats-card {
-    padding: 16px;
+    padding: 12px;
   }
 }
 .stats-card::after {

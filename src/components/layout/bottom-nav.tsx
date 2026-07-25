@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useAuthStore } from '@/store/auth-store'
 import { cn } from '@/lib/utils'
-import { LayoutDashboard, Calendar, Dumbbell, TrendingUp } from 'lucide-react'
+import { LayoutDashboard, Calendar, Users, Package } from 'lucide-react'
 import type { UserRole } from '@/types'
 
 const BOTTOM_NAV_ITEMS = [
@@ -15,21 +15,21 @@ const BOTTOM_NAV_ITEMS = [
     roles: ['super_admin', 'personal_trainer', 'client'],
   },
   {
+    title: 'Client',
+    href: '/clients',
+    icon: Users,
+    roles: ['super_admin', 'personal_trainer'],
+  },
+  {
+    title: 'Paket',
+    href: '/packages',
+    icon: Package,
+    roles: ['super_admin', 'personal_trainer', 'client'],
+  },
+  {
     title: 'Sesi',
     href: '/session',
     icon: Calendar,
-    roles: ['super_admin', 'personal_trainer', 'client'],
-  },
-  {
-    title: 'Workout',
-    href: '/workout',
-    icon: Dumbbell,
-    roles: ['super_admin', 'personal_trainer', 'client'],
-  },
-  {
-    title: 'Progress',
-    href: '/progress',
-    icon: TrendingUp,
     roles: ['super_admin', 'personal_trainer', 'client'],
   },
 ]

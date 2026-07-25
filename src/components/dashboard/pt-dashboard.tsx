@@ -390,19 +390,20 @@ function DashboardStyles() {
         display: flex;
         align-items: flex-start;
         justify-content: space-between;
-        margin-bottom: 28px;
+        margin-bottom: 16px;
         flex-wrap: wrap;
-        gap: 12px;
+        gap: 8px;
       }
       .dash-title {
-        font-size: 22px;
+        font-size: 20px;
         font-weight: 700;
         color: var(--text-primary);
+        line-height: 1.2;
       }
       .dash-desc {
         font-size: 13px;
         color: var(--text-muted);
-        margin-top: 4px;
+        margin-top: 2px;
       }
       .dash-date {
         font-size: 13px;
@@ -417,8 +418,8 @@ function DashboardStyles() {
       .stats-grid {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
-        gap: 16px;
-        margin-bottom: 24px;
+        gap: 12px;
+        margin-bottom: 16px;
       }
       .stats-grid-client {
         grid-template-columns: repeat(3, 1fr);
@@ -427,18 +428,18 @@ function DashboardStyles() {
       .dash-content-grid {
         display: grid;
         grid-template-columns: 1fr 1fr 1fr;
-        gap: 16px;
+        gap: 12px;
       }
       .dash-content-grid-client {
         grid-template-columns: 1fr 1fr;
       }
 
       .dash-panel {
-        padding: 20px;
+        padding: 16px;
       }
       .panel-header {
-        margin-bottom: 16px;
-        padding-bottom: 12px;
+        margin-bottom: 12px;
+        padding-bottom: 10px;
         border-bottom: 1px solid var(--border-default);
       }
       .panel-title {

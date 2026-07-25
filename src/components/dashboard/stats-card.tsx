@@ -156,21 +156,25 @@ export function StatsCard({
         }
         @media (max-width: 640px) {
           .stats-top {
-            margin-bottom: 8px;
-          }
-          .stats-title {
-            font-size: 12px;
-          }
-          .stats-icon-wrapper {
-            width: 32px;
-            height: 32px;
-          }
-          .stats-value {
-            font-size: 22px;
             margin-bottom: 6px;
           }
-          .stats-subtitle {
+          .stats-title {
             font-size: 11px;
+          }
+          .stats-icon-wrapper {
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+          }
+          .stats-value {
+            font-size: 18px;
+            margin-bottom: 4px;
+          }
+          .stats-subtitle {
+            font-size: 10px;
+          }
+          .stats-trend {
+            font-size: 10px;
           }
         }
       `}</style>
