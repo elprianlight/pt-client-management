@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { sellPackage } from '@/lib/actions/package'
+import { sellPackage, updatePackageData } from '@/lib/actions/package'
 import { Loader2, AlertCircle, CheckCircle } from 'lucide-react'
 import Link from 'next/link'
 
@@ -14,6 +14,7 @@ const packageSchema = z.object({
   packageName: z.string().min(2, 'Nama paket wajib diisi').max(255),
   totalSessions: z.preprocess(v => v === '' ? undefined : Number(v), z.number().min(1, 'Minimal 1 sesi')),
   pricePerSession: z.preprocess(v => v === '' ? undefined : Number(v), z.number().min(0, 'Harga tidak valid')),
+  purchaseDate: z.string().min(1, 'Tanggal penjualan wajib diisi'),
   notes: z.string().optional(),
 })
 
@@ -21,20 +22,26 @@ type PackageFormValues = z.infer<typeof packageSchema>
 
 interface PackageFormProps {
   clients: { id: string, name: string }[]
+  initialData?: any
 }
 
-export function PackageForm({ clients }: PackageFormProps) {
+export function PackageForm({ clients, initialData }: PackageFormProps) {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
+  const isEdit = !!initialData
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { register, handleSubmit, watch, formState: { errors } } = useForm<PackageFormValues>({ // eslint-disable-line
     resolver: zodResolver(packageSchema) as any,
     defaultValues: {
-      totalSessions: 10,
-      pricePerSession: 0,
+      clientId: initialData?.clientId || '',
+      packageName: initialData?.packageName || '',
+      totalSessions: initialData?.totalSessions || 10,
+      pricePerSession: initialData?.pricePerSession ? Number(initialData.pricePerSession) : 0,
+      purchaseDate: initialData?.createdAt ? new Date(initialData.createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+      notes: initialData?.notes || '',
     }
   })
 
@@ -46,7 +53,7 @@ export function PackageForm({ clients }: PackageFormProps) {
     setIsLoading(true)
     setError(null)
     try {
-      const res = await sellPackage(data)
+      const res = isEdit ? await updatePackageData(initialData.id, data) : await sellPackage(data)
       if (!res.success) {
         setError(res.error || 'Terjadi kesalahan')
       } else {
@@ -67,12 +74,12 @@ export function PackageForm({ clients }: PackageFormProps) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     <form onSubmit={(handleSubmit as any)(onSubmit)} className="package-form">
       {error && <div className="form-alert form-alert-error"><AlertCircle size={15} /><span>{error}</span></div>}
-      {success && <div className="form-alert form-alert-success"><CheckCircle size={15} /><span>Paket berhasil dijual! Mengalihkan...</span></div>}
+      {success && <div className="form-alert form-alert-success"><CheckCircle size={15} /><span>{isEdit ? 'Perubahan berhasil disimpan! Mengalihkan...' : 'Paket berhasil dijual! Mengalihkan...'}</span></div>}
 
       <div className="form-grid">
         <div className="form-group" style={{ gridColumn: 'span 2' }}>
           <label className="form-label">Client</label>
-          <select className={`input-field ${errors.clientId ? 'input-error' : ''}`} {...register('clientId')}>
+          <select className={`input-field ${errors.clientId ? 'input-error' : ''}`} disabled={isEdit} {...register('clientId')}>
             <option value="">-- Pilih Client --</option>
             {clients.map(c => (
               <option key={c.id} value={c.id}>{c.name}</option>
@@ -85,6 +92,12 @@ export function PackageForm({ clients }: PackageFormProps) {
           <label className="form-label">Nama Paket</label>
           <input type="text" className={`input-field ${errors.packageName ? 'input-error' : ''}`} placeholder="Contoh: Paket Fat Loss 10 Sesi" {...register('packageName')} />
           {errors.packageName && <span className="form-error">{errors.packageName.message}</span>}
+        </div>
+
+        <div className="form-group" style={{ gridColumn: 'span 2' }}>
+          <label className="form-label">Tanggal Penjualan</label>
+          <input type="date" className={`input-field ${errors.purchaseDate ? 'input-error' : ''}`} {...register('purchaseDate')} />
+          {errors.purchaseDate && <span className="form-error">{errors.purchaseDate.message}</span>}
         </div>
 
         <div className="form-group">
@@ -115,7 +128,7 @@ export function PackageForm({ clients }: PackageFormProps) {
       <div className="form-actions">
         <Link href="/packages" className="btn-secondary">Batal</Link>
         <button type="submit" className="btn-primary" disabled={isLoading}>
-          {isLoading ? <><Loader2 size={16} className="spin" /> Menyimpan...</> : 'Jual Paket'}
+          {isLoading ? <><Loader2 size={16} className="spin" /> Menyimpan...</> : (isEdit ? 'Simpan Perubahan' : 'Jual Paket')}
         </button>
       </div>
 

@@ -294,7 +294,9 @@ export const workoutSessions = pgTable('workout_sessions', {
   completedAt: timestamp('completed_at', { withTimezone: true }),
   status: sessionStatusEnum('status').default('scheduled').notNull(),
   location: varchar('location', { length: 255 }),
-  duration: integer('duration'), // minutes
+  duration: integer('duration').default(60), // minutes (default 60)
+  programType: varchar('program_type', { length: 255 }),
+  rpe: integer('rpe'), // 1-10
   sessionNotes: text('session_notes'),
   ptNotes: text('pt_notes'), // private PT notes
   rating: integer('rating'), // 1-5 client rating

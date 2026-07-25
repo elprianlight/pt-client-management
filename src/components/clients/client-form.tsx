@@ -18,6 +18,8 @@ const createSchema = z.object({
   heightCm: z.preprocess(v => v === '' ? undefined : Number(v), z.number().min(100).max(250).optional()),
   weightKg: z.preprocess(v => v === '' ? undefined : Number(v), z.number().min(20).max(300).optional()),
   notes: z.string().optional(),
+  emergencyContactName: z.string().optional(),
+  emergencyContactPhone: z.string().optional(),
 })
 
 const updateSchema = z.object({
@@ -29,6 +31,8 @@ const updateSchema = z.object({
   weightKg: z.preprocess(v => v === '' ? undefined : Number(v), z.number().min(20).max(300).optional()),
   notes: z.string().optional(),
   isActive: z.boolean().optional(),
+  emergencyContactName: z.string().optional(),
+  emergencyContactPhone: z.string().optional(),
 })
 
 type CreateForm = z.infer<typeof createSchema>
@@ -99,6 +103,20 @@ export function ClientCreateForm({ onSuccess }: ClientCreateFormProps) {
               </button>
             </div>
             {errors.password && <p className="form-error">{errors.password.message}</p>}
+          </div>
+
+          <div className="form-group form-group-full" style={{ marginTop: '10px' }}>
+            <h4 style={{ fontSize: '13px', color: 'var(--text-primary)', marginBottom: '4px' }}>Kontak Darurat (Opsional)</h4>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+              <div>
+                <label className="form-label">Nama Kontak Darurat</label>
+                <input type="text" className="input-field" placeholder="Nama..." {...register('emergencyContactName')} />
+              </div>
+              <div>
+                <label className="form-label">Nomor HP Darurat</label>
+                <input type="tel" className="input-field" placeholder="08..." {...register('emergencyContactPhone')} />
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -276,6 +294,20 @@ export function ClientEditForm({ clientId, defaultValues, onSuccess }: ClientEdi
               <input type="checkbox" className="checkbox-input" {...register('isActive')} />
               <span className="checkbox-text">Akun Aktif</span>
             </label>
+          </div>
+
+          <div className="form-group form-group-full" style={{ marginTop: '10px' }}>
+            <h4 style={{ fontSize: '13px', color: 'var(--text-primary)', marginBottom: '4px' }}>Kontak Darurat (Opsional)</h4>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+              <div>
+                <label className="form-label">Nama Kontak Darurat</label>
+                <input type="text" className="input-field" placeholder="Nama..." {...register('emergencyContactName')} />
+              </div>
+              <div>
+                <label className="form-label">Nomor HP Darurat</label>
+                <input type="tel" className="input-field" placeholder="08..." {...register('emergencyContactPhone')} />
+              </div>
+            </div>
           </div>
         </div>
       </div>

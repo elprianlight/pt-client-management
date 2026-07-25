@@ -1,7 +1,7 @@
 'use server'
 
 import { db } from '@/lib/db'
-import { ptPackages, ptTransactions, clients, personalTrainers, users } from '@/lib/db/schema'
+import { ptPackages, ptTransactions, clients, personalTrainers, users, workoutSessions } from '@/lib/db/schema'
 import { eq, desc } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
@@ -13,6 +13,7 @@ const createPackageSchema = z.object({
   packageName: z.string().min(2, 'Nama paket wajib diisi').max(255),
   totalSessions: z.number().min(1, 'Minimal 1 sesi'),
   pricePerSession: z.number().min(0, 'Harga tidak valid'),
+  purchaseDate: z.string().min(1, 'Tanggal penjualan wajib diisi'),
   notes: z.string().optional(),
 })
 
@@ -49,12 +50,13 @@ export async function sellPackage(input: z.infer<typeof createPackageSchema>) {
       return { success: false, error: 'Data tidak valid: ' + validated.error.issues[0].message }
     }
 
-    const { clientId, packageName, totalSessions, pricePerSession, notes } = validated.data
+    const { clientId, packageName, totalSessions, pricePerSession, purchaseDate, notes } = validated.data
     const totalPrice = totalSessions * pricePerSession
 
+    const pDate = new Date(purchaseDate)
     // Tanggal kadaluarsa: asumsikan 1 minggu per sesi sebagai standar (bisa diedit di versi berikutnya)
-    const startDate = new Date()
-    const expiresAt = new Date()
+    const startDate = pDate
+    const expiresAt = new Date(pDate)
     expiresAt.setDate(expiresAt.getDate() + (totalSessions * 7)) // e.g. 10 session = 70 days
 
     // Insert menggunakan db transaction
@@ -72,6 +74,7 @@ export async function sellPackage(input: z.infer<typeof createPackageSchema>) {
         startDate: startDate.toISOString().split('T')[0],
         expiresAt: expiresAt.toISOString().split('T')[0],
         notes: notes || null,
+        createdAt: pDate,
       }).returning({ id: ptPackages.id })
 
       // 2. Catat transaksi
@@ -81,7 +84,8 @@ export async function sellPackage(input: z.infer<typeof createPackageSchema>) {
         clientId,
         amount: String(totalPrice),
         paymentStatus: 'paid',
-        paymentDate: new Date(),
+        paymentDate: pDate,
+        createdAt: pDate,
         notes: `Pembelian: ${packageName}`,
       })
     })
@@ -133,5 +137,100 @@ export async function listPackages() {
   } catch (err) {
     console.error('List packages error:', err)
     return []
+  }
+}
+
+export async function getPackageById(packageId: string) {
+  try {
+    const supabase = await createClient()
+    const { data: { user: authUser } } = await supabase.auth.getUser()
+    if (!authUser) return null
+
+    const [pkg] = await db.select().from(ptPackages).where(eq(ptPackages.id, packageId))
+    return pkg || null
+  } catch (err) {
+    console.error('Get package by id error:', err)
+    return null
+  }
+}
+
+export async function updatePackageData(packageId: string, input: any) {
+  try {
+    const supabase = await createClient()
+    const { data: { user: authUser } } = await supabase.auth.getUser()
+    if (!authUser) return { success: false, error: 'Unauthorized' }
+
+    const [currentUser] = await db.select().from(users).where(eq(users.id, authUser.id))
+    if (!currentUser || currentUser.role === 'client') return { success: false, error: 'Unauthorized' }
+
+    const validated = createPackageSchema.safeParse(input)
+    if (!validated.success) {
+      return { success: false, error: 'Data tidak valid: ' + validated.error.issues[0].message }
+    }
+
+    const { packageName, totalSessions, pricePerSession, purchaseDate, notes } = validated.data
+    const totalPrice = totalSessions * pricePerSession
+    const pDate = new Date(purchaseDate)
+    const expiresAt = new Date(pDate)
+    expiresAt.setDate(expiresAt.getDate() + (totalSessions * 7))
+
+    await db.update(ptPackages)
+      .set({
+        packageName,
+        totalSessions,
+        pricePerSession: String(pricePerSession),
+        totalPrice: String(totalPrice),
+        notes: notes || null,
+        startDate: pDate.toISOString().split('T')[0],
+        expiresAt: expiresAt.toISOString().split('T')[0],
+        createdAt: pDate,
+        updatedAt: new Date(),
+      })
+      .where(eq(ptPackages.id, packageId))
+
+    // Update the transaction record too so revenue matches
+    await db.update(ptTransactions)
+      .set({
+        paymentDate: pDate,
+        createdAt: pDate,
+      })
+      .where(eq(ptTransactions.packageId, packageId))
+
+    revalidatePath('/packages')
+    return { success: true }
+  } catch (err: any) {
+    console.error('Update package error:', err)
+    return { success: false, error: err.message || 'Gagal mengubah paket' }
+  }
+}
+
+export async function deletePackage(packageId: string) {
+  try {
+    const supabase = await createClient()
+    const { data: { user: authUser } } = await supabase.auth.getUser()
+    if (!authUser) return { success: false, error: 'Unauthorized' }
+
+    const [currentUser] = await db.select().from(users).where(eq(users.id, authUser.id))
+    if (!currentUser || currentUser.role === 'client') return { success: false, error: 'Unauthorized' }
+
+    await db.transaction(async (tx) => {
+      // Hapus transaksi yang berelasi
+      await tx.delete(ptTransactions).where(eq(ptTransactions.packageId, packageId))
+      
+      // Hapus sesi yang berelasi
+      // (sessionExercises akan terhapus berkat onDelete: 'cascade' di database level jika sudah di-migrate,
+      // tetapi untuk amannya kita hapus manual jika tidak ada cascade)
+      // Note: sessionExercises ada onDelete: 'cascade', jadi aman.
+      await tx.delete(workoutSessions).where(eq(workoutSessions.packageId, packageId))
+
+      // Terakhir hapus paketnya
+      await tx.delete(ptPackages).where(eq(ptPackages.id, packageId))
+    })
+
+    revalidatePath('/packages')
+    return { success: true }
+  } catch (err: any) {
+    console.error('Delete package error:', err)
+    return { success: false, error: err.message || 'Gagal menghapus paket' }
   }
 }

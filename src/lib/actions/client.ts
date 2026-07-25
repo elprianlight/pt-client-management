@@ -20,6 +20,8 @@ const createClientSchema = z.object({
   heightCm: z.number().min(100).max(250).optional(),
   weightKg: z.number().min(20).max(300).optional(),
   notes: z.string().optional(),
+  emergencyContactName: z.string().optional(),
+  emergencyContactPhone: z.string().optional(),
 })
 
 const updateClientSchema = z.object({
@@ -31,6 +33,8 @@ const updateClientSchema = z.object({
   weightKg: z.number().min(20).max(300).optional(),
   notes: z.string().optional(),
   isActive: z.boolean().optional(),
+  emergencyContactName: z.string().optional(),
+  emergencyContactPhone: z.string().optional(),
 })
 
 export type CreateClientInput = z.infer<typeof createClientSchema>
@@ -117,6 +121,8 @@ export async function getClientById(clientId: string) {
       gender: clients.gender,
       dateOfBirth: clients.dateOfBirth,
       notes: clients.medicalNotes,
+      emergencyContactName: clients.emergencyContactName,
+      emergencyContactPhone: clients.emergencyContactPhone,
       joinedAt: clients.createdAt,
       createdAt: clients.createdAt,
       updatedAt: clients.updatedAt,
@@ -166,57 +172,59 @@ export async function createClient_action(input: CreateClientInput) {
     return { success: false, error: 'Data tidak valid: ' + validated.error.issues[0].message }
   }
 
-  const { username, fullName, phone, password, dateOfBirth, gender, heightCm, weightKg, notes } = validated.data
-  const dummyEmail = `${username}@pt.local`
+    const { username, fullName, phone, password, dateOfBirth, gender, heightCm, weightKg, notes, emergencyContactName, emergencyContactPhone } = validated.data
+    const dummyEmail = `${username}@pt.local`
 
-  // Get PT record
-  let ptRecord: { id: string } | null = null
-  if (profile.role === 'personal_trainer') {
-    ptRecord = await getPTRecordByUserId(profile.id)
-  } else if (profile.role === 'super_admin') {
-    const [firstPt] = await db.select({ id: personalTrainers.id }).from(personalTrainers).limit(1)
-    ptRecord = firstPt ?? null
-  }
-  if (!ptRecord) return { success: false, error: 'Tidak ada PT yang tersedia untuk di-assign.' }
-
-  try {
-    const supabaseAdmin = createAdminClient()
-    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
-      email: dummyEmail,
-      password,
-      email_confirm: true,
-      user_metadata: { full_name: fullName, username, role: 'client' },
-    })
-
-    if (authError || !authData.user) {
-      if (authError?.message.includes('already')) {
-        return { success: false, error: 'Username sudah digunakan.' }
-      }
-      return { success: false, error: authError?.message ?? 'Gagal membuat akun.' }
+    // Get PT record
+    let ptRecord: { id: string } | null = null
+    if (profile.role === 'personal_trainer') {
+      ptRecord = await getPTRecordByUserId(profile.id)
+    } else if (profile.role === 'super_admin') {
+      const [firstPt] = await db.select({ id: personalTrainers.id }).from(personalTrainers).limit(1)
+      ptRecord = firstPt ?? null
     }
+    if (!ptRecord) return { success: false, error: 'Tidak ada PT yang tersedia untuk di-assign.' }
 
-    const authUserId = authData.user.id
+    try {
+      const supabaseAdmin = createAdminClient()
+      const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+        email: dummyEmail,
+        password,
+        email_confirm: true,
+        user_metadata: { full_name: fullName, username, role: 'client' },
+      })
 
-    await db.insert(users).values({
-      id: authUserId,
-      email: dummyEmail,
-      username,
-      fullName,
-      phone: phone || null,
-      role: 'client',
-      isActive: true,
-    })
+      if (authError || !authData.user) {
+        if (authError?.message.includes('already')) {
+          return { success: false, error: 'Username sudah digunakan.' }
+        }
+        return { success: false, error: authError?.message ?? 'Gagal membuat akun.' }
+      }
 
-    const [client] = await db.insert(clients).values({
-      userId: authUserId,
-      trainerId: ptRecord.id,
-      gender: (gender as 'male' | 'female' | 'other') ?? null,
-      dateOfBirth: dateOfBirth ? dateOfBirth : null,
-      height: heightCm ?? null,
-      initialWeight: weightKg ?? null,
-      currentWeight: weightKg ?? null,
-      medicalNotes: notes || null,
-    }).returning({ id: clients.id })
+      const authUserId = authData.user.id
+
+      await db.insert(users).values({
+        id: authUserId,
+        email: dummyEmail,
+        username,
+        fullName,
+        phone: phone || null,
+        role: 'client',
+        isActive: true,
+      })
+
+      const [client] = await db.insert(clients).values({
+        userId: authUserId,
+        trainerId: ptRecord.id,
+        gender: (gender as 'male' | 'female' | 'other') ?? null,
+        dateOfBirth: dateOfBirth ? dateOfBirth : null,
+        height: heightCm ?? null,
+        initialWeight: weightKg ?? null,
+        currentWeight: weightKg ?? null,
+        medicalNotes: notes || null,
+        emergencyContactName: emergencyContactName || null,
+        emergencyContactPhone: emergencyContactPhone || null,
+      }).returning({ id: clients.id })
 
     revalidatePath('/clients')
     return { success: true, clientId: client.id }
@@ -236,7 +244,7 @@ export async function updateClient(clientId: string, input: UpdateClientInput) {
     return { success: false, error: 'Data tidak valid.' }
   }
 
-  const { fullName, phone, dateOfBirth, gender, heightCm, weightKg, notes, isActive } = validated.data
+  const { fullName, phone, dateOfBirth, gender, heightCm, weightKg, notes, isActive, emergencyContactName, emergencyContactPhone } = validated.data
 
   try {
     const client = await getClientById(clientId)
@@ -253,6 +261,8 @@ export async function updateClient(clientId: string, input: UpdateClientInput) {
         height: heightCm ?? null,
         currentWeight: weightKg ?? null,
         medicalNotes: notes || null,
+        emergencyContactName: emergencyContactName || null,
+        emergencyContactPhone: emergencyContactPhone || null,
         updatedAt: new Date(),
       })
       .where(eq(clients.id, clientId))

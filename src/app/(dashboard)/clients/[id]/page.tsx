@@ -2,12 +2,13 @@ import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { db } from '@/lib/db'
-import { users } from '@/lib/db/schema'
-import { eq } from 'drizzle-orm'
+import { users, ptPackages, workoutSessions } from '@/lib/db/schema'
+import { eq, desc } from 'drizzle-orm'
 import { getClientById } from '@/lib/actions/client'
 import { ArrowLeft, UserSquare2 } from 'lucide-react'
 import Link from 'next/link'
 import { ClientForm } from '@/components/clients/client-form'
+import { ClientDetail } from '@/components/clients/client-detail'
 
 export const metadata: Metadata = { title: 'Detail Client' }
 
@@ -38,6 +39,25 @@ export default async function ClientDetailPage({
       </div>
     )
   }
+
+  // Fetch active packages
+  const activePackages = await db.select()
+    .from(ptPackages)
+    .where(eq(ptPackages.clientId, clientData.id))
+    .orderBy(desc(ptPackages.createdAt))
+
+  // Fetch recent sessions
+  const recentSessions = await db.select({
+    id: workoutSessions.id,
+    scheduledAt: workoutSessions.scheduledAt,
+    status: workoutSessions.status,
+    packageName: ptPackages.packageName,
+  })
+    .from(workoutSessions)
+    .innerJoin(ptPackages, eq(workoutSessions.packageId, ptPackages.id))
+    .where(eq(workoutSessions.clientId, clientData.id))
+    .orderBy(desc(workoutSessions.scheduledAt))
+    .limit(5)
 
   const isEdit = searchParams.edit === 'true'
 
@@ -75,64 +95,18 @@ export default async function ClientDetailPage({
               weightKg: clientData.weightKg ?? undefined,
               notes: clientData.notes ?? '',
               isActive: clientData.user?.isActive ?? true,
+              emergencyContactName: clientData.emergencyContactName ?? '',
+              emergencyContactPhone: clientData.emergencyContactPhone ?? '',
             }}
           />
         ) : (
-          <div className="detail-view">
-            <div className="detail-section">
-              <h3 className="detail-section-title">Informasi Akun</h3>
-              <div className="detail-grid">
-                <div className="detail-item">
-                  <span className="detail-label">Nama Lengkap</span>
-                  <span className="detail-value">{clientData.user?.fullName}</span>
-                </div>
-                <div className="detail-item">
-                  <span className="detail-label">Username</span>
-                  <span className="detail-value">@{clientData.user?.username}</span>
-                </div>
-                <div className="detail-item">
-                  <span className="detail-label">Nomor HP</span>
-                  <span className="detail-value">{clientData.user?.phone || '—'}</span>
-                </div>
-                <div className="detail-item">
-                  <span className="detail-label">Status Akun</span>
-                  <span className={`badge ${clientData.user?.isActive ? 'badge-success' : 'badge-error'}`}>
-                    {clientData.user?.isActive ? 'Aktif' : 'Non-aktif'}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div className="detail-section">
-              <h3 className="detail-section-title">Data Fisik</h3>
-              <div className="detail-grid">
-                <div className="detail-item">
-                  <span className="detail-label">Jenis Kelamin</span>
-                  <span className="detail-value">
-                    {clientData.gender === 'male' ? 'Laki-laki' : clientData.gender === 'female' ? 'Perempuan' : clientData.gender === 'other' ? 'Lainnya' : '—'}
-                  </span>
-                </div>
-                <div className="detail-item">
-                  <span className="detail-label">Tanggal Lahir</span>
-                  <span className="detail-value">
-                    {clientData.dateOfBirth ? new Intl.DateTimeFormat('id-ID', { dateStyle: 'long' }).format(new Date(clientData.dateOfBirth)) : '—'}
-                  </span>
-                </div>
-                <div className="detail-item">
-                  <span className="detail-label">Tinggi Badan</span>
-                  <span className="detail-value">{clientData.heightCm ? `${clientData.heightCm} cm` : '—'}</span>
-                </div>
-                <div className="detail-item">
-                  <span className="detail-label">Berat Badan</span>
-                  <span className="detail-value">{clientData.weightKg ? `${clientData.weightKg} kg` : '—'}</span>
-                </div>
-                <div className="detail-item" style={{ gridColumn: 'span 2' }}>
-                  <span className="detail-label">Catatan</span>
-                  <span className="detail-value" style={{ whiteSpace: 'pre-wrap' }}>{clientData.notes || '—'}</span>
-                </div>
-              </div>
-            </div>
-
+          <div>
+            <ClientDetail 
+              clientData={clientData}
+              packages={activePackages}
+              sessions={recentSessions}
+              measurements={[]}
+            />
             <div className="form-actions" style={{ marginTop: '24px', paddingTop: '20px', borderTop: '1px solid var(--border-default)', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
               <Link href="/clients" className="btn-secondary">Kembali</Link>
               <Link href={`/clients/${clientData.id}?edit=true`} className="btn-primary">Edit Data</Link>

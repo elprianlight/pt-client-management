@@ -5,6 +5,7 @@ const AUTH_ROUTES = ['/login', '/register', '/forgot-password']
 const PROTECTED_BASE = ['/dashboard', '/pt', '/clients', '/packages', '/workout', '/session', '/nutrition', '/progress', '/reports', '/settings']
 
 export async function middleware(request: NextRequest) {
+  console.log('--- Middleware hit for URL:', request.url)
   let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient(
