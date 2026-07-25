@@ -44,13 +44,7 @@ export function ClientListClient({ initialData, totalCount }: ClientListClientPr
       label: 'Nama',
       render: (row: Client) => (
         <div className="pt-name-cell">
-          <div className="avatar-circle avatar-client">
-            {(row.user?.fullName?.[0] ?? 'C').toUpperCase()}
-          </div>
-          <div>
-            <div className="cell-primary">{row.user?.fullName ?? '—'}</div>
-            <div className="cell-secondary">@{row.user?.username ?? '—'}</div>
-          </div>
+          <div className="cell-primary font-medium">{row.user?.fullName ?? '—'}</div>
         </div>
       )
     },
@@ -92,6 +86,21 @@ export function ClientListClient({ initialData, totalCount }: ClientListClientPr
       )
     },
     {
+      key: 'sessions_total',
+      label: 'Sesi Dibeli',
+      render: (row: Client) => <span>{row.packageStats?.total ?? 0}</span>
+    },
+    {
+      key: 'sessions_used',
+      label: 'Sesi Terpakai',
+      render: (row: Client) => <span>{row.packageStats?.used ?? 0}</span>
+    },
+    {
+      key: 'sessions_remaining',
+      label: 'Sisa Sesi',
+      render: (row: Client) => <span>{(row.packageStats?.total ?? 0) - (row.packageStats?.used ?? 0)}</span>
+    },
+    {
       key: 'status',
       label: 'Status',
       render: (row: Client) => (
@@ -102,35 +111,31 @@ export function ClientListClient({ initialData, totalCount }: ClientListClientPr
     },
     {
       key: 'actions',
-      label: '',
-      width: '60px',
+      label: 'Aksi',
       render: (row: Client) => (
-        <div className="action-menu-wrapper">
-          <button
-            className="action-menu-btn"
-            onClick={e => { e.stopPropagation(); setOpenMenuId(openMenuId === row.id ? null : row.id) }}
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <button 
+            className="action-btn" 
+            title="Detail Client"
+            onClick={() => router.push(`/clients/${row.id}`)}
           >
-            <MoreVertical size={15} />
+            <Eye size={16} />
           </button>
-          {openMenuId === row.id && (
-            <div className="action-menu" onClick={e => e.stopPropagation()}>
-              <button className="action-menu-item" onClick={() => router.push(`/clients/${row.id}`)}>
-                <Eye size={13} /> Detail
-              </button>
-              <button className="action-menu-item" onClick={() => router.push(`/clients/${row.id}?edit=true`)}>
-                <Pencil size={13} /> Edit
-              </button>
-              <div className="action-menu-divider" />
-              <button
-                className={`action-menu-item ${row.user?.isActive ? 'action-menu-danger' : 'action-menu-success'}`}
-                onClick={() => handleToggleStatus(row)}
-                disabled={loadingId === row.id}
-              >
-                {row.user?.isActive ? <PowerOff size={13} /> : <Power size={13} />}
-                {row.user?.isActive ? 'Non-aktifkan' : 'Aktifkan'}
-              </button>
-            </div>
-          )}
+          <button 
+            className="action-btn" 
+            title="Edit Client"
+            onClick={() => router.push(`/clients/${row.id}?edit=true`)}
+          >
+            <Pencil size={16} />
+          </button>
+          <button
+            className={`action-btn ${row.user?.isActive ? 'action-btn-danger' : 'action-btn-success'}`}
+            title={row.user?.isActive ? 'Non-aktifkan' : 'Aktifkan'}
+            onClick={() => handleToggleStatus(row)}
+            disabled={loadingId === row.id}
+          >
+            {loadingId === row.id ? <Loader2 size={16} className="spin" /> : (row.user?.isActive ? <PowerOff size={16} /> : <Power size={16} />)}
+          </button>
         </div>
       )
     },
@@ -159,8 +164,37 @@ export function ClientListClient({ initialData, totalCount }: ClientListClientPr
       </div>
 
       <style jsx global>{`
-        .avatar-client {
-          background: linear-gradient(135deg, #8b5cf6, #06b6d4) !important;
+        .action-btn {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          width: 32px;
+          height: 32px;
+          border-radius: 8px;
+          background: var(--bg-elevated);
+          color: var(--text-secondary);
+          border: 1px solid var(--border-default);
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+        .action-btn:hover:not(:disabled) {
+          background: rgba(139, 92, 246, 0.1);
+          color: var(--brand-primary);
+          border-color: rgba(139, 92, 246, 0.3);
+        }
+        .action-btn-danger:hover:not(:disabled) {
+          background: rgba(239, 68, 68, 0.1);
+          color: var(--error);
+          border-color: rgba(239, 68, 68, 0.3);
+        }
+        .action-btn-success:hover:not(:disabled) {
+          background: rgba(16, 185, 129, 0.1);
+          color: #10b981;
+          border-color: rgba(16, 185, 129, 0.3);
+        }
+        .action-btn:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
         }
       `}</style>
     </div>

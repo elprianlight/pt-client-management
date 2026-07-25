@@ -12,7 +12,7 @@ import {
   CheckCircle,
 } from 'lucide-react'
 
-export function SuperAdminDashboard({ stats }: { stats?: { totalClients: number; totalPTs: number; monthSessions: number; monthRevenue: number; recentActivity: any[] } }) {
+export function SuperAdminDashboard({ stats }: { stats?: { totalClients: number; totalPTs: number; monthSessions: number; monthRevenue: number; sessionsTrend: number; revenueTrend: number; recentActivity: any[] } }) {
   return (
     <div className="sa-dashboard stagger-children">
       {/* Page Header */}
@@ -52,14 +52,14 @@ export function SuperAdminDashboard({ stats }: { stats?: { totalClients: number;
           value={stats?.monthSessions?.toString() ?? "0"}
           icon={Calendar}
           iconColor="#06b6d4"
-          trend={{ value: 0, label: 'vs bulan lalu', direction: 'neutral' }}
+          trend={{ value: stats?.sessionsTrend ?? 0, label: 'vs bulan lalu', direction: (stats?.sessionsTrend ?? 0) > 0 ? 'up' : (stats?.sessionsTrend ?? 0) < 0 ? 'down' : 'neutral' }}
         />
         <StatsCard
           title="Total Revenue"
           value={stats?.monthRevenue ? `Rp ${stats.monthRevenue.toLocaleString('id-ID')}` : "Rp 0"}
           icon={DollarSign}
           iconColor="#10b981"
-          trend={{ value: 0, label: 'bulan ini', direction: 'neutral' }}
+          trend={{ value: stats?.revenueTrend ?? 0, label: 'vs bulan lalu', direction: (stats?.revenueTrend ?? 0) > 0 ? 'up' : (stats?.revenueTrend ?? 0) < 0 ? 'down' : 'neutral' }}
         />
       </div>
 
@@ -151,7 +151,7 @@ export function SuperAdminDashboard({ stats }: { stats?: { totalClients: number;
   )
 }
 
-export function PTDashboard({ stats }: { stats?: { totalClients: number; todaySessions: number; monthSessions: number; monthRevenue: number; todaySessionsList: any[]; recentClientsList: any[]; recentRevenueList: any[] } }) {
+export function PTDashboard({ stats }: { stats?: { totalClients: number; todaySessions: number; monthSessions: number; monthRevenue: number; sessionsTrend: number; revenueTrend: number; todaySessionsList: any[]; recentClientsList: any[]; recentRevenueList: any[] } }) {
   return (
     <div className="pt-dashboard stagger-children">
       <div className="dash-header animate-fade-in-up">
@@ -186,14 +186,14 @@ export function PTDashboard({ stats }: { stats?: { totalClients: number; todaySe
           value={stats?.monthSessions?.toString() ?? "0"}
           icon={Activity}
           iconColor="#06b6d4"
-          trend={{ value: 0, label: 'vs bulan lalu', direction: 'neutral' }}
+          trend={{ value: stats?.sessionsTrend ?? 0, label: 'vs bulan lalu', direction: (stats?.sessionsTrend ?? 0) > 0 ? 'up' : (stats?.sessionsTrend ?? 0) < 0 ? 'down' : 'neutral' }}
         />
         <StatsCard
           title="Revenue Bulan Ini"
           value={stats?.monthRevenue ? `Rp ${stats.monthRevenue.toLocaleString('id-ID')}` : "Rp 0"}
           icon={DollarSign}
           iconColor="#10b981"
-          trend={{ value: 0, label: 'vs bulan lalu', direction: 'neutral' }}
+          trend={{ value: stats?.revenueTrend ?? 0, label: 'vs bulan lalu', direction: (stats?.revenueTrend ?? 0) > 0 ? 'up' : (stats?.revenueTrend ?? 0) < 0 ? 'down' : 'neutral' }}
         />
       </div>
 

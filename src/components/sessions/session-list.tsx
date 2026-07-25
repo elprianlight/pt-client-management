@@ -263,7 +263,7 @@ export function SessionList() {
             ))}
           </select>
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+        <div className="hide-on-mobile" style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
           <label style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 500 }}>Cari</label>
           <div style={{ position: 'relative', width: '240px' }}>
             <Search size={14} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />

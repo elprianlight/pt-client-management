@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
 import { Sidebar } from '@/components/layout/sidebar'
-import { Header } from '@/components/layout/header'
 import { AuthProvider } from '@/components/providers/auth-provider'
 import { createClient } from '@/lib/supabase/server'
 import { db } from '@/lib/db'
@@ -17,6 +16,7 @@ export const metadata: Metadata = {
 }
 
 import { BottomNav } from '@/components/layout/bottom-nav'
+import { MobileHeader } from '@/components/layout/mobile-header'
 
 export default async function DashboardLayout({
   children,
@@ -40,8 +40,8 @@ export default async function DashboardLayout({
       <AuthProvider user={profile} role={profile.role} />
       <Sidebar />
       <div className="dashboard-main">
-        <Header />
-        <main className="dashboard-content">
+        <MobileHeader />
+        <main className="dashboard-content" style={{ paddingTop: '24px' }}>
           {children}
         </main>
       </div>

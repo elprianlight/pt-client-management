@@ -25,6 +25,7 @@ import {
   Dumbbell as LogoIcon,
   Activity,
   BookOpen,
+  Search,
 } from 'lucide-react'
 
 interface NavItem {
@@ -163,7 +164,7 @@ export function Sidebar({ className }: SidebarProps) {
         {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
       </button>
 
-      {/* User Info */}
+      {/* User Info & Notifications */}
       {!collapsed && user && (
         <div className="sidebar-user">
           <div className="sidebar-user-avatar">
@@ -174,6 +175,24 @@ export function Sidebar({ className }: SidebarProps) {
             <span className={cn('badge', role && roleBadgeClass[role])}>
               {role && roleLabel[role]}
             </span>
+          </div>
+          <button className="sidebar-notif-btn" aria-label="Notifikasi">
+            <Bell size={16} />
+            <span className="sidebar-notif-dot" />
+          </button>
+        </div>
+      )}
+
+      {/* Search Bar */}
+      {!collapsed && (
+        <div className="sidebar-search-container">
+          <div className="sidebar-search">
+            <Search size={14} className="sidebar-search-icon" />
+            <input
+              type="text"
+              placeholder="Cari client, sesi..."
+              className="sidebar-search-input"
+            />
           </div>
         </div>
       )}
@@ -321,6 +340,67 @@ export function Sidebar({ className }: SidebarProps) {
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
+        }
+        .sidebar-notif-btn {
+          position: relative;
+          background: none;
+          border: none;
+          color: var(--text-secondary);
+          cursor: pointer;
+          padding: 6px;
+          border-radius: var(--radius-sm);
+          transition: all var(--transition-fast);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .sidebar-notif-btn:hover {
+          background: var(--bg-overlay);
+          color: var(--text-primary);
+        }
+        .sidebar-notif-dot {
+          position: absolute;
+          top: 6px;
+          right: 6px;
+          width: 6px;
+          height: 6px;
+          background: var(--brand-primary);
+          border-radius: 50%;
+          border: 1px solid var(--bg-elevated);
+        }
+
+        .sidebar-search-container {
+          padding: 12px 18px 0;
+        }
+        .sidebar-search {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          background: var(--bg-overlay);
+          border: 1px solid var(--border-default);
+          border-radius: var(--radius-md);
+          padding: 6px 10px;
+          transition: all var(--transition-fast);
+        }
+        .sidebar-search:focus-within {
+          border-color: var(--brand-primary);
+          box-shadow: 0 0 0 2px rgba(99,102,241,0.1);
+        }
+        .sidebar-search-icon {
+          color: var(--text-muted);
+          flex-shrink: 0;
+        }
+        .sidebar-search-input {
+          background: none;
+          border: none;
+          outline: none;
+          font-size: 12px;
+          color: var(--text-primary);
+          width: 100%;
+          font-family: 'Inter', sans-serif;
+        }
+        .sidebar-search-input::placeholder {
+          color: var(--text-muted);
         }
 
         .sidebar-nav {

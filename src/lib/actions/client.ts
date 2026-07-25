@@ -3,8 +3,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/server'
 import { db } from '@/lib/db'
-import { users, clients, personalTrainers } from '@/lib/db/schema'
-import { eq, desc, count, and } from 'drizzle-orm'
+import { users, clients, personalTrainers, ptPackages } from '@/lib/db/schema'
+import { eq, desc, count, and, inArray } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 
@@ -71,7 +71,6 @@ export async function listClients(search?: string) {
       dateOfBirth: clients.dateOfBirth,
       notes: clients.medicalNotes,
       joinedAt: clients.createdAt,
-      createdAt: clients.createdAt,
       user: {
         id: users.id,
         fullName: users.fullName,
@@ -98,16 +97,34 @@ export async function listClients(search?: string) {
       })()
     : result
 
-  if (search) {
-    const term = search.toLowerCase()
-    return filtered.filter(c =>
-      c.user?.fullName?.toLowerCase().includes(term) ||
-      c.user?.username?.toLowerCase().includes(term) ||
-      c.user?.phone?.toLowerCase().includes(term)
-    )
+  const searched = search ? filtered.filter(c =>
+      c.user?.fullName?.toLowerCase().includes(search.toLowerCase()) ||
+      c.user?.username?.toLowerCase().includes(search.toLowerCase()) ||
+      c.user?.phone?.toLowerCase().includes(search.toLowerCase())
+    ) : filtered
+
+  const clientIds = searched.map(c => c.id)
+  let packageMap: Record<string, { total: number, used: number }> = {}
+  if (clientIds.length > 0) {
+    const pkgs = await db.select({
+      clientId: ptPackages.clientId,
+      totalSessions: ptPackages.totalSessions,
+      usedSessions: ptPackages.usedSessions,
+    }).from(ptPackages).where(inArray(ptPackages.clientId, clientIds))
+    
+    pkgs.forEach(pkg => {
+      if (!packageMap[pkg.clientId]) {
+        packageMap[pkg.clientId] = { total: 0, used: 0 }
+      }
+      packageMap[pkg.clientId].total += pkg.totalSessions
+      packageMap[pkg.clientId].used += pkg.usedSessions
+    })
   }
 
-  return filtered
+  return searched.map(c => ({
+    ...c,
+    packageStats: packageMap[c.id] || { total: 0, used: 0 }
+  }))
 }
 
 export async function getClientById(clientId: string) {
@@ -124,7 +141,6 @@ export async function getClientById(clientId: string) {
       emergencyContactName: clients.emergencyContactName,
       emergencyContactPhone: clients.emergencyContactPhone,
       joinedAt: clients.createdAt,
-      createdAt: clients.createdAt,
       updatedAt: clients.updatedAt,
       user: {
         id: users.id,

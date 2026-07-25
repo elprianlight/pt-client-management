@@ -246,6 +246,9 @@ export function DataTable<T extends { id: string }>({
         }
 
         @media (max-width: 640px) {
+          .dt-search-bar {
+            display: none;
+          }
           .dt-th {
             padding: 10px 8px;
             font-size: 10px;

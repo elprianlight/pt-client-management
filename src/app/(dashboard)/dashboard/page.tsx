@@ -36,8 +36,11 @@ export default async function DashboardPage() {
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
   const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999).toISOString()
 
-  let saStats = { totalClients: 0, totalPTs: 0, monthSessions: 0, monthRevenue: 0, recentActivity: [] as any[] }
-  let ptStats = { totalClients: 0, todaySessions: 0, monthSessions: 0, monthRevenue: 0, todaySessionsList: [] as any[], recentClientsList: [] as any[], recentRevenueList: [] as any[] }
+  const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString()
+  const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999).toISOString()
+
+  let saStats = { totalClients: 0, totalPTs: 0, monthSessions: 0, monthRevenue: 0, sessionsTrend: 0, revenueTrend: 0, recentActivity: [] as any[] }
+  let ptStats = { totalClients: 0, todaySessions: 0, monthSessions: 0, monthRevenue: 0, sessionsTrend: 0, revenueTrend: 0, todaySessionsList: [] as any[], recentClientsList: [] as any[], recentRevenueList: [] as any[] }
   let clientStats = { remainingSessions: 0, completedSessions: 0, streakDays: 0, nextSession: null as any, recentProgress: null as any }
 
   if (role === 'super_admin') {
@@ -48,9 +51,17 @@ export default async function DashboardPage() {
 
     const { count: monthSessionsCount } = await supabase.from('workout_sessions').select('*', { count: 'exact', head: true }).gte('scheduled_at', startOfMonth).lte('scheduled_at', endOfMonth)
     saStats.monthSessions = monthSessionsCount || 0
+    const { count: lastMonthSessionsCount } = await supabase.from('workout_sessions').select('*', { count: 'exact', head: true }).gte('scheduled_at', startOfLastMonth).lte('scheduled_at', endOfLastMonth)
+    saStats.sessionsTrend = lastMonthSessionsCount === 0 ? (saStats.monthSessions > 0 ? 100 : 0) : Math.round(((saStats.monthSessions - (lastMonthSessionsCount || 0)) / (lastMonthSessionsCount || 1)) * 100)
 
-    const { data: allPackages } = await supabase.from('pt_packages').select('total_price').gte('created_at', startOfMonth).lte('created_at', endOfMonth)
-    saStats.monthRevenue = allPackages?.reduce((acc, pkg) => acc + Number(pkg.total_price), 0) || 0
+    const { data: allPackages } = await supabase.from('pt_packages').select('total_price, created_at')
+    
+    const thisMonthPackages = allPackages?.filter(p => p.created_at >= startOfMonth && p.created_at <= endOfMonth) || []
+    saStats.monthRevenue = thisMonthPackages.reduce((acc, pkg) => acc + Number(pkg.total_price), 0) || 0
+    
+    const lastMonthPackagesSA = allPackages?.filter(p => p.created_at >= startOfLastMonth && p.created_at <= endOfLastMonth) || []
+    const lastMonthRevenueSA = lastMonthPackagesSA.reduce((acc, pkg) => acc + Number(pkg.total_price), 0) || 0
+    saStats.revenueTrend = lastMonthRevenueSA === 0 ? (saStats.monthRevenue > 0 ? 100 : 0) : Math.round(((saStats.monthRevenue - lastMonthRevenueSA) / lastMonthRevenueSA) * 100)
 
     const { data: recentUsers } = await supabase.from('users').select('full_name, role, created_at').order('created_at', { ascending: false }).limit(5)
     saStats.recentActivity = recentUsers?.map(u => ({
@@ -85,6 +96,14 @@ export default async function DashboardPage() {
         .lte('scheduled_at', endOfMonth)
       ptStats.monthSessions = monthCount || 0
 
+      const { count: lastMonthCount } = await supabase
+        .from('workout_sessions')
+        .select('*', { count: 'exact', head: true })
+        .eq('trainer_id', ptData.id)
+        .gte('scheduled_at', startOfLastMonth)
+        .lte('scheduled_at', endOfLastMonth)
+      ptStats.sessionsTrend = lastMonthCount === 0 ? (ptStats.monthSessions > 0 ? 100 : 0) : Math.round(((ptStats.monthSessions - (lastMonthCount || 0)) / (lastMonthCount || 1)) * 100)
+
       // Month revenue & recent packages
       const { data: packages } = await supabase
         .from('pt_packages')
@@ -93,6 +112,10 @@ export default async function DashboardPage() {
         
       const thisMonthPackages = packages?.filter(p => p.created_at >= startOfMonth && p.created_at <= endOfMonth) || []
       ptStats.monthRevenue = thisMonthPackages.reduce((acc, pkg) => acc + Number(pkg.total_price), 0) || 0
+      
+      const lastMonthPackagesPT = packages?.filter(p => p.created_at >= startOfLastMonth && p.created_at <= endOfLastMonth) || []
+      const lastMonthRevenuePT = lastMonthPackagesPT.reduce((acc, pkg) => acc + Number(pkg.total_price), 0) || 0
+      ptStats.revenueTrend = lastMonthRevenuePT === 0 ? (ptStats.monthRevenue > 0 ? 100 : 0) : Math.round(((ptStats.monthRevenue - lastMonthRevenuePT) / lastMonthRevenuePT) * 100)
       
       ptStats.recentRevenueList = (packages || [])
         .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
