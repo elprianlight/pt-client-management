@@ -127,8 +127,11 @@ export async function listClients(search?: string) {
       if (!packageMap[pkg.clientId]) {
         packageMap[pkg.clientId] = { total: 0, used: 0, lastPackageName: pkg.packageName, lastBought: 0 }
       }
-      packageMap[pkg.clientId].total += pkg.totalSessions
-      packageMap[pkg.clientId].used += pkg.usedSessions
+      // Only accumulate active packages (where usedSessions < totalSessions)
+      if (pkg.usedSessions < pkg.totalSessions) {
+        packageMap[pkg.clientId].total += pkg.totalSessions
+        packageMap[pkg.clientId].used += pkg.usedSessions
+      }
     })
 
     // Fetch last session date per client

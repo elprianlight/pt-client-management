@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { format } from 'date-fns'
 import { id } from 'date-fns/locale'
@@ -69,9 +69,24 @@ export function ClientDetail({
     badge?: number
   }
 
+  // Filter active packages (usedSessions < totalSessions)
+  const activePackagesList = useMemo(() => {
+    return packages.filter((p: any) => (p.usedSessions ?? 0) < (p.totalSessions ?? 0))
+  }, [packages])
+
+  const totalActiveSessions = useMemo(() => {
+    return activePackagesList.reduce((acc: number, p: any) => acc + (p.totalSessions ?? 0), 0)
+  }, [activePackagesList])
+
+  const usedActiveSessions = useMemo(() => {
+    return activePackagesList.reduce((acc: number, p: any) => acc + (p.usedSessions ?? 0), 0)
+  }, [activePackagesList])
+
+  const remainingActiveSessions = Math.max(0, totalActiveSessions - usedActiveSessions)
+
   const TABS: TabItem[] = [
     { id: 'sessions', label: 'Riwayat Sesi', icon: Calendar, badge: sessionList.length },
-    { id: 'packages', label: 'Paket & Sesi', icon: Package, badge: packages.length },
+    { id: 'packages', label: 'Paket & Sesi', icon: Package, badge: activePackagesList.length },
     { id: 'workout', label: 'Workout Plan', icon: Dumbbell },
     { id: 'nutrition', label: 'Nutrisi', icon: Apple },
     { id: 'progress', label: 'Progress', icon: TrendingUp },
@@ -216,17 +231,17 @@ export function ClientDetail({
         <div className="client-quick-stats">
           <div className="quick-stat-item">
             <span className="qs-label">Paket Aktif</span>
-            <span className="qs-value">{packages.length} Paket</span>
+            <span className="qs-value">{activePackagesList.length} Paket</span>
           </div>
           <div className="quick-stat-divider" />
           <div className="quick-stat-item">
-            <span className="qs-label">Total Sesi Riw.</span>
+            <span className="qs-label">Sisa Sesi (Aktif)</span>
+            <span className="qs-value">{remainingActiveSessions} / {totalActiveSessions} Sesi</span>
+          </div>
+          <div className="quick-stat-divider" />
+          <div className="quick-stat-item">
+            <span className="qs-label">Riwayat Sesi</span>
             <span className="qs-value">{sessionList.length} Sesi</span>
-          </div>
-          <div className="quick-stat-divider" />
-          <div className="quick-stat-item">
-            <span className="qs-label">Berat Terkini</span>
-            <span className="qs-value">{clientData.currentWeight || clientData.heightCm || '—'} {clientData.currentWeight ? 'kg' : ''}</span>
           </div>
         </div>
       </div>
@@ -401,28 +416,37 @@ export function ClientDetail({
               </div>
             ) : (
               <div className="packages-grid">
-                {packages.map((pkg) => (
-                  <div key={pkg.id} className="glass-card pkg-card">
-                    <div className="pkg-card-header">
-                      <h4 className="pkg-name">{pkg.packageName}</h4>
-                      <span className="badge badge-brand">
-                        {pkg.usedSessions} / {pkg.totalSessions} Sesi
-                      </span>
+                {packages.map((pkg) => {
+                  const isExpired = (pkg.usedSessions ?? 0) >= (pkg.totalSessions ?? 0)
+                  return (
+                    <div key={pkg.id} className={`glass-card pkg-card ${isExpired ? 'pkg-card-expired' : ''}`}>
+                      <div className="pkg-card-header">
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                          <h4 className="pkg-name">{pkg.packageName}</h4>
+                          <span className={`badge ${isExpired ? 'badge-error' : 'badge-success'}`} style={{ width: 'fit-content', fontSize: 11 }}>
+                            {isExpired ? 'Paket Habis (Tidak Aktif)' : 'Paket Aktif'}
+                          </span>
+                        </div>
+                        <span className="badge badge-brand">
+                          {pkg.usedSessions} / {pkg.totalSessions} Sesi
+                        </span>
+                      </div>
+                      <div className="pkg-progress-bar">
+                        <div
+                          className="pkg-progress-fill"
+                          style={{
+                            width: `${Math.min(100, (pkg.usedSessions / pkg.totalSessions) * 100)}%`,
+                            background: isExpired ? 'var(--error)' : 'var(--gradient-brand)',
+                          }}
+                        />
+                      </div>
+                      <div className="pkg-meta-row">
+                        <span>Status Sesi:</span>
+                        <strong>{isExpired ? 'Habis (100% Terpakai)' : `Sisa ${pkg.totalSessions - pkg.usedSessions} Sesi`}</strong>
+                      </div>
                     </div>
-                    <div className="pkg-progress-bar">
-                      <div
-                        className="pkg-progress-fill"
-                        style={{
-                          width: `${Math.min(100, (pkg.usedSessions / pkg.totalSessions) * 100)}%`,
-                        }}
-                      />
-                    </div>
-                    <div className="pkg-meta-row">
-                      <span>Berlaku hingga:</span>
-                      <strong>{format(new Date(pkg.expiresAt), 'dd MMM yyyy')}</strong>
-                    </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             )}
           </div>
