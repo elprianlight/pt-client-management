@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import {
-  MessageSquare,
   X,
   Send,
   Calendar,
@@ -12,6 +11,7 @@ import {
   Copy,
   Check,
 } from 'lucide-react'
+import { WhatsAppIcon } from '@/components/ui/whatsapp-icon'
 import {
   getScheduleReminderMessage,
   getRenewalReminderMessage,
@@ -98,7 +98,7 @@ export function WhatsAppModal({
         <div className="wa-modal-header">
           <div className="wa-modal-title-row">
             <div className="wa-icon-badge">
-              <MessageSquare size={20} />
+              <WhatsAppIcon size={22} />
             </div>
             <div>
               <h3 className="wa-modal-title">WhatsApp Quick Center</h3>
@@ -232,15 +232,16 @@ export function WhatsAppModal({
           gap: 12px;
         }
         .wa-icon-badge {
-          width: 40px;
-          height: 40px;
+          width: 42px;
+          height: 42px;
           border-radius: 12px;
-          background: rgba(16, 185, 129, 0.15);
-          border: 1px solid rgba(16, 185, 129, 0.3);
-          color: #10b981;
+          background: linear-gradient(135deg, rgba(37, 211, 102, 0.2) 0%, rgba(18, 140, 126, 0.2) 100%);
+          border: 1px solid rgba(37, 211, 102, 0.4);
+          color: #25D366;
           display: flex;
           align-items: center;
           justify-content: center;
+          box-shadow: 0 4px 12px rgba(37, 211, 102, 0.15);
         }
         .wa-modal-title {
           font-size: 16px;

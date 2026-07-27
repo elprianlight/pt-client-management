@@ -4,7 +4,6 @@ import { useState } from 'react'
 import {
   CheckSquare,
   Square,
-  MessageSquare,
   AlertTriangle,
   Package,
   Cake,
@@ -13,6 +12,7 @@ import {
   UserCheck,
 } from 'lucide-react'
 import { WhatsAppModal } from '@/components/crm/whatsapp-modal'
+import { WhatsAppIcon } from '@/components/ui/whatsapp-icon'
 import type { CRMTaskItem } from '@/lib/actions/crm'
 
 interface CRMTaskManagerProps {
@@ -107,7 +107,7 @@ export function CRMTaskManager({ initialTasks }: CRMTaskManagerProps) {
                 onClick={() => setSelectedTaskForWA(task)}
                 title="Kirim Pesan WhatsApp"
               >
-                <MessageSquare size={14} />
+                <WhatsAppIcon size={15} />
                 <span>WA</span>
               </button>
             </div>

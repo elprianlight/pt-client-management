@@ -4,8 +4,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 const AUTH_ROUTES = ['/login', '/register', '/forgot-password']
 const PROTECTED_BASE = ['/dashboard', '/pt', '/clients', '/packages', '/workout', '/session', '/nutrition', '/progress', '/reports', '/settings']
 
-export async function middleware(request: NextRequest) {
-  console.log('--- Middleware hit for URL:', request.url)
+export async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient(
@@ -17,8 +16,7 @@ export async function middleware(request: NextRequest) {
           return request.cookies.getAll()
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => {
-            const customOptions = { ...options, maxAge: 6 * 60 * 60 }
+          cookiesToSet.forEach(({ name, value }) => {
             request.cookies.set(name, value)
           })
           supabaseResponse = NextResponse.next({ request })

@@ -2,12 +2,14 @@
 
 import { useState, useMemo, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Search, Plus, Dumbbell, ChevronRight, X, Loader2, Filter, MessageSquare } from 'lucide-react'
+import { Search, Plus, Dumbbell, ChevronRight, X, Loader2, Filter, UserPlus } from 'lucide-react'
 import { format, subDays, startOfMonth } from 'date-fns'
 import { id as idLocale } from 'date-fns/locale'
 import type { listClients } from '@/lib/actions/client'
 import { useThemeStore } from '@/store/theme-store'
 import { WhatsAppModal } from '@/components/crm/whatsapp-modal'
+import { WhatsAppIcon } from '@/components/ui/whatsapp-icon'
+import { ClientCreateForm } from '@/components/clients/client-form'
 
 type Client = Awaited<ReturnType<typeof listClients>>[number]
 
@@ -37,6 +39,7 @@ export function ClientListClient({ initialData, totalCount }: ClientListClientPr
   const { theme } = useThemeStore()
   const [search, setSearch] = useState('')
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false)
+  const [isAddClientModalOpen, setIsAddClientModalOpen] = useState(false)
   const [filterType, setFilterType] = useState<'all' | 'low_session' | 'inactive' | 'new_this_month' | 'has_remaining' | 'no_remaining'>('all')
   const [isSearching, setIsSearching] = useState(false)
   const [selectedWAClient, setSelectedWAClient] = useState<Client | null>(null)
@@ -103,7 +106,7 @@ export function ClientListClient({ initialData, totalCount }: ClientListClientPr
       {/* Interactive Search Bar Trigger */}
       <div className="cl-search-trigger" onClick={openSearchModal} id="btn-open-search-modal">
         <div className="search-input-inner">
-          <Search size={18} className="search-icon-left" />
+          <Search size={15} className="search-icon-left" />
           <span className="search-placeholder-text">
             {search ? (
               <span className="search-active-text">"{search}"</span>
@@ -121,7 +124,7 @@ export function ClientListClient({ initialData, totalCount }: ClientListClientPr
               }}
               title="Bersihkan Pencarian"
             >
-              <X size={14} />
+              <X size={12} />
             </button>
           )}
         </div>
@@ -130,7 +133,7 @@ export function ClientListClient({ initialData, totalCount }: ClientListClientPr
       {/* Main Client Cards List */}
       {filtered.length === 0 ? (
         <div className="cl-empty">
-          <Dumbbell size={40} style={{ opacity: 0.3 }} />
+          <Dumbbell size={32} style={{ opacity: 0.3 }} />
           <p>Tidak ada client ditemukan.</p>
           {search && (
             <button
@@ -165,28 +168,46 @@ export function ClientListClient({ initialData, totalCount }: ClientListClientPr
             ].filter(Boolean).join(' · ')
 
             return (
-              <button
+              <div
                 key={client.id}
                 className="cl-card"
                 onClick={() => router.push(`/clients/${client.id}`)}
                 id={`client-card-${client.id}`}
                 style={{ animationDelay: `${idx * 30}ms` }}
               >
-                {/* Avatar */}
-                <div className="cl-avatar" style={{ background: gradient }}>
-                  {initial}
-                </div>
+                {/* Header Row: Avatar + Full Name/Info + Quick Actions */}
+                <div className="cl-card-header">
+                  <div className="cl-avatar" style={{ background: gradient }}>
+                    {initial}
+                  </div>
 
-                {/* Info */}
-                <div className="cl-info">
-                  <div className="cl-name">{name}</div>
-                  <div className="cl-subtitle">
-                    {subtitleText || 'Belum ada paket · Belum ada sesi'}
+                  <div className="cl-info">
+                    <div className="cl-name">{name}</div>
+                    <div className="cl-subtitle">
+                      {subtitleText || 'Belum ada paket · Belum ada sesi'}
+                    </div>
+                  </div>
+
+                  <div className="cl-actions">
+                    <button
+                      type="button"
+                      className="cl-wa-quick-btn"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setSelectedWAClient(client)
+                      }}
+                      title="Kirim WhatsApp"
+                    >
+                      <WhatsAppIcon size={12} />
+                    </button>
+                    <div className="cl-arrow-wrap">
+                      <ChevronRight size={15} className="cl-arrow" />
+                    </div>
                   </div>
                 </div>
 
-                {/* Session Stats Chips */}
-                <div className="cl-stats">
+                {/* Bottom Row: Session Stats Chips Bar */}
+                <div className="cl-card-stats">
                   <div className="cl-stat-chip cl-chip-neutral">
                     <span className="cl-chip-label">BELI</span>
                     <span className="cl-chip-value">{total}</span>
@@ -200,22 +221,7 @@ export function ClientListClient({ initialData, totalCount }: ClientListClientPr
                     <span className="cl-chip-value">{remaining}</span>
                   </div>
                 </div>
-
-                {/* WA Quick Send Button */}
-                <button
-                  type="button"
-                  className="cl-wa-quick-btn"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    setSelectedWAClient(client)
-                  }}
-                  title="Kirim WhatsApp"
-                >
-                  <MessageSquare size={15} />
-                </button>
-
-                <ChevronRight size={16} className="cl-arrow" />
-              </button>
+              </div>
             )
           })}
         </div>
@@ -241,10 +247,10 @@ export function ClientListClient({ initialData, totalCount }: ClientListClientPr
         />
       )}
 
-      {/* Floating Add Button */}
+      {/* Floating Add Client Button (Opens Modern In-App Modal) */}
       <button
         className="cl-fab"
-        onClick={() => router.push('/clients/new')}
+        onClick={() => setIsAddClientModalOpen(true)}
         aria-label="Tambah Client"
         id="btn-add-client-fab"
       >
@@ -380,21 +386,21 @@ export function ClientListClient({ initialData, totalCount }: ClientListClientPr
         .cl-root {
           display: flex;
           flex-direction: column;
-          gap: 14px;
+          gap: 10px;
           position: relative;
-          padding-bottom: 88px;
+          padding-bottom: 72px;
         }
 
-        /* Search Bar Trigger */
+        /* Search Bar Trigger - Compact */
         .cl-search-trigger {
           width: 100%;
           background: var(--bg-surface);
           border: 1px solid var(--border-default);
           border-radius: 50px;
-          padding: 6px;
+          padding: 3px;
           cursor: pointer;
           transition: all var(--transition-fast);
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+          box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
         }
         .cl-search-trigger:hover {
           border-color: var(--border-brand);
@@ -403,8 +409,8 @@ export function ClientListClient({ initialData, totalCount }: ClientListClientPr
         .search-input-inner {
           display: flex;
           align-items: center;
-          gap: 10px;
-          padding: 8px 16px;
+          gap: 8px;
+          padding: 5px 12px;
           width: 100%;
         }
         :global(.search-icon-left) {
@@ -413,7 +419,7 @@ export function ClientListClient({ initialData, totalCount }: ClientListClientPr
         }
         .search-placeholder-text {
           flex: 1;
-          font-size: 14.5px;
+          font-size: 12.5px;
           color: var(--text-muted);
           white-space: nowrap;
           overflow: hidden;
@@ -427,8 +433,8 @@ export function ClientListClient({ initialData, totalCount }: ClientListClientPr
           background: var(--bg-elevated);
           border: 1px solid var(--border-default);
           color: var(--text-muted);
-          width: 22px;
-          height: 22px;
+          width: 18px;
+          height: 18px;
           border-radius: 50%;
           display: flex;
           align-items: center;
@@ -447,135 +453,116 @@ export function ClientListClient({ initialData, totalCount }: ClientListClientPr
           flex-direction: column;
           align-items: center;
           justify-content: center;
-          gap: 12px;
-          padding: 60px 20px;
+          gap: 10px;
+          padding: 44px 16px;
           color: var(--text-muted);
           background: var(--bg-surface);
           border: 1px dashed var(--border-default);
-          border-radius: var(--radius-xl);
-          font-size: 14px;
+          border-radius: var(--radius-lg);
+          font-size: 13px;
         }
 
         /* List */
         .cl-list {
           display: flex;
           flex-direction: column;
-          gap: 10px;
+          gap: 8px;
         }
 
-        /* Client Card */
+        /* Client Card - 15% Scaled Down */
         .cl-card {
           display: flex;
-          align-items: center;
-          gap: 14px;
-          padding: 14px 16px;
+          flex-direction: column;
+          gap: 8px;
+          padding: 10px 12px;
           background: var(--bg-surface);
           border: 1px solid var(--border-default);
-          border-radius: var(--radius-xl);
+          border-radius: var(--radius-lg);
           cursor: pointer;
           text-align: left;
           width: 100%;
           transition: all var(--transition-fast);
           backdrop-filter: blur(12px);
           -webkit-backdrop-filter: blur(12px);
-          min-height: 74px;
         }
         .cl-card:hover,
         .cl-card:focus-visible {
           border-color: var(--border-brand);
           background: var(--bg-elevated);
           transform: translateY(-1px);
+          box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
         }
         .cl-card:active {
           transform: scale(0.985);
         }
 
-        /* Avatar */
+        /* Card Header Row */
+        .cl-card-header {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          width: 100%;
+        }
+
+        /* Avatar - Compact 36px */
         .cl-avatar {
-          width: 48px;
-          height: 48px;
-          border-radius: 14px;
+          width: 36px;
+          height: 36px;
+          border-radius: 10px;
           display: flex;
           align-items: center;
           justify-content: center;
           font-weight: 800;
-          font-size: 20px;
+          font-size: 15px;
           color: white;
           flex-shrink: 0;
-          box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+          box-shadow: 0 3px 8px rgba(0,0,0,0.2);
         }
 
-        /* Info text */
+        /* Info text - Compact */
         .cl-info {
           flex: 1;
           min-width: 0;
           display: flex;
           flex-direction: column;
-          gap: 3px;
+          gap: 1px;
         }
         .cl-name {
-          font-size: 15px;
+          font-size: 13.5px;
           font-weight: 700;
           color: var(--text-primary);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
           line-height: 1.3;
+          letter-spacing: -0.01em;
         }
         .cl-subtitle {
-          font-size: 12px;
+          font-size: 10.5px;
           color: var(--text-muted);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
         }
 
-        /* Stats chips */
-        .cl-stats {
+        /* Actions container */
+        .cl-actions {
           display: flex;
+          align-items: center;
           gap: 6px;
           flex-shrink: 0;
         }
-        .cl-stat-chip {
+        .cl-arrow-wrap {
           display: flex;
-          flex-direction: column;
           align-items: center;
           justify-content: center;
-          width: 44px;
-          height: 44px;
-          border-radius: 10px;
-          gap: 1px;
         }
-        .cl-chip-label {
-          font-size: 8px;
-          font-weight: 700;
-          letter-spacing: 0.06em;
-          text-transform: uppercase;
-        }
-        .cl-chip-value {
-          font-size: 14px;
-          font-weight: 900;
-          line-height: 1;
-        }
-        .cl-chip-neutral {
-          background: rgba(255,255,255,0.05);
-          border: 1px solid var(--border-default);
-          color: var(--text-secondary);
-        }
-        .cl-chip-warning {
-          background: rgba(245,158,11,0.12);
-          border: 1px solid rgba(245,158,11,0.25);
-          color: #f59e0b;
-        }
-        .cl-chip-success {
-          background: rgba(16,185,129,0.12);
-          border: 1px solid rgba(16,185,129,0.25);
-          color: #10b981;
-        }
+
+        /* Compact WhatsApp Button */
         :global(.cl-wa-quick-btn) {
-          width: 32px;
-          height: 32px;
-          border-radius: 8px;
+          width: 26px;
+          height: 26px;
+          border-radius: 6px;
           background: rgba(16, 185, 129, 0.12);
           border: 1px solid rgba(16, 185, 129, 0.3);
           color: #10b981;
@@ -587,8 +574,11 @@ export function ClientListClient({ initialData, totalCount }: ClientListClientPr
           transition: all var(--transition-fast);
         }
         :global(.cl-wa-quick-btn:hover) {
-          background: #10b981;
+          background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
           color: white;
+          border-color: #25D366;
+          box-shadow: 0 4px 12px rgba(37, 211, 102, 0.35);
+          transform: scale(1.05);
         }
 
         :global(.cl-arrow) {
@@ -596,11 +586,54 @@ export function ClientListClient({ initialData, totalCount }: ClientListClientPr
           flex-shrink: 0;
         }
 
-        /* Floating Action Button */
+        /* Card Bottom Row: Session Stats Chips - Compact */
+        .cl-card-stats {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 6px;
+          width: 100%;
+          padding-top: 6px;
+          border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .cl-stat-chip {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 4px 8px;
+          border-radius: 6px;
+        }
+        .cl-chip-label {
+          font-size: 8.5px;
+          font-weight: 700;
+          letter-spacing: 0.03em;
+          text-transform: uppercase;
+        }
+        .cl-chip-value {
+          font-size: 12px;
+          font-weight: 900;
+          line-height: 1;
+        }
+        .cl-chip-neutral {
+          background: rgba(255,255,255,0.04);
+          border: 1px solid var(--border-default);
+          color: var(--text-secondary);
+        }
+        .cl-chip-warning {
+          background: rgba(245,158,11,0.1);
+          border: 1px solid rgba(245,158,11,0.22);
+          color: #f59e0b;
+        }
+        .cl-chip-success {
+          background: rgba(16,185,129,0.1);
+          border: 1px solid rgba(16,185,129,0.22);
+          color: #10b981;
+        }
+
+        /* Floating Action Button (FAB) - Floating Above Bottom Nav */
         .cl-fab {
           position: fixed;
           right: 20px;
-          bottom: 84px;
+          bottom: calc(var(--bottom-nav-height, 68px) + 24px);
           width: 56px;
           height: 56px;
           border-radius: 50%;
@@ -611,13 +644,16 @@ export function ClientListClient({ initialData, totalCount }: ClientListClientPr
           align-items: center;
           justify-content: center;
           cursor: pointer;
-          box-shadow: 0 8px 24px rgba(99,102,241,0.45);
+          box-shadow: 0 8px 24px rgba(99, 102, 241, 0.5);
           transition: all var(--transition-fast);
-          z-index: 40;
+          z-index: 999;
         }
         .cl-fab:hover {
           transform: scale(1.08);
-          box-shadow: 0 12px 32px rgba(99,102,241,0.6);
+          box-shadow: 0 12px 32px rgba(99, 102, 241, 0.65);
+        }
+        .cl-fab:active {
+          transform: scale(0.95);
         }
 
         /* 🚀 IN-APP SEARCH MODAL DIALOG STYLES */
@@ -839,15 +875,129 @@ export function ClientListClient({ initialData, totalCount }: ClientListClientPr
           background: rgba(245,158,11,0.15);
           color: #f59e0b;
         }
-        .res-chip-success {
-          background: rgba(16,185,129,0.15);
-          color: #10b981;
+        /* 🚀 IN-APP ADD CLIENT MODAL STYLES */
+        .add-client-backdrop {
+          position: fixed;
+          inset: 0;
+          background: rgba(0, 0, 0, 0.82);
+          backdrop-filter: blur(14px);
+          -webkit-backdrop-filter: blur(14px);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 9999;
+          padding: 16px;
         }
-        :global(.result-arrow) {
+        .add-client-card {
+          background: var(--bg-elevated);
+          border: 1px solid var(--border-default);
+          border-radius: var(--radius-xl);
+          width: 100%;
+          max-width: 600px;
+          max-height: 90vh;
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+          box-shadow: 0 24px 50px rgba(0, 0, 0, 0.65);
+        }
+        .add-client-modal-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 16px 20px;
+          border-bottom: 1px solid var(--border-default);
+          background: var(--bg-surface);
+        }
+        .ac-title-group {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        }
+        .ac-modal-icon {
+          width: 40px;
+          height: 40px;
+          border-radius: 12px;
+          background: rgba(99, 102, 241, 0.15);
+          border: 1px solid rgba(99, 102, 241, 0.3);
+          color: var(--brand-primary);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .ac-modal-title {
+          font-size: 16px;
+          font-weight: 800;
+          color: var(--text-primary);
+          line-height: 1.2;
+        }
+        .ac-modal-sub {
+          font-size: 12.5px;
           color: var(--text-muted);
-          flex-shrink: 0;
+        }
+        :global(.ac-modal-close) {
+          background: none;
+          border: none;
+          color: var(--text-muted);
+          cursor: pointer;
+          padding: 4px;
+          display: flex;
+          align-items: center;
+          transition: color var(--transition-fast);
+        }
+        :global(.ac-modal-close:hover) {
+          color: var(--text-primary);
+        }
+        .add-client-modal-body {
+          overflow-y: auto;
+          padding: 20px;
+          max-height: calc(90vh - 75px);
         }
       `}</style>
+
+      {/* 🚀 MODERN IN-APP ADD CLIENT MODAL DIALOG */}
+      {isAddClientModalOpen && (
+        <div
+          className="add-client-backdrop animate-fade-in"
+          onClick={() => setIsAddClientModalOpen(false)}
+        >
+          <div
+            className="add-client-card animate-slide-up"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="add-client-modal-header">
+              <div className="ac-title-group">
+                <div className="ac-modal-icon">
+                  <UserPlus size={20} />
+                </div>
+                <div>
+                  <h3 className="ac-modal-title">Tambah Client Baru</h3>
+                  <p className="ac-modal-sub">Isi data akun & profil fisik client</p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                className="ac-modal-close"
+                onClick={() => setIsAddClientModalOpen(false)}
+                id="btn-close-add-client-modal"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Modal Form Content */}
+            <div className="add-client-modal-body">
+              <ClientCreateForm
+                onSuccess={() => {
+                  setIsAddClientModalOpen(false)
+                  router.refresh()
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
