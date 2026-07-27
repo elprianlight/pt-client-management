@@ -1143,13 +1143,105 @@ export function ClientDetail({
         }
 
         @media (max-width: 640px) {
-          .client-hub-header {
-            flex-direction: column;
-            align-items: flex-start;
+          .client-detail-card {
+            padding: 10px 12px;
+            gap: 10px;
+            margin-bottom: 10px;
+          }
+          .client-avatar {
+            width: 42px;
+            height: 42px;
+            font-size: 17px;
+          }
+          .client-name {
+            font-size: 16px;
+          }
+          .client-submeta {
+            font-size: 11px;
           }
           .client-quick-stats {
+            padding: 6px 10px;
+            gap: 6px;
             width: 100%;
-            justify-content: space-around;
+            justify-content: space-between;
+          }
+          .qs-label {
+            font-size: 9px;
+          }
+          .qs-value {
+            font-size: 11.5px;
+          }
+          .quick-stat-divider {
+            height: 18px;
+          }
+          .client-subnav-container {
+            margin-bottom: 6px;
+          }
+          .client-subnav-item {
+            padding: 6px 10px;
+            min-height: 34px;
+            font-size: 11.5px;
+            gap: 5px;
+          }
+          .sess-filter-bar {
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+            gap: 6px;
+            margin-bottom: 6px;
+            flex-wrap: nowrap;
+          }
+          .sess-filter-left {
+            flex: 1;
+            min-width: 0;
+          }
+          .sess-package-select {
+            padding: 5px 8px;
+            font-size: 11.5px;
+            height: 32px;
+            width: 100%;
+            min-width: 0;
+            border-radius: var(--radius-md);
+          }
+          .sess-filter-actions {
+            gap: 5px;
+            flex-shrink: 0;
+          }
+          :global(.sess-export-btn) {
+            padding: 5px 8px;
+            font-size: 11px;
+            height: 32px;
+            border-radius: var(--radius-md);
+          }
+          :global(.sess-checkin-link) {
+            font-size: 11.5px;
+            height: 32px;
+            padding: 0 8px;
+            background: rgba(249, 115, 22, 0.12);
+            border-radius: var(--radius-md);
+            border: 1px solid rgba(249, 115, 22, 0.3);
+          }
+          .sess-card-list {
+            gap: 4px;
+          }
+          .sess-card {
+            padding: 6px 10px;
+            gap: 8px;
+          }
+          .sess-day-num {
+            font-size: 16px;
+          }
+          .sess-month-abbr {
+            font-size: 8.5px;
+          }
+          .sess-title {
+            font-size: 12px;
+          }
+          .sess-time-row {
+            font-size: 10.5px;
+          }
+          .sess-notes {
+            font-size: 10.5px;
           }
           .detail-grid {
             grid-template-columns: 1fr;
@@ -1157,6 +1249,7 @@ export function ClientDetail({
           .detail-item.full-width {
             grid-column: span 1;
           }
+        }
         .account-actions-wrap {
           display: flex;
           align-items: center;
