@@ -59,7 +59,6 @@ export function ClientDetail({
 
   // Session states
   const [sessionList, setSessionList] = useState<any[]>(sessions)
-  const [selectedPackageFilter, setSelectedPackageFilter] = useState<string>('all')
   const [deletingId, setDeletingId] = useState<string | null>(null)
 
   interface TabItem {
@@ -74,6 +73,10 @@ export function ClientDetail({
     return packages.filter((p: any) => (p.usedSessions ?? 0) < (p.totalSessions ?? 0))
   }, [packages])
 
+  const expiredPackagesList = useMemo(() => {
+    return packages.filter((p: any) => (p.usedSessions ?? 0) >= (p.totalSessions ?? 0))
+  }, [packages])
+
   const totalActiveSessions = useMemo(() => {
     return activePackagesList.reduce((acc: number, p: any) => acc + (p.totalSessions ?? 0), 0)
   }, [activePackagesList])
@@ -83,6 +86,11 @@ export function ClientDetail({
   }, [activePackagesList])
 
   const remainingActiveSessions = Math.max(0, totalActiveSessions - usedActiveSessions)
+
+  // Initialize filter with the first ACTIVE package ID if available, otherwise 'all'
+  const [selectedPackageFilter, setSelectedPackageFilter] = useState<string>(
+    () => packages.find((p: any) => (p.usedSessions ?? 0) < (p.totalSessions ?? 0))?.id || 'all'
+  )
 
   const TABS: TabItem[] = [
     { id: 'sessions', label: 'Riwayat Sesi', icon: Calendar, badge: sessionList.length },
@@ -457,7 +465,26 @@ export function ClientDetail({
           <div className="tab-pane">
             {/* Filter Sesi & Actions Bar */}
             <div className="sess-filter-bar">
-              <h3 className="sess-filter-title">Filter Sesi</h3>
+              <div className="sess-filter-left">
+                <select
+                  className="sess-package-select"
+                  value={selectedPackageFilter}
+                  onChange={(e) => setSelectedPackageFilter(e.target.value)}
+                  id="select-package-filter"
+                >
+                  {activePackagesList.map((p: any) => (
+                    <option key={p.id} value={p.id}>
+                      {p.packageName} (Aktif - {p.usedSessions}/{p.totalSessions})
+                    </option>
+                  ))}
+                  {expiredPackagesList.map((p: any) => (
+                    <option key={p.id} value={p.id}>
+                      {p.packageName} (Habis - {p.usedSessions}/{p.totalSessions})
+                    </option>
+                  ))}
+                  <option value="all">Semua Paket ({sessionList.length} Sesi)</option>
+                </select>
+              </div>
 
               <div className="sess-filter-actions">
                 <button
@@ -477,23 +504,6 @@ export function ClientDetail({
                   + Check-In
                 </Link>
               </div>
-            </div>
-
-            {/* Package Filter Selector */}
-            <div style={{ marginBottom: 16 }}>
-              <select
-                className="sess-package-select"
-                value={selectedPackageFilter}
-                onChange={(e) => setSelectedPackageFilter(e.target.value)}
-                id="select-package-filter"
-              >
-                <option value="all">Semua Paket ({sessionList.length} Sesi)</option>
-                {packages.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.packageName} ({p.isActive ? 'active' : 'expired'})
-                  </option>
-                ))}
-              </select>
             </div>
 
             {filteredSessions.length === 0 ? (
