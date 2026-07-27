@@ -1,0 +1,50 @@
+1. ⚠️ Sistem Peringatan Retensi & Renewal (Client Retention & Churn Alert)
+Mencegah klien berhenti (churn) dan mengingatkan tepat waktu saat paket akan habis.
+
+Paket Mau Habis (Low Session Alert):
+Notifikasi otomatis ketika sisa sesi klien ≤ 2 sesi atau paket berlaku < 7 hari.
+Tombol cepat "Kirim Penawaran Renewal (WA)".
+Klien Pasif / Berpotensi Churn (Inactivity Alert):
+Peringatan otomatis jika klien tidak latihan dalam 7 atau 14 hari terakhir.
+Rekomendasi tindakan untuk PT: "Sapa & Tanyakan Kabar Klien via WA".
+Peringatan Ulang Tahun Klien (Birthday Reminder):
+Peringatan hari H ulang tahun klien untuk mengirimkan ucapan & promo khusus.
+
+2. 📱 WhatsApp Quick Center & Auto Templates
+Mempermudah PT berkomunikasi dengan klien tanpa perlu mengetik ulang pesan standar.
+
+Template Pesan WhatsApp 1-Klik:
+📩 Pengingat Jadwal Latihan ("Halo [Nama], pengingat sesi latihan besok jam [Waktu]...")
+📦 Pengingat Renewal Paket ("Sesi latihan kamu sisa [Sisa Sesi], yuk perpanjang paket...")
+👋 Follow-Up Klien Pasif ("Halo [Nama], kangen latihan nih! Kapan ada waktu luang?...")
+🎂 Ucapan Ulang Tahun ("Selamat Ulang Tahun [Nama]! Dapatkan bonus 1 sesi gratis...")
+Integrasi Direct WA Link (https://wa.me/...): Sekali klik langsung membuka WhatsApp Web atau WhatsApp Mobile dengan pesan terformat rapi.
+
+3. 🎯 Filter & Segmentasi Klien Cerdas
+Menampilkan klien berdasarkan kriteria khusus dengan cepat.
+
+✅ Filter Sesuai Paket:
+Tampilkan klien yang membeli paket "Fat Burner 8x Sesi" atau "Muscle Gain 12x Sesi".
+Tampilkan klien yang sedang aktif menggunakan paket Personal Trainer.
+Tampilkan klien yang sudah tidak aktif/expired paketnya.
+🔄 Segmentasi Otomatis:
+Tampilkan: "Klien Sisa 1 Sesion", "Klien Pasif > 7 hari", "Klien Aktif Baru Bulan Ini".
+4.📊 Analitik & Laporan Komprehensif (Dashboard)
+
+Memberikan gambaran performa bisnis secara visual.
+
+📈 Grafik Pendapatan per Bulan: Visualisasi pertumbuhan income dari penjualan paket.
+📦 Grafik Stok Paket: Menampilkan berapa paket yang terjual, sisa paket, dan paket yang akan habis.
+🕒 Grafik Aktivitas Klien: Seberapa aktif klien latihan dalam sebulan terakhir.
+👤 Klien Baru vs Lama: Perbandingan pertumbuhan basis klien dari waktu ke waktu.
+
+5. 💰 Modul Paket & Penjualan (Product & Sales Module)
+
+6. 📋 Task Manager Harian PT (Daily Follow-Up Tasks)
+Daftar tugas otomatis harian untuk PT agar tidak ada klien yang terlewat.
+
+Dashboard kecil di halaman utama PT:
+[ ] Follow up Budi (Paket habis 2 hari lagi)
+[ ] Konfirmasi jadwal Marysa besok jam 09:15
+[ ] Kirim pesan ucapan ultah ke Inta
+

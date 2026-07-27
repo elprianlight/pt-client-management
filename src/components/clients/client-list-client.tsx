@@ -2,11 +2,12 @@
 
 import { useState, useMemo, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Search, Plus, Dumbbell, ChevronRight, X, Loader2, Filter } from 'lucide-react'
-import { format } from 'date-fns'
+import { Search, Plus, Dumbbell, ChevronRight, X, Loader2, Filter, MessageSquare } from 'lucide-react'
+import { format, subDays, startOfMonth } from 'date-fns'
 import { id as idLocale } from 'date-fns/locale'
 import type { listClients } from '@/lib/actions/client'
 import { useThemeStore } from '@/store/theme-store'
+import { WhatsAppModal } from '@/components/crm/whatsapp-modal'
 
 type Client = Awaited<ReturnType<typeof listClients>>[number]
 
@@ -36,8 +37,9 @@ export function ClientListClient({ initialData, totalCount }: ClientListClientPr
   const { theme } = useThemeStore()
   const [search, setSearch] = useState('')
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false)
-  const [filterType, setFilterType] = useState<'all' | 'has_remaining' | 'no_remaining'>('all')
+  const [filterType, setFilterType] = useState<'all' | 'low_session' | 'inactive' | 'new_this_month' | 'has_remaining' | 'no_remaining'>('all')
   const [isSearching, setIsSearching] = useState(false)
+  const [selectedWAClient, setSelectedWAClient] = useState<Client | null>(null)
 
   // Simulate subtle transparent loading state when search text changes
   useEffect(() => {
@@ -50,11 +52,28 @@ export function ClientListClient({ initialData, totalCount }: ClientListClientPr
     }
   }, [search])
 
-  // Filter clients
+  // Filter clients with Smart CRM Segmentation
   const filtered = useMemo(() => {
     let result = initialData
+    const now = new Date()
+    const sevenDaysAgo = subDays(now, 7)
+    const currentMonthStart = startOfMonth(now)
 
-    if (filterType === 'has_remaining') {
+    if (filterType === 'low_session') {
+      result = result.filter(c => {
+        const total = c.packageStats?.total ?? 0
+        const used = c.packageStats?.used ?? 0
+        const rem = total - used
+        return total > 0 && rem <= 2
+      })
+    } else if (filterType === 'inactive') {
+      result = result.filter(c => {
+        if (!c.lastSessionAt) return true
+        return new Date(c.lastSessionAt) < sevenDaysAgo
+      })
+    } else if (filterType === 'new_this_month') {
+      result = result.filter(c => new Date(c.createdAt) >= currentMonthStart)
+    } else if (filterType === 'has_remaining') {
       result = result.filter(c => ((c.packageStats?.total ?? 0) - (c.packageStats?.used ?? 0)) > 0)
     } else if (filterType === 'no_remaining') {
       result = result.filter(c => ((c.packageStats?.total ?? 0) - (c.packageStats?.used ?? 0)) <= 0)
@@ -182,11 +201,44 @@ export function ClientListClient({ initialData, totalCount }: ClientListClientPr
                   </div>
                 </div>
 
+                {/* WA Quick Send Button */}
+                <button
+                  type="button"
+                  className="cl-wa-quick-btn"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setSelectedWAClient(client)
+                  }}
+                  title="Kirim WhatsApp"
+                >
+                  <MessageSquare size={15} />
+                </button>
+
                 <ChevronRight size={16} className="cl-arrow" />
               </button>
             )
           })}
         </div>
+      )}
+
+      {/* WhatsApp Modal Dialog */}
+      {selectedWAClient && (
+        <WhatsAppModal
+          isOpen={Boolean(selectedWAClient)}
+          onClose={() => setSelectedWAClient(null)}
+          clientData={{
+            id: selectedWAClient.id,
+            fullName: selectedWAClient.user?.fullName ?? 'Client',
+            phone: selectedWAClient.user?.phone,
+            fitnessGoal: selectedWAClient.fitnessGoal,
+            remainingSessions: (selectedWAClient.packageStats?.total ?? 0) - (selectedWAClient.packageStats?.used ?? 0),
+          }}
+          defaultTemplate={
+            ((selectedWAClient.packageStats?.total ?? 0) - (selectedWAClient.packageStats?.used ?? 0)) <= 2
+              ? 'renewal'
+              : 'schedule'
+          }
+        />
       )}
 
       {/* Floating Add Button */}
@@ -519,6 +571,24 @@ export function ClientListClient({ initialData, totalCount }: ClientListClientPr
           background: rgba(16,185,129,0.12);
           border: 1px solid rgba(16,185,129,0.25);
           color: #10b981;
+        }
+        :global(.cl-wa-quick-btn) {
+          width: 32px;
+          height: 32px;
+          border-radius: 8px;
+          background: rgba(16, 185, 129, 0.12);
+          border: 1px solid rgba(16, 185, 129, 0.3);
+          color: #10b981;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          flex-shrink: 0;
+          transition: all var(--transition-fast);
+        }
+        :global(.cl-wa-quick-btn:hover) {
+          background: #10b981;
+          color: white;
         }
 
         :global(.cl-arrow) {

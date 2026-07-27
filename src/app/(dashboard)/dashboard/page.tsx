@@ -189,10 +189,37 @@ export default async function DashboardPage() {
     }
   }
 
+  let crmTasks: any[] = []
+  let crmAnalytics: any = null
+
+  if (role === 'super_admin' || role === 'personal_trainer') {
+    try {
+      const { getCRMTasks, getCRMAnalytics } = await import('@/lib/actions/crm')
+      crmTasks = await getCRMTasks()
+      crmAnalytics = await getCRMAnalytics()
+    } catch (e) {
+      console.error('Failed to fetch CRM data:', e)
+    }
+  }
+
+  const { CRMTaskManager } = await import('@/components/crm/crm-task-manager')
+  const { CRMAnalyticsCharts } = await import('@/components/crm/crm-analytics-charts')
+
   return (
-    <div className="page-container">
+    <div className="page-container" style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       {role === 'super_admin' && <SuperAdminDashboard stats={saStats} />}
       {role === 'personal_trainer' && <PTDashboard stats={ptStats} />}
+      
+      {(role === 'super_admin' || role === 'personal_trainer') && (
+        <>
+          {/* Daily Task Manager */}
+          <CRMTaskManager initialTasks={crmTasks} />
+
+          {/* CRM Analytics Charts */}
+          {crmAnalytics && <CRMAnalyticsCharts data={crmAnalytics} />}
+        </>
+      )}
+
       {role === 'client' && <ClientDashboard stats={clientStats} />}
     </div>
   )
