@@ -214,7 +214,7 @@ export async function getCRMAnalytics(): Promise<CRMAnalyticsData> {
   const profile = await getAuthProfile()
 
   // 1. Total Active Clients
-  const [activeClientsCount] = await db.select({ value: count() })
+  const [activeClientsCount] = await db.select({ value: sql<number>`count(*)` })
     .from(clients)
     .innerJoin(users, eq(clients.userId, users.id))
     .where(eq(users.isActive, true))

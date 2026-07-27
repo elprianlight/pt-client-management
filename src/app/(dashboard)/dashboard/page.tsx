@@ -6,6 +6,9 @@ import {
   PTDashboard,
   ClientDashboard,
 } from '@/components/dashboard/pt-dashboard'
+import { getCRMTasks, getCRMAnalytics } from '@/lib/actions/crm'
+import { CRMTaskManager } from '@/components/crm/crm-task-manager'
+import { CRMAnalyticsCharts } from '@/components/crm/crm-analytics-charts'
 
 export const metadata: Metadata = {
   title: 'Dashboard',
@@ -194,16 +197,12 @@ export default async function DashboardPage() {
 
   if (role === 'super_admin' || role === 'personal_trainer') {
     try {
-      const { getCRMTasks, getCRMAnalytics } = await import('@/lib/actions/crm')
       crmTasks = await getCRMTasks()
       crmAnalytics = await getCRMAnalytics()
     } catch (e) {
       console.error('Failed to fetch CRM data:', e)
     }
   }
-
-  const { CRMTaskManager } = await import('@/components/crm/crm-task-manager')
-  const { CRMAnalyticsCharts } = await import('@/components/crm/crm-analytics-charts')
 
   return (
     <div className="page-container" style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
