@@ -75,7 +75,7 @@ export function ClientListClient({ initialData, totalCount }: ClientListClientPr
         return new Date(c.lastSessionAt) < sevenDaysAgo
       })
     } else if (filterType === 'new_this_month') {
-      result = result.filter(c => new Date(c.createdAt) >= currentMonthStart)
+      result = result.filter(c => c.joinedAt && new Date(c.joinedAt) >= currentMonthStart)
     } else if (filterType === 'has_remaining') {
       result = result.filter(c => ((c.packageStats?.total ?? 0) - (c.packageStats?.used ?? 0)) > 0)
     } else if (filterType === 'no_remaining') {

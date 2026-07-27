@@ -3,7 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { db } from '@/lib/db'
 import { users, clients, ptPackages, workoutSessions, ptTransactions } from '@/lib/db/schema'
-import { eq, desc, and, gte, lte, sql, inArray, subDays, startOfMonth } from 'drizzle-orm'
+import { eq, desc, and, gte, lte, sql, inArray } from 'drizzle-orm'
 import { subDays as dateSubDays, format, startOfMonth as dateStartOfMonth } from 'date-fns'
 import { id as idLocale } from 'date-fns/locale'
 
@@ -241,8 +241,8 @@ export async function getCRMAnalytics(): Promise<CRMAnalyticsData> {
   const monthlyRevenueMap: Record<string, number> = {}
 
   allTransactions.forEach(t => {
-    const d = new Date(t.createdAt)
-    const amount = Number(t.amountPaid) || 0
+    const d = t.createdAt ? new Date(t.createdAt) : new Date()
+    const amount = Number(t.amount) || 0
 
     if (d >= currentMonthStart) {
       totalRevenueThisMonth += amount
