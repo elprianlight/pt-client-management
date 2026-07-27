@@ -65,11 +65,16 @@ export function SessionForm({ packages, initialData }: { packages: { id: string;
   const onSubmit = async (data: FormData) => {
     setError(null)
     
+    const payload = {
+      ...data,
+      rpe: data.rpe ? Number(data.rpe) : null,
+    }
+
     let res
     if (isEdit) {
-      res = await updateSessionData(initialData.id, data)
+      res = await updateSessionData(initialData.id, payload)
     } else {
-      res = await scheduleSession(data)
+      res = await scheduleSession(payload)
     }
 
     if (res.success) {

@@ -23,30 +23,16 @@ export default async function WorkoutPage({
 
   const [profile] = await db.select().from(users).where(eq(users.id, user.id))
   if (!profile) redirect('/login')
+  if (profile.role === 'super_admin' || profile.role === 'personal_trainer') redirect('/clients')
 
   const params = await searchParams
   const activeTab = params.tab || 'programs'
-
-  const canEdit = profile.role === 'super_admin' || profile.role === 'personal_trainer'
 
   const exercises = await listExercises()
   const programs = await listPrograms()
 
   return (
     <div className="page-container">
-      <div className="page-header animate-fade-in-up">
-        <div />
-        {canEdit && (
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <Link href="/workout/exercises/new" className="btn-secondary">
-              <Plus size={16} /> Gerakan
-            </Link>
-            <Link href="/workout/programs/new" className="btn-primary">
-              <Plus size={16} /> Program
-            </Link>
-          </div>
-        )}
-      </div>
 
       <div className="tabs animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
         <Link href="/workout?tab=programs" className={`tab-item ${activeTab === 'programs' ? 'active' : ''}`}>

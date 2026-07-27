@@ -18,6 +18,7 @@ const createSchema = z.object({
   heightCm: z.preprocess(v => v === '' ? undefined : Number(v), z.number().min(100).max(250).optional()),
   weightKg: z.preprocess(v => v === '' ? undefined : Number(v), z.number().min(20).max(300).optional()),
   notes: z.string().optional(),
+  fitnessGoal: z.string().optional(),
   emergencyContactName: z.string().optional(),
   emergencyContactPhone: z.string().optional(),
 })
@@ -30,6 +31,7 @@ const updateSchema = z.object({
   heightCm: z.preprocess(v => v === '' ? undefined : Number(v), z.number().min(100).max(250).optional()),
   weightKg: z.preprocess(v => v === '' ? undefined : Number(v), z.number().min(20).max(300).optional()),
   notes: z.string().optional(),
+  fitnessGoal: z.string().optional(),
   isActive: z.boolean().optional(),
   emergencyContactName: z.string().optional(),
   emergencyContactPhone: z.string().optional(),
@@ -54,6 +56,7 @@ export function ClientCreateForm({ onSuccess }: ClientCreateFormProps) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { register, handleSubmit, formState: { errors } } = useForm<CreateForm>({ // eslint-disable-line
     resolver: zodResolver(createSchema) as any,
+    defaultValues: { fitnessGoal: 'General Fitness' }
   })
 
   const onSubmit = async (data: CreateForm) => {
@@ -150,6 +153,19 @@ export function ClientCreateForm({ onSuccess }: ClientCreateFormProps) {
           </div>
 
           <div className="form-group form-group-full">
+            <label className="form-label">Goals Client</label>
+            <select className="input-field" {...register('fitnessGoal')}>
+              <option value="General Fitness">General Fitness</option>
+              <option value="Body Recomposition">Body Recomposition</option>
+              <option value="Weight Loss">Weight Loss</option>
+              <option value="Muscle Building">Muscle Building</option>
+              <option value="Fat Loss & Toning">Fat Loss & Toning</option>
+              <option value="Athletic Performance">Athletic Performance</option>
+              <option value="Rehabilitation">Rehabilitation / Recovery</option>
+            </select>
+          </div>
+
+          <div className="form-group form-group-full">
             <label className="form-label">Catatan</label>
             <textarea className="input-field" placeholder="Catatan khusus..." rows={3} style={{ resize: 'vertical' }} {...register('notes')} />
           </div>
@@ -220,7 +236,7 @@ export function ClientEditForm({ clientId, defaultValues, onSuccess }: ClientEdi
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { register, handleSubmit, formState: { errors } } = useForm<UpdateForm>({ // eslint-disable-line
     resolver: zodResolver(updateSchema) as any,
-    defaultValues: { ...defaultValues, isActive: defaultValues?.isActive ?? true }
+    defaultValues: { fitnessGoal: defaultValues?.fitnessGoal || 'General Fitness', ...defaultValues, isActive: defaultValues?.isActive ?? true }
   })
 
   const onSubmit = async (data: UpdateForm) => {
@@ -282,6 +298,19 @@ export function ClientEditForm({ clientId, defaultValues, onSuccess }: ClientEdi
           <div className="form-group">
             <label className="form-label">Berat Badan (kg)</label>
             <input type="number" min={20} max={300} step={0.1} className="input-field" {...register('weightKg')} />
+          </div>
+
+          <div className="form-group form-group-full">
+            <label className="form-label">Goals Client</label>
+            <select className="input-field" {...register('fitnessGoal')}>
+              <option value="General Fitness">General Fitness</option>
+              <option value="Body Recomposition">Body Recomposition</option>
+              <option value="Weight Loss">Weight Loss</option>
+              <option value="Muscle Building">Muscle Building</option>
+              <option value="Fat Loss & Toning">Fat Loss & Toning</option>
+              <option value="Athletic Performance">Athletic Performance</option>
+              <option value="Rehabilitation">Rehabilitation / Recovery</option>
+            </select>
           </div>
 
           <div className="form-group form-group-full">

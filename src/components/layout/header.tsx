@@ -3,7 +3,8 @@
 import { useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { useAuthStore } from '@/store/auth-store'
-import { Bell, Search, Menu, LogOut } from 'lucide-react'
+import { useThemeStore } from '@/store/theme-store'
+import { Bell, Search, Menu, LogOut, Sun, Moon } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 
@@ -29,6 +30,7 @@ export function Header({ onMenuClick, className }: HeaderProps) {
   const pathname = usePathname()
   const router = useRouter()
   const { user, clearAuth } = useAuthStore()
+  const { theme, toggleTheme } = useThemeStore()
   const [dropdownOpen, setDropdownOpen] = useState(false)
 
   const pageTitle = Object.entries(PAGE_TITLES).find(([key]) =>
@@ -86,6 +88,21 @@ export function Header({ onMenuClick, className }: HeaderProps) {
           <span className="header-notif-dot" aria-hidden="true" />
         </button>
 
+        {/* Theme Toggle */}
+        <button
+          className="header-icon-btn theme-toggle-btn"
+          onClick={toggleTheme}
+          aria-label={theme === 'dark' ? 'Ganti ke tema terang' : 'Ganti ke tema gelap'}
+          id="btn-theme-toggle-desktop"
+          title={theme === 'dark' ? 'Tema Terang' : 'Tema Gelap'}
+        >
+          {theme === 'dark' ? (
+            <Sun size={18} style={{ color: '#f59e0b' }} />
+          ) : (
+            <Moon size={18} style={{ color: '#6366f1' }} />
+          )}
+        </button>
+
         {/* Avatar & Dropdown */}
         <div style={{ position: 'relative' }}>
           <button
@@ -98,17 +115,23 @@ export function Header({ onMenuClick, className }: HeaderProps) {
           </button>
           
           {dropdownOpen && (
-            <div className="header-dropdown animate-fade-in">
-              <div className="header-dropdown-header">
-                <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>{user?.fullName}</p>
-                <p style={{ fontSize: 11, color: 'var(--text-muted)' }}>{user?.email}</p>
+            <>
+              <div
+                style={{ position: 'fixed', inset: 0, zIndex: 99 }}
+                onClick={() => setDropdownOpen(false)}
+              />
+              <div className="header-dropdown animate-fade-in" style={{ zIndex: 100 }}>
+                <div className="header-dropdown-header">
+                  <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>{user?.fullName}</p>
+                  <p style={{ fontSize: 11, color: 'var(--text-muted)' }}>{user?.email}</p>
+                </div>
+                <div className="divider" style={{ margin: '4px 0' }} />
+                <button className="header-dropdown-item text-error" onClick={handleLogout}>
+                  <LogOut size={14} />
+                  Keluar
+                </button>
               </div>
-              <div className="divider" style={{ margin: '4px 0' }} />
-              <button className="header-dropdown-item text-error" onClick={handleLogout}>
-                <LogOut size={14} />
-                Keluar
-              </button>
-            </div>
+            </>
           )}
         </div>
       </div>
@@ -125,8 +148,9 @@ export function Header({ onMenuClick, className }: HeaderProps) {
           position: sticky;
           top: 0;
           z-index: 40;
-          backdrop-filter: blur(8px);
-          -webkit-backdrop-filter: blur(8px);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          transition: background-color var(--transition-base);
         }
 
         .header-left {
@@ -143,6 +167,7 @@ export function Header({ onMenuClick, className }: HeaderProps) {
           padding: 8px;
           border-radius: var(--radius-md);
           transition: all var(--transition-fast);
+          min-height: 44px;
         }
         .header-menu-btn:hover {
           background: var(--bg-elevated);
@@ -163,7 +188,7 @@ export function Header({ onMenuClick, className }: HeaderProps) {
         .header-right {
           display: flex;
           align-items: center;
-          gap: 12px;
+          gap: 10px;
         }
 
         /* Search */
@@ -212,8 +237,8 @@ export function Header({ onMenuClick, className }: HeaderProps) {
         /* Icon Buttons */
         .header-icon-btn {
           position: relative;
-          width: 36px;
-          height: 36px;
+          width: 38px;
+          height: 38px;
           background: var(--bg-elevated);
           border: 1px solid var(--border-default);
           border-radius: var(--radius-md);
@@ -223,6 +248,8 @@ export function Header({ onMenuClick, className }: HeaderProps) {
           cursor: pointer;
           color: var(--text-secondary);
           transition: all var(--transition-fast);
+          min-height: unset;
+          flex-shrink: 0;
         }
         .header-icon-btn:hover {
           background: var(--bg-overlay);
@@ -231,8 +258,8 @@ export function Header({ onMenuClick, className }: HeaderProps) {
         }
         .header-notif-dot {
           position: absolute;
-          top: 7px;
-          right: 7px;
+          top: 8px;
+          right: 8px;
           width: 7px;
           height: 7px;
           background: var(--brand-primary);
@@ -242,8 +269,8 @@ export function Header({ onMenuClick, className }: HeaderProps) {
 
         /* Avatar */
         .header-avatar {
-          width: 36px;
-          height: 36px;
+          width: 38px;
+          height: 38px;
           background: var(--gradient-brand);
           border: none;
           border-radius: 50%;
@@ -256,6 +283,8 @@ export function Header({ onMenuClick, className }: HeaderProps) {
           cursor: pointer;
           transition: opacity var(--transition-fast), transform var(--transition-fast);
           box-shadow: 0 0 12px rgba(99,102,241,0.3);
+          min-height: unset;
+          flex-shrink: 0;
         }
         .header-avatar:hover {
           opacity: 0.85;
@@ -267,17 +296,16 @@ export function Header({ onMenuClick, className }: HeaderProps) {
           top: 100%;
           right: 0;
           margin-top: 8px;
-          background: var(--bg-surface);
+          background: var(--bg-overlay);
           border: 1px solid var(--border-default);
           border-radius: var(--radius-md);
-          min-width: 180px;
-          box-shadow: var(--shadow-md);
-          backdrop-filter: blur(16px);
-          -webkit-backdrop-filter: blur(16px);
+          min-width: 200px;
+          box-shadow: var(--shadow-lg);
+          backdrop-filter: blur(20px);
+          -webkit-backdrop-filter: blur(20px);
           display: flex;
           flex-direction: column;
           padding: 8px;
-          z-index: 100;
         }
         .header-dropdown-header {
           padding: 8px;
@@ -286,7 +314,7 @@ export function Header({ onMenuClick, className }: HeaderProps) {
           display: flex;
           align-items: center;
           gap: 10px;
-          padding: 8px;
+          padding: 10px 8px;
           background: transparent;
           border: none;
           color: var(--text-secondary);
@@ -296,9 +324,10 @@ export function Header({ onMenuClick, className }: HeaderProps) {
           transition: all var(--transition-fast);
           width: 100%;
           text-align: left;
+          min-height: 44px;
         }
         .header-dropdown-item:hover {
-          background: var(--bg-overlay);
+          background: var(--bg-elevated);
           color: var(--text-primary);
         }
         .text-error {

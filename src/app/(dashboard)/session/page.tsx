@@ -17,21 +17,10 @@ export default async function SessionPage() {
 
   const [profile] = await db.select().from(users).where(eq(users.id, user.id))
   if (!profile) redirect('/login')
-
-  // Hanya Super Admin & PT yang bisa tambah jadwal sesi
-  const canAddSession = profile.role === 'super_admin' || profile.role === 'personal_trainer'
+  if (profile.role === 'super_admin' || profile.role === 'personal_trainer') redirect('/clients')
 
   return (
     <div className="page-container">
-      <div className="page-header animate-fade-in-up">
-        <div />
-        {canAddSession && (
-          <Link href="/session/new" className="btn-primary">
-            <Plus size={16} /> Jadwalkan Sesi
-          </Link>
-        )}
-      </div>
-
       <div className="glass-card animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
         <SessionList />
       </div>

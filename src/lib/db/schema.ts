@@ -196,6 +196,7 @@ export const clients = pgTable('clients', {
   height: real('height'), // cm
   initialWeight: real('initial_weight'), // kg
   currentWeight: real('current_weight'), // kg
+  fitnessGoal: varchar('fitness_goal', { length: 255 }),
   fitnessGoalId: uuid('fitness_goal_id').references(() => fitnessGoals.id),
   activityLevelId: uuid('activity_level_id').references(() => activityLevels.id),
   medicalNotes: text('medical_notes'),

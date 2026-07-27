@@ -3,8 +3,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/server'
 import { db } from '@/lib/db'
-import { users, clients, personalTrainers, ptPackages } from '@/lib/db/schema'
-import { eq, desc, count, and, inArray } from 'drizzle-orm'
+import { users, clients, personalTrainers, ptPackages, workoutSessions, sessionExercises, ptTransactions, measurements, nutritionLogs } from '@/lib/db/schema'
+import { eq, desc, count, and, inArray, max, sql } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 
@@ -20,6 +20,7 @@ const createClientSchema = z.object({
   heightCm: z.number().min(100).max(250).optional(),
   weightKg: z.number().min(20).max(300).optional(),
   notes: z.string().optional(),
+  fitnessGoal: z.string().optional(),
   emergencyContactName: z.string().optional(),
   emergencyContactPhone: z.string().optional(),
 })
@@ -32,6 +33,7 @@ const updateClientSchema = z.object({
   heightCm: z.number().min(100).max(250).optional(),
   weightKg: z.number().min(20).max(300).optional(),
   notes: z.string().optional(),
+  fitnessGoal: z.string().optional(),
   isActive: z.boolean().optional(),
   emergencyContactName: z.string().optional(),
   emergencyContactPhone: z.string().optional(),
@@ -69,6 +71,7 @@ export async function listClients(search?: string) {
       weightKg: clients.currentWeight,
       gender: clients.gender,
       dateOfBirth: clients.dateOfBirth,
+      fitnessGoal: clients.fitnessGoal,
       notes: clients.medicalNotes,
       joinedAt: clients.createdAt,
       user: {
@@ -104,26 +107,47 @@ export async function listClients(search?: string) {
     ) : filtered
 
   const clientIds = searched.map(c => c.id)
-  let packageMap: Record<string, { total: number, used: number }> = {}
+  let packageMap: Record<string, { total: number, used: number, lastPackageName: string | null, lastBought: number }> = {}
+  let lastSessionMap: Record<string, Date | null> = {}
+
   if (clientIds.length > 0) {
+    // Aggregate package stats + find most recent package name
     const pkgs = await db.select({
       clientId: ptPackages.clientId,
       totalSessions: ptPackages.totalSessions,
       usedSessions: ptPackages.usedSessions,
-    }).from(ptPackages).where(inArray(ptPackages.clientId, clientIds))
+      packageName: ptPackages.packageName,
+      startDate: ptPackages.startDate,
+      createdAt: ptPackages.createdAt,
+    }).from(ptPackages)
+      .where(inArray(ptPackages.clientId, clientIds))
+      .orderBy(desc(ptPackages.createdAt))
     
     pkgs.forEach(pkg => {
       if (!packageMap[pkg.clientId]) {
-        packageMap[pkg.clientId] = { total: 0, used: 0 }
+        packageMap[pkg.clientId] = { total: 0, used: 0, lastPackageName: pkg.packageName, lastBought: 0 }
       }
       packageMap[pkg.clientId].total += pkg.totalSessions
       packageMap[pkg.clientId].used += pkg.usedSessions
+    })
+
+    // Fetch last session date per client
+    const lastSessions = await db.select({
+      clientId: workoutSessions.clientId,
+      lastAt: max(workoutSessions.scheduledAt),
+    }).from(workoutSessions)
+      .where(inArray(workoutSessions.clientId, clientIds))
+      .groupBy(workoutSessions.clientId)
+
+    lastSessions.forEach(s => {
+      lastSessionMap[s.clientId] = s.lastAt ? new Date(s.lastAt) : null
     })
   }
 
   return searched.map(c => ({
     ...c,
-    packageStats: packageMap[c.id] || { total: 0, used: 0 }
+    packageStats: packageMap[c.id] || { total: 0, used: 0, lastPackageName: null, lastBought: 0 },
+    lastSessionAt: lastSessionMap[c.id] ?? null,
   }))
 }
 
@@ -137,6 +161,7 @@ export async function getClientById(clientId: string) {
       weightKg: clients.currentWeight,
       gender: clients.gender,
       dateOfBirth: clients.dateOfBirth,
+      fitnessGoal: clients.fitnessGoal,
       notes: clients.medicalNotes,
       emergencyContactName: clients.emergencyContactName,
       emergencyContactPhone: clients.emergencyContactPhone,
@@ -188,7 +213,7 @@ export async function createClient_action(input: CreateClientInput) {
     return { success: false, error: 'Data tidak valid: ' + validated.error.issues[0].message }
   }
 
-    const { username, fullName, phone, password, dateOfBirth, gender, heightCm, weightKg, notes, emergencyContactName, emergencyContactPhone } = validated.data
+    const { username, fullName, phone, password, dateOfBirth, gender, heightCm, weightKg, notes, fitnessGoal, emergencyContactName, emergencyContactPhone } = validated.data
     const dummyEmail = `${username}@pt.local`
 
     // Get PT record
@@ -237,6 +262,7 @@ export async function createClient_action(input: CreateClientInput) {
         height: heightCm ?? null,
         initialWeight: weightKg ?? null,
         currentWeight: weightKg ?? null,
+        fitnessGoal: fitnessGoal || 'General Fitness',
         medicalNotes: notes || null,
         emergencyContactName: emergencyContactName || null,
         emergencyContactPhone: emergencyContactPhone || null,
@@ -260,7 +286,7 @@ export async function updateClient(clientId: string, input: UpdateClientInput) {
     return { success: false, error: 'Data tidak valid.' }
   }
 
-  const { fullName, phone, dateOfBirth, gender, heightCm, weightKg, notes, isActive, emergencyContactName, emergencyContactPhone } = validated.data
+  const { fullName, phone, dateOfBirth, gender, heightCm, weightKg, notes, fitnessGoal, isActive, emergencyContactName, emergencyContactPhone } = validated.data
 
   try {
     const client = await getClientById(clientId)
@@ -276,6 +302,7 @@ export async function updateClient(clientId: string, input: UpdateClientInput) {
         dateOfBirth: dateOfBirth ? dateOfBirth : null,
         height: heightCm ?? null,
         currentWeight: weightKg ?? null,
+        fitnessGoal: fitnessGoal || 'General Fitness',
         medicalNotes: notes || null,
         emergencyContactName: emergencyContactName || null,
         emergencyContactPhone: emergencyContactPhone || null,
@@ -305,5 +332,68 @@ export async function toggleClientStatus(clientId: string, isActive: boolean) {
     .where(eq(users.id, client.userId))
 
   revalidatePath('/clients')
+  revalidatePath(`/clients/${clientId}`)
   return { success: true }
+}
+
+export async function deleteClient(clientId: string) {
+  const profile = await getAuthProfile()
+  if (profile.role === 'client') return { success: false, error: 'Forbidden.' }
+
+  const client = await getClientById(clientId)
+  if (!client) return { success: false, error: 'Client tidak ditemukan.' }
+
+  try {
+    // 1. Get all session IDs for this client
+    const clientSessions = await db.select({ id: workoutSessions.id })
+      .from(workoutSessions)
+      .where(eq(workoutSessions.clientId, clientId))
+    const sessionIds = clientSessions.map(s => s.id)
+
+    // 2. Delete session exercises
+    if (sessionIds.length > 0) {
+      await db.delete(sessionExercises).where(inArray(sessionExercises.sessionId, sessionIds))
+    }
+
+    // 3. Delete workout sessions
+    await db.delete(workoutSessions).where(eq(workoutSessions.clientId, clientId))
+
+    // 4. Delete PT transactions for this client's packages
+    const clientPackages = await db.select({ id: ptPackages.id })
+      .from(ptPackages)
+      .where(eq(ptPackages.clientId, clientId))
+    const packageIds = clientPackages.map(p => p.id)
+
+    if (packageIds.length > 0) {
+      await db.delete(ptTransactions).where(inArray(ptTransactions.packageId, packageIds))
+    }
+
+    // 5. Delete PT packages
+    await db.delete(ptPackages).where(eq(ptPackages.clientId, clientId))
+
+    // 6. Delete measurements & nutrition logs
+    await db.delete(measurements).where(eq(measurements.clientId, clientId))
+    await db.delete(nutritionLogs).where(eq(nutritionLogs.clientId, clientId))
+
+    // 7. Delete client record
+    await db.delete(clients).where(eq(clients.id, clientId))
+
+    // 8. Delete user record
+    await db.delete(users).where(eq(users.id, client.userId))
+
+    // 9. Delete auth user from Supabase
+    try {
+      const supabaseAdmin = createAdminClient()
+      await supabaseAdmin.auth.admin.deleteUser(client.userId)
+    } catch (e) {
+      console.error('Failed to delete auth user from Supabase:', e)
+    }
+
+    revalidatePath('/clients')
+    return { success: true }
+  } catch (error: unknown) {
+    console.error('deleteClient error:', error)
+    const msg = error instanceof Error ? error.message : 'Gagal menghapus client.'
+    return { success: false, error: msg }
+  }
 }

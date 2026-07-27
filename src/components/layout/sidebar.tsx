@@ -59,31 +59,31 @@ const NAV_ITEMS: NavItem[] = [
     title: 'Paket & Sesi',
     href: '/packages',
     icon: Package,
-    roles: ['super_admin', 'personal_trainer', 'client'],
+    roles: ['client'], // Dikelola via Client Hub untuk PT & Admin
   },
   {
     title: 'Sesi Latihan',
     href: '/session',
     icon: Calendar,
-    roles: ['super_admin', 'personal_trainer', 'client'],
+    roles: ['client'], // Dikelola via Client Hub untuk PT & Admin
   },
   {
     title: 'Workout',
     href: '/workout',
     icon: Dumbbell,
-    roles: ['super_admin', 'personal_trainer', 'client'],
+    roles: ['client'], // Dikelola via Client Hub untuk PT & Admin
   },
   {
     title: 'Nutrisi',
     href: '/nutrition',
     icon: Apple,
-    roles: ['super_admin', 'personal_trainer', 'client'],
+    roles: ['client'], // Dikelola via Client Hub untuk PT & Admin
   },
   {
     title: 'Progress',
     href: '/progress',
     icon: TrendingUp,
-    roles: ['super_admin', 'personal_trainer', 'client'],
+    roles: ['client'], // Dikelola via Client Hub untuk PT & Admin
   },
   {
     title: 'Laporan',
@@ -256,8 +256,8 @@ export function Sidebar({ className }: SidebarProps) {
           overflow: hidden;
         }
         .sidebar-logo-icon {
-          width: 36px;
-          height: 36px;
+          width: 44px;
+          height: 44px;
           background: var(--gradient-brand);
           border-radius: 10px;
           display: flex;

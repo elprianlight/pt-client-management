@@ -17,9 +17,7 @@ export default async function PackagesPage() {
 
   const [profile] = await db.select().from(users).where(eq(users.id, user.id))
   if (!profile) redirect('/login')
-
-  // Hanya Super Admin & PT yang bisa tambah paket
-  const canAddPackage = profile.role === 'super_admin' || profile.role === 'personal_trainer'
+  if (profile.role === 'super_admin' || profile.role === 'personal_trainer') redirect('/clients')
 
   return (
     <div className="page-container">
@@ -29,15 +27,10 @@ export default async function PackagesPage() {
             <Package size={20} strokeWidth={1.8} />
           </div>
           <div>
-            <h1 className="page-title">Manajemen Paket</h1>
-            <p className="page-desc">Kelola dan pantau penjualan paket sesi latihan.</p>
+            <h1 className="page-title">Paket Saya</h1>
+            <p className="page-desc">Daftar paket sesi latihan Anda.</p>
           </div>
         </div>
-        {canAddPackage && (
-          <Link href="/packages/new" className="btn-primary">
-            <Plus size={16} /> Jual Paket Baru
-          </Link>
-        )}
       </div>
 
       <div className="glass-card animate-fade-in-up" style={{ animationDelay: '0.1s' }}>

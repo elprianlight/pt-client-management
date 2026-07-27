@@ -18,22 +18,12 @@ export default async function ProgressPage() {
 
   const [profile] = await db.select().from(users).where(eq(users.id, user.id))
   if (!profile) redirect('/login')
-
-  const canEdit = profile.role === 'super_admin' || profile.role === 'personal_trainer'
+  if (profile.role === 'super_admin' || profile.role === 'personal_trainer') redirect('/clients')
 
   const measurements = await listMeasurements()
 
   return (
     <div className="page-container">
-      <div className="page-header animate-fade-in-up">
-        <div />
-        {canEdit && (
-          <Link href="/progress/new" className="btn-primary">
-            <Plus size={16} /> Catat Progress
-          </Link>
-        )}
-      </div>
-
       <div className="glass-card animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
         <ProgressList data={measurements} />
       </div>
