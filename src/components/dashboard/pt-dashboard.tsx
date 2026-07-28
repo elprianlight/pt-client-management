@@ -131,7 +131,8 @@ function HeroHeader({
           box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
           backdrop-filter: blur(16px);
           -webkit-backdrop-filter: blur(16px);
-          margin-bottom: 10px;
+          margin-top: 0;
+          margin-bottom: 16px;
           position: relative;
           overflow: hidden;
         }

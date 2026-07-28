@@ -41,7 +41,7 @@ export default async function DashboardLayout({
       <Sidebar />
       <div className="dashboard-main">
         <MobileHeader />
-        <main className="dashboard-content" style={{ paddingTop: '12px' }}>
+        <main className="dashboard-content" style={{ paddingTop: '2px' }}>
           {children}
         </main>
       </div>
