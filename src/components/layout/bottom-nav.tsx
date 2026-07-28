@@ -79,12 +79,6 @@ const PRIMARY_NAV: NavItem[] = [
     roles: ['super_admin', 'personal_trainer'],
   },
   {
-    title: 'Paket',
-    href: '/packages',
-    icon: Package,
-    roles: ['super_admin', 'personal_trainer'],
-  },
-  {
     title: 'Laporan',
     href: '/reports',
     icon: BarChart3,
