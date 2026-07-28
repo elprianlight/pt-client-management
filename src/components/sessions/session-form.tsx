@@ -184,25 +184,6 @@ export function SessionForm({
         </Link>
       </div>
 
-      {/* Hero Glass Banner Header */}
-      <div className="smart-checkin-banner animate-slide-down">
-        <div className="sc-badge">
-          <Zap size={14} className="sc-zap-icon" />
-          <span>SMART CHECK-IN SYSTEM</span>
-        </div>
-        <div className="sc-header-main">
-          <div className="sc-icon-wrap">
-            <CheckCircle2 size={24} strokeWidth={2.4} />
-          </div>
-          <div>
-            <h1 className="sc-title">Smart Check-In Latihan</h1>
-            <p className="sc-subtitle">
-              Catat kehadiran & jalankan sesi latihan client dalam hitungan detik.
-            </p>
-          </div>
-        </div>
-      </div>
-
       <form onSubmit={handleSubmit(onSubmit)} className="smart-checkin-form">
         {error && (
           <div className="sc-error-banner animate-fade-in">
