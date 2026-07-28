@@ -206,8 +206,8 @@ export default async function DashboardPage() {
 
   return (
     <div className="page-container" style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-      {role === 'super_admin' && <SuperAdminDashboard stats={saStats} />}
-      {role === 'personal_trainer' && <PTDashboard stats={ptStats} />}
+      {role === 'super_admin' && <SuperAdminDashboard stats={saStats} userName={profile?.full_name} />}
+      {role === 'personal_trainer' && <PTDashboard stats={ptStats} userName={profile?.full_name} />}
       
       {(role === 'super_admin' || role === 'personal_trainer') && (
         <>
