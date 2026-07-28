@@ -47,6 +47,12 @@ const PRIMARY_NAV: NavItem[] = [
     roles: ['client'],
   },
   {
+    title: 'Paket',
+    href: '/packages',
+    icon: Package,
+    roles: ['client'],
+  },
+  {
     title: 'Check-In',
     href: '/session/new',
     icon: CheckCircle2,
@@ -60,6 +66,12 @@ const PRIMARY_NAV: NavItem[] = [
     roles: ['super_admin', 'personal_trainer'],
   },
   {
+    title: 'Paket',
+    href: '/packages',
+    icon: Package,
+    roles: ['super_admin', 'personal_trainer'],
+  },
+  {
     title: 'Laporan',
     href: '/reports',
     icon: BarChart3,
@@ -67,14 +79,7 @@ const PRIMARY_NAV: NavItem[] = [
   },
 ]
 
-const MORE_NAV: NavItem[] = [
-  {
-    title: 'Paket',
-    href: '/packages',
-    icon: Package,
-    roles: ['client'],
-  },
-]
+const MORE_NAV: NavItem[] = []
 
 export function BottomNav() {
   const pathname = usePathname()
