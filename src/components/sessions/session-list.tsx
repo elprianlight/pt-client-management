@@ -950,39 +950,54 @@ export function SessionList() {
         .sk-subtitle { height: 24px; width: 70%; }
         .sk-body { height: 14px; width: 90%; }
 
-        /* 9. PREMIUM BOTTOM SHEET STYLES */
+        /* 9. PREMIUM CENTERED DIALOG POPUP STYLES (LANGSUNG TAMPIL DI LAYAR UTAMA) */
         .bottom-sheet-backdrop {
           position: fixed;
-          inset: 0;
-          background: rgba(0, 0, 0, 0.75);
-          backdrop-filter: blur(14px);
-          z-index: 9999;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(0, 0, 0, 0.78);
+          backdrop-filter: blur(16px);
+          -webkit-backdrop-filter: blur(16px);
+          z-index: 99999;
           display: flex;
-          align-items: flex-end;
+          align-items: center;
           justify-content: center;
+          padding: 16px;
         }
         .bottom-sheet-card {
           width: 100%;
-          max-width: 600px;
+          max-width: 520px;
           background: var(--bg-elevated);
-          border-top-left-radius: 28px;
-          border-top-right-radius: 28px;
-          border: 1px solid var(--border-default);
-          border-bottom: none;
-          padding: 16px 20px 24px;
-          box-shadow: 0 -20px 50px rgba(0, 0, 0, 0.6);
+          border-radius: 24px;
+          border: 1px solid rgba(255, 255, 255, 0.15);
+          padding: 20px 22px 24px;
+          box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5), 0 0 35px rgba(99, 102, 241, 0.2);
           max-height: 85vh;
           overflow-y: auto;
           display: flex;
           flex-direction: column;
           gap: 16px;
+          animation: modalPop 250ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes modalPop {
+          from {
+            opacity: 0;
+            transform: scale(0.94) translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+          }
         }
         .sheet-handle-bar {
           width: 42px;
-          height: 5px;
+          height: 4px;
           background: var(--border-default);
           border-radius: 100px;
           align-self: center;
+          margin-bottom: 2px;
         }
         .sheet-header {
           display: flex;
