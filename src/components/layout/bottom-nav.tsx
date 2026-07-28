@@ -13,6 +13,8 @@ import {
   TrendingUp,
   BarChart3,
   MoreHorizontal,
+  CheckCircle2,
+  Zap,
 } from 'lucide-react'
 import type { UserRole } from '@/types'
 import { useState } from 'react'
@@ -22,6 +24,7 @@ interface NavItem {
   href: string
   icon: React.ElementType
   roles: UserRole[]
+  isCenter?: boolean
 }
 
 const PRIMARY_NAV: NavItem[] = [
@@ -42,6 +45,19 @@ const PRIMARY_NAV: NavItem[] = [
     href: '/session',
     icon: Calendar,
     roles: ['client'],
+  },
+  {
+    title: 'Check-In',
+    href: '/session/new',
+    icon: CheckCircle2,
+    roles: ['super_admin', 'personal_trainer', 'client'],
+    isCenter: true,
+  },
+  {
+    title: 'Jadwal',
+    href: '/session',
+    icon: Calendar,
+    roles: ['super_admin', 'personal_trainer'],
   },
   {
     title: 'Workout',
@@ -131,6 +147,23 @@ export function BottomNav() {
             pathname === item.href ||
             (item.href !== '/dashboard' && pathname.startsWith(item.href))
 
+          if (item.isCenter) {
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn('bottom-nav-item bottom-nav-center-item', isActive && 'active')}
+                aria-current={isActive ? 'page' : undefined}
+                title="Smart Check-In Latihan"
+              >
+                <div className="bottom-nav-center-btn">
+                  <CheckCircle2 size={24} strokeWidth={2.4} />
+                </div>
+                <span className="bottom-nav-label bottom-nav-center-label">{item.title}</span>
+              </Link>
+            )
+          }
+
           return (
             <Link
               key={item.href}
@@ -216,6 +249,39 @@ export function BottomNav() {
         /* Override global min-height for bottom nav button */
         :global(.bottom-nav-item) {
           min-height: unset !important;
+        }
+
+        /* 🚀 ENLARGED FLOATING CENTER BUTTON FOR BOTTOM NAV */
+        :global(.bottom-nav-center-item) {
+          position: relative;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          margin-top: -16px;
+        }
+        :global(.bottom-nav-center-btn) {
+          width: 50px;
+          height: 50px;
+          border-radius: 50%;
+          background: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
+          color: #ffffff;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 8px 22px rgba(99, 102, 241, 0.6), 0 0 0 4px var(--bg-surface);
+          transition: all var(--transition-fast);
+        }
+        :global(.bottom-nav-center-item:hover .bottom-nav-center-btn),
+        :global(.bottom-nav-center-item.active .bottom-nav-center-btn) {
+          transform: scale(1.08) translateY(-2px);
+          box-shadow: 0 12px 28px rgba(99, 102, 241, 0.8), 0 0 0 4px var(--bg-surface);
+        }
+        :global(.bottom-nav-center-label) {
+          font-weight: 700 !important;
+          color: var(--brand-primary) !important;
+          font-size: 10px !important;
+          margin-top: 2px;
         }
       `}</style>
     </>
