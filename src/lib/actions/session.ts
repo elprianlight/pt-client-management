@@ -12,6 +12,7 @@ import { logAudit } from './audit'
 const scheduleSessionSchema = z.object({
   packageId: z.string().uuid('Pilih paket terlebih dahulu'),
   scheduledAt: z.string().refine((val) => !isNaN(Date.parse(val)), { message: 'Tanggal dan waktu tidak valid' }),
+  status: z.enum(['scheduled', 'completed', 'cancelled', 'no_show']).optional(),
   programType: z.string().min(1, 'Pilih program latihan'),
   rpe: z.coerce.number().min(1).max(10).optional().nullable(),
   sessionNotes: z.string().optional(),
@@ -34,7 +35,8 @@ export async function scheduleSession(input: z.infer<typeof scheduleSessionSchem
       return { success: false, error: 'Data tidak valid: ' + validated.error.issues[0].message }
     }
 
-    const { packageId, scheduledAt, programType, rpe, sessionNotes, location } = validated.data
+    const { packageId, scheduledAt, status, programType, rpe, sessionNotes, location } = validated.data
+    const targetStatus = status || 'scheduled'
 
     // 1. Validasi ketersediaan kuota paket
     const [selectedPackage] = await db.select().from(ptPackages).where(eq(ptPackages.id, packageId))
@@ -44,21 +46,31 @@ export async function scheduleSession(input: z.infer<typeof scheduleSessionSchem
       return { success: false, error: 'Kuota sesi paket ini sudah habis' }
     }
 
-    // 2. Insert ke workoutSessions
-    await db.insert(workoutSessions).values({
-      packageId,
-      trainerId: selectedPackage.trainerId,
-      clientId: selectedPackage.clientId,
-      scheduledAt: new Date(scheduledAt),
-      duration: 60, // hardcoded 60 minutes
-      programType,
-      rpe: rpe || null,
-      sessionNotes: sessionNotes || null,
-      location: location || null,
-      status: 'scheduled',
+    // 2. Insert ke workoutSessions & update kuota jika completed
+    await db.transaction(async (tx) => {
+      await tx.insert(workoutSessions).values({
+        packageId,
+        trainerId: selectedPackage.trainerId,
+        clientId: selectedPackage.clientId,
+        scheduledAt: new Date(scheduledAt),
+        completedAt: targetStatus === 'completed' ? new Date() : null,
+        duration: 60, // hardcoded 60 minutes
+        programType,
+        rpe: rpe || null,
+        sessionNotes: sessionNotes || null,
+        location: location || null,
+        status: targetStatus,
+      })
+
+      if (targetStatus === 'completed') {
+        await tx.update(ptPackages)
+          .set({ usedSessions: sql`${ptPackages.usedSessions} + 1` })
+          .where(eq(ptPackages.id, packageId))
+      }
     })
 
     revalidatePath('/session')
+    revalidatePath('/packages')
     return { success: true }
   } catch (err: any) {
     console.error('Schedule session error:', err)
