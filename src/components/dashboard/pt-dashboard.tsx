@@ -47,9 +47,10 @@ function HeroHeader({
   onOpenSearch,
 }: {
   userName?: string
-  onOpenSearch: () => void
+  onOpenSearch?: () => void
 }) {
   const [timeStr, setTimeStr] = useState<string>('')
+  const [dayStr, setDayStr] = useState<string>('')
   const [dateStr, setDateStr] = useState<string>('')
   const greeting = useMemo(() => getGreetingInfo(), [])
 
@@ -63,9 +64,13 @@ function HeroHeader({
           second: '2-digit',
         })
       )
-      setDateStr(
+      setDayStr(
         now.toLocaleDateString('id-ID', {
           weekday: 'long',
+        })
+      )
+      setDateStr(
+        now.toLocaleDateString('id-ID', {
           day: 'numeric',
           month: 'long',
           year: 'numeric',
@@ -79,209 +84,274 @@ function HeroHeader({
   }, [])
 
   return (
-    <div className="hero-header-banner animate-slide-down">
-      <div className="hh-top-bar">
-        {/* Left: Dynamic Greeting & User Name */}
-        <div className="hh-greeting-wrap">
-          <div className="hh-greeting-badge">
-            <span>{greeting.icon}</span>
-            <span>{greeting.text}</span>
+    <div className="hero-header-banner hero-enter-anim">
+      {/* Background Decorative Ambient Orbs */}
+      <div className="hero-orb hero-orb-1" />
+      <div className="hero-orb hero-orb-2" />
+      <div className="hero-pattern-overlay" />
+
+      <div className="hero-content-container">
+        {/* Left Side: Greeting Card & Personal Welcome */}
+        <div className="hero-left-section">
+          <div className="hero-greeting-card animate-fade-in">
+            <span className="hh-g-icon">{greeting.icon}</span>
+            <span className="hh-g-text">{greeting.text} 👋</span>
           </div>
-          <h1 className="hh-user-name">
-            {userName} <span className="hh-sparkle">✨</span>
-          </h1>
+
+          <div className="hero-typography-wrap">
+            <span className="hero-welcome-sub">Welcome Back,</span>
+            <h1 className="hero-welcome-name">
+              {userName} <span className="hero-sparkle">✨</span>
+            </h1>
+            <p className="hero-system-status">
+              <span className="hero-status-pulse" />
+              StrengthLab PT Enterprise System Active
+            </p>
+          </div>
         </div>
 
-        {/* Right: Live Clock */}
-        <div className="hh-right-actions">
-          <div className="hh-live-clock-card">
-            <div className="hh-clock-row">
-              <Clock size={13} className="hh-clock-icon" />
-              <span className="hh-time-val">{timeStr || '00:00:00'}</span>
+        {/* Right Side: Standalone Elevated Live Clock Card */}
+        <div className="hero-right-section">
+          <div className="hero-clock-card">
+            <div className="hero-clock-top">
+              <Clock size={16} className="hero-clock-icon" />
+              <span className="hero-time-value">{timeStr || '00:00:00'}</span>
             </div>
-            <span className="hh-date-val">{dateStr || 'Loading...'}</span>
+            <div className="hero-clock-bottom">
+              <span className="hero-day-name">{dayStr || 'Hari ini'}</span>
+              <span className="hero-date-dot">•</span>
+              <span className="hero-date-text">{dateStr || '...'}</span>
+            </div>
           </div>
         </div>
       </div>
 
       <style jsx>{`
         .hero-header-banner {
-          background: linear-gradient(135deg, var(--bg-surface) 0%, var(--bg-elevated) 100%);
-          border: 1px solid var(--border-default);
-          border-radius: 18px;
-          padding: 12px 16px;
-          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-          backdrop-filter: blur(16px);
-          -webkit-backdrop-filter: blur(16px);
-          margin-top: 0;
-          margin-bottom: 16px;
           position: relative;
+          min-height: 220px;
+          border-radius: 24px;
+          padding: 28px 32px;
+          background: linear-gradient(135deg, rgba(30, 27, 75, 0.5) 0%, rgba(15, 23, 42, 0.8) 50%, rgba(49, 46, 129, 0.45) 100%);
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25), 0 0 40px rgba(99, 102, 241, 0.12);
+          backdrop-filter: blur(24px);
+          -webkit-backdrop-filter: blur(24px);
+          margin-top: 0;
+          margin-bottom: 20px;
           overflow: hidden;
+          display: flex;
+          align-items: center;
         }
-        .hero-header-banner::before {
-          content: '';
+
+        /* 5. HERO ANIMATION: Fade In + Slide Up + Soft Scale (300ms) */
+        .hero-enter-anim {
+          animation: heroEntry 300ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes heroEntry {
+          from {
+            opacity: 0;
+            transform: translateY(14px) scale(0.98);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
+        }
+
+        /* 6. BACKGROUND DECORATION: Glowing Orbs & Pattern */
+        .hero-orb {
           position: absolute;
-          top: -50px;
-          right: -50px;
-          width: 160px;
-          height: 160px;
-          background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, rgba(168, 85, 247, 0) 70%);
+          border-radius: 50%;
+          pointer-events: none;
+          z-index: 0;
+        }
+        .hero-orb-1 {
+          top: -80px;
+          right: -60px;
+          width: 280px;
+          height: 280px;
+          background: radial-gradient(circle, rgba(99, 102, 241, 0.3) 0%, rgba(168, 85, 247, 0) 70%);
+          filter: blur(35px);
+        }
+        .hero-orb-2 {
+          bottom: -70px;
+          left: -40px;
+          width: 220px;
+          height: 220px;
+          background: radial-gradient(circle, rgba(236, 72, 153, 0.22) 0%, rgba(99, 102, 241, 0) 70%);
+          filter: blur(30px);
+        }
+        .hero-pattern-overlay {
+          position: absolute;
+          inset: 0;
+          background-image: radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+          background-size: 24px 24px;
+          opacity: 0.4;
           pointer-events: none;
         }
-        .hh-top-bar {
+
+        .hero-content-container {
+          position: relative;
+          z-index: 1;
+          width: 100%;
           display: flex;
           align-items: center;
           justify-content: space-between;
-          gap: 12px;
-          flex-wrap: wrap;
+          gap: 24px;
         }
-        .hh-greeting-wrap {
+
+        .hero-left-section {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+          max-width: 680px;
+        }
+
+        /* 2. DYNAMIC GREETING CARD */
+        .hero-greeting-card {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          background: rgba(99, 102, 241, 0.16);
+          border: 1px solid rgba(99, 102, 241, 0.35);
+          padding: 6px 14px;
+          border-radius: 100px;
+          width: fit-content;
+          box-shadow: 0 4px 14px rgba(99, 102, 241, 0.15);
+        }
+        .hh-g-icon {
+          font-size: 14px;
+        }
+        .hh-g-text {
+          font-size: 12.5px;
+          font-weight: 700;
+          color: var(--brand-primary);
+          letter-spacing: 0.02em;
+        }
+
+        /* 3. PERSONAL WELCOME TYPOGRAPHY */
+        .hero-typography-wrap {
           display: flex;
           flex-direction: column;
           gap: 2px;
         }
-        .hh-greeting-badge {
+        .hero-welcome-sub {
+          font-size: 14px;
+          font-weight: 600;
+          color: var(--text-muted);
+          letter-spacing: 0.01em;
+        }
+        .hero-welcome-name {
+          font-size: 28px;
+          font-weight: 900;
+          line-height: 1.15;
+          letter-spacing: -0.02em;
+          background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 50%, #818cf8 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+        }
+        .hero-sparkle {
+          -webkit-text-fill-color: initial;
+        }
+        .hero-system-status {
           display: inline-flex;
           align-items: center;
-          gap: 4px;
-          background: rgba(99, 102, 241, 0.12);
-          border: 1px solid rgba(99, 102, 241, 0.25);
-          color: var(--brand-primary);
-          padding: 2px 8px;
-          border-radius: 100px;
-          font-size: 10px;
-          font-weight: 800;
-          letter-spacing: 0.03em;
-          width: fit-content;
+          gap: 8px;
+          margin-top: 6px;
+          font-size: 12px;
+          font-weight: 600;
+          color: var(--text-secondary);
         }
-        .hh-user-name {
-          font-size: 18px;
-          font-weight: 800;
-          color: var(--text-primary);
-          line-height: 1.2;
-          letter-spacing: -0.01em;
+        .hero-status-pulse {
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          background: #10b981;
+          box-shadow: 0 0 10px #10b981;
+          animation: pulseGreen 2s infinite ease-in-out;
         }
-        .hh-right-actions {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          flex-wrap: wrap;
+        @keyframes pulseGreen {
+          0%, 100% { transform: scale(1); opacity: 1; }
+          50% { transform: scale(1.3); opacity: 0.6; }
         }
-        .hh-live-clock-card {
-          background: var(--bg-elevated);
-          border: 1px solid var(--border-default);
-          border-radius: 12px;
-          padding: 5px 10px;
+
+        /* 4. LIVE CLOCK CARD */
+        .hero-right-section {
+          flex-shrink: 0;
+        }
+        .hero-clock-card {
+          background: rgba(15, 23, 42, 0.55);
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          border-radius: 20px;
+          padding: 16px 22px;
+          box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+          backdrop-filter: blur(20px);
+          -webkit-backdrop-filter: blur(20px);
           display: flex;
           flex-direction: column;
           align-items: flex-end;
-          gap: 1px;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+          gap: 4px;
         }
-        .hh-clock-row {
-          display: flex;
-          align-items: center;
-          gap: 5px;
-          color: var(--brand-primary);
-        }
-        .hh-time-val {
-          font-family: monospace;
-          font-size: 13.5px;
-          font-weight: 800;
-          letter-spacing: 0.04em;
-          color: var(--text-primary);
-        }
-        .hh-date-val {
-          font-size: 10px;
-          font-weight: 600;
-          color: var(--text-muted);
-        }
-        .hh-action-buttons {
+        .hero-clock-top {
           display: flex;
           align-items: center;
           gap: 8px;
+          color: var(--brand-primary);
         }
-        .hh-search-btn {
-          display: inline-flex;
+        :global(.hero-clock-icon) {
+          color: #a855f7;
+        }
+        .hero-time-value {
+          font-family: monospace;
+          font-size: 22px;
+          font-weight: 800;
+          color: #ffffff;
+          letter-spacing: 0.05em;
+          text-shadow: 0 0 16px rgba(99, 102, 241, 0.6);
+        }
+        .hero-clock-bottom {
+          display: flex;
           align-items: center;
           gap: 6px;
-          background: var(--bg-elevated);
-          border: 1px solid var(--border-default);
-          color: var(--text-secondary);
-          padding: 7px 12px;
-          border-radius: 12px;
           font-size: 12px;
           font-weight: 600;
-          cursor: pointer;
-          transition: all var(--transition-fast);
-          height: 36px;
-        }
-        .hh-search-btn:hover {
-          border-color: var(--border-brand);
-          color: var(--text-primary);
-          box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
-        }
-        .hh-kbd {
-          background: var(--bg-surface);
-          border: 1px solid var(--border-default);
           color: var(--text-muted);
-          font-size: 9.5px;
-          padding: 1px 5px;
-          border-radius: 4px;
-          font-family: monospace;
         }
-        :global(.hh-checkin-btn) {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          gap: 6px;
-          background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
-          color: white;
-          padding: 7px 14px;
-          border-radius: 12px;
-          font-size: 12px;
-          font-weight: 800;
-          text-decoration: none;
-          box-shadow: 0 6px 16px rgba(99, 102, 241, 0.35);
-          transition: all var(--transition-fast);
-          height: 36px;
+        .hero-day-name {
+          color: var(--text-secondary);
+          font-weight: 700;
         }
-        :global(.hh-checkin-btn:hover) {
-          transform: translateY(-1px);
-          box-shadow: 0 10px 22px rgba(99, 102, 241, 0.5);
-        }
-        @media (max-width: 640px) {
+
+        /* RESPONSIVE DESIGN FOR HP/MOBILE */
+        @media (max-width: 768px) {
           .hero-header-banner {
-            padding: 10px 12px;
-            border-radius: 16px;
-            margin-bottom: 8px;
+            min-height: 200px;
+            padding: 20px 20px;
+            border-radius: 20px;
+            margin-bottom: 14px;
           }
-          .hh-user-name {
-            font-size: 16px;
+          .hero-content-container {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 16px;
           }
-          .hh-live-clock-card {
+          .hero-welcome-name {
+            font-size: 22px;
+          }
+          .hero-right-section {
+            width: 100%;
+          }
+          .hero-clock-card {
             width: 100%;
             flex-direction: row;
             justify-content: space-between;
             align-items: center;
-            padding: 4px 10px;
+            padding: 10px 14px;
+            border-radius: 14px;
           }
-          .hh-action-buttons {
-            width: 100%;
-            display: flex;
-            gap: 6px;
-          }
-          .hh-search-btn {
-            flex: 1;
-            height: 34px;
-            font-size: 11.5px;
-            justify-content: center;
-          }
-          :global(.hh-checkin-btn) {
-            flex: 1;
-            height: 34px;
-            font-size: 11.5px;
-            justify-content: center;
+          .hero-time-value {
+            font-size: 17px;
           }
         }
       `}</style>
