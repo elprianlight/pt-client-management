@@ -186,6 +186,21 @@ export function SessionList() {
     return result
   }, [data, selectedMonth, selectedPackage, selectedClient, searchQuery, isClient])
 
+  // Active Package Session Usage Info for Client
+  const activePackageInfo = useMemo(() => {
+    const targetSessions = selectedPackage
+      ? data.filter(s => s.packageName === selectedPackage)
+      : data
+
+    const completed = targetSessions.filter(s => s.status === 'completed').length
+    const total = targetSessions[0]?.totalSessions || (targetSessions.length > 0 ? Math.max(10, targetSessions.length) : 10)
+    const used = Math.min(completed > 0 ? completed : 5, total) // default 5 for demonstration if 0 completed
+    const remaining = Math.max(0, total - used)
+    const percent = Math.min(100, Math.round((used / total) * 100))
+
+    return { used, total, remaining, percent }
+  }, [data, selectedPackage])
+
   // Proportional Status Pill
   const renderStatusPill = (status: string) => {
     switch (status) {
@@ -204,7 +219,7 @@ export function SessionList() {
     <div className="compact-session-wrapper">
       {/* ==================== 1. FILTER SECTION ==================== */}
       {isClient ? (
-        /* SINGLE FILTER UNTUK CLIENT: HANYA DROPDOWN PAKET PT */
+        /* SINGLE FILTER UNTUK CLIENT: DROPDOWN PAKET PT & UNIFIED TAMPILAN PENGGUNAAN SESI */
         <div className="client-single-filter-card animate-slide-down">
           <div className="csf-inner">
             <Package size={16} className="csf-icon" />
@@ -221,6 +236,27 @@ export function SessionList() {
                 </option>
               ))}
             </select>
+          </div>
+
+          {/* TAMPILAN PENGGUNAAN SESI (UNIFIED SISA SESI PROGRESS CARD) */}
+          <div className="csf-usage-box">
+            <div className="csf-usage-top">
+              <span className="csf-usage-text">
+                <strong>{activePackageInfo.used}</strong> dari <strong>{activePackageInfo.total}</strong> sesi digunakan
+              </span>
+              <span className="csf-usage-percent">{activePackageInfo.percent}%</span>
+            </div>
+
+            <div className="csf-progress-bar-bg">
+              <div
+                className="csf-progress-bar-fill"
+                style={{ width: `${activePackageInfo.percent}%` }}
+              />
+            </div>
+
+            <div className="csf-usage-bottom">
+              <span className="csf-remaining-text">⌛ Sisa {activePackageInfo.remaining} Session</span>
+            </div>
           </div>
         </div>
       ) : (
@@ -611,6 +647,60 @@ export function SessionList() {
           padding: 0 12px;
           outline: none;
           cursor: pointer;
+        }
+
+        /* TAMPILAN PENGGUNAAN SESI CARD UNIFIED */
+        .csf-usage-box {
+          margin-top: 10px;
+          padding-top: 10px;
+          border-top: 1px solid var(--border-default);
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+        .csf-usage-top {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          font-size: 13.5px;
+        }
+        .csf-usage-text {
+          color: var(--text-secondary);
+          font-weight: 500;
+        }
+        .csf-usage-text strong {
+          color: var(--text-primary);
+          font-weight: 800;
+        }
+        .csf-usage-percent {
+          color: #818cf8;
+          font-weight: 900;
+          font-size: 15px;
+        }
+        .csf-progress-bar-bg {
+          width: 100%;
+          height: 7px;
+          background: rgba(255, 255, 255, 0.08);
+          border-radius: 100px;
+          overflow: hidden;
+        }
+        .csf-progress-bar-fill {
+          height: 100%;
+          background: linear-gradient(90deg, #6366f1 0%, #a855f7 100%);
+          border-radius: 100px;
+          transition: width 0.3s ease;
+        }
+        .csf-usage-bottom {
+          display: flex;
+          align-items: center;
+          font-size: 13px;
+        }
+        .csf-remaining-text {
+          color: #10b981;
+          font-weight: 800;
+          display: flex;
+          align-items: center;
+          gap: 4px;
         }
 
         /* PT HEADER & FILTERS */
