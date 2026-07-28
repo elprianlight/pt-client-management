@@ -92,7 +92,7 @@ function HeroHeader({
           </h1>
         </div>
 
-        {/* Right: Live Clock & Action Buttons */}
+        {/* Right: Live Clock */}
         <div className="hh-right-actions">
           <div className="hh-live-clock-card">
             <div className="hh-clock-row">
@@ -100,24 +100,6 @@ function HeroHeader({
               <span className="hh-time-val">{timeStr || '00:00:00'}</span>
             </div>
             <span className="hh-date-val">{dateStr || 'Loading...'}</span>
-          </div>
-
-          <div className="hh-action-buttons">
-            <button
-              type="button"
-              onClick={onOpenSearch}
-              className="hh-search-btn"
-              title="Quick Search (Ctrl + K)"
-            >
-              <Search size={14} />
-              <span className="hh-search-text">Quick Search...</span>
-              <kbd className="hh-kbd">⌘K</kbd>
-            </button>
-
-            <Link href="/session/new" className="hh-checkin-btn">
-              <Zap size={14} />
-              <span>Smart Check-In</span>
-            </Link>
           </div>
         </div>
       </div>
@@ -1221,9 +1203,9 @@ function DashboardStyles() {
     <style jsx global>{`
       .stats-grid {
         display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 14px;
-        margin-bottom: 20px;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+        margin-bottom: 16px;
       }
       .stats-grid-client {
         grid-template-columns: repeat(3, 1fr);
@@ -1310,7 +1292,10 @@ function DashboardStyles() {
         }
       }
       @media (max-width: 768px) {
-        .stats-grid,
+        .stats-grid {
+          grid-template-columns: repeat(2, 1fr);
+          gap: 10px;
+        }
         .stats-grid-client {
           grid-template-columns: repeat(2, 1fr);
         }
@@ -1321,7 +1306,8 @@ function DashboardStyles() {
       }
       @media (max-width: 480px) {
         .stats-grid {
-          grid-template-columns: 1fr;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 10px;
         }
       }
     `}</style>
