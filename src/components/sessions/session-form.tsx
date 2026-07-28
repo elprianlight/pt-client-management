@@ -42,21 +42,6 @@ const PROGRAM_OPTIONS = [
   { label: 'Cardio Training', icon: '🏃' },
 ]
 
-const LOCATION_QUICK_PRESETS = ['Gym Hang Lekir', 'Area Functional', 'Private Studio', 'Outdoor']
-
-const RPE_DESCRIPTIONS: Record<number, { text: string; color: string }> = {
-  1: { text: 'Sangat Ringan (Bisa ngobrol santai)', color: '#10b981' },
-  2: { text: 'Ringan (Ngobrol mudah)', color: '#10b981' },
-  3: { text: 'Lumayan Ringan', color: '#10b981' },
-  4: { text: 'Sedikit Keras', color: '#3b82f6' },
-  5: { text: 'Sedang (Mulai berkeringat)', color: '#3b82f6' },
-  6: { text: 'Lumayan Keras (Napas agak berat)', color: '#8b5cf6' },
-  7: { text: 'Keras (Susah bicara panjang)', color: '#f59e0b' },
-  8: { text: 'Sangat Keras (Bicara terputus)', color: '#f97316' },
-  9: { text: 'Hampir Maksimal (Hanya 1-2 kata)', color: '#ef4444' },
-  10: { text: 'Maksimal Usaha (Tidak bisa bicara)', color: '#dc2626' },
-}
-
 function getNowForInput() {
   const d = new Date()
   d.setMinutes(d.getMinutes() - d.getTimezoneOffset())
@@ -128,7 +113,7 @@ export function SessionForm({
 
   const selectedPackageId = watch('packageId')
   const selectedProgramType = watch('programType')
-  const selectedRpe = Number(watch('rpe')) || 0
+  const selectedRpe = Number(watch('rpe')) || 8
   const currentLocation = watch('location') || ''
 
   const selectedPackageInfo = useMemo(() => {
@@ -336,7 +321,7 @@ export function SessionForm({
           </div>
         </div>
 
-        {/* 3. CARD 3: INTENSITAS (RPE) & LOKASI — IN-LINE DIRECT EDIT (NO POP-UP/MODAL) 🚀 */}
+        {/* 3. CARD 3: INTENSITAS (RPE) DROPDOWN & LOKASI MANUAL SMART REMINDER 🚀 */}
         <div className="sc-card animate-slide-up" style={{ animationDelay: '100ms' }}>
           <div className="sc-card-header">
             <div className="sc-card-title-group">
@@ -351,67 +336,35 @@ export function SessionForm({
           </div>
 
           <div className="sc-card-body">
-            {/* RPE Rating Grid Chips Direct In-Line */}
+            {/* REVISI 1: Tingkat Intensitas (RPE) Dropdown Klik & Pilih */}
             <div className="form-group">
-              <div className="form-label-row">
-                <label className="form-label">Tingkat Intensitas (RPE)</label>
-                {selectedRpe > 0 && RPE_DESCRIPTIONS[selectedRpe] && (
-                  <span className="sc-rpe-badge" style={{ color: RPE_DESCRIPTIONS[selectedRpe].color }}>
-                    RPE {selectedRpe} — {RPE_DESCRIPTIONS[selectedRpe].text}
-                  </span>
-                )}
-              </div>
-              <div className="sc-rpe-grid">
-                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(val => {
-                  const isSelected = selectedRpe === val
-                  const colorInfo = RPE_DESCRIPTIONS[val]
-                  return (
-                    <button
-                      key={val}
-                      type="button"
-                      onClick={() => setValue('rpe', val)}
-                      className={`sc-rpe-chip ${isSelected ? 'active' : ''}`}
-                      style={
-                        isSelected
-                          ? {
-                              background: colorInfo.color,
-                              borderColor: colorInfo.color,
-                              color: '#ffffff',
-                              boxShadow: `0 4px 12px ${colorInfo.color}66`,
-                            }
-                          : {}
-                      }
-                    >
-                      {val}
-                    </button>
-                  )
-                })}
-              </div>
+              <label className="form-label">Tingkat Intensitas (RPE)</label>
+              <select
+                className="sc-input-select"
+                value={selectedRpe}
+                onChange={(e) => setValue('rpe', Number(e.target.value))}
+                id="select-rpe-level"
+              >
+                <option value="1">🟢 RPE 1 — Sangat Ringan (Bisa ngobrol santai)</option>
+                <option value="2">🟢 RPE 2 — Ringan (Ngobrol mudah)</option>
+                <option value="3">🟢 RPE 3 — Lumayan Ringan</option>
+                <option value="4">🔵 RPE 4 — Sedikit Keras</option>
+                <option value="5">🔵 RPE 5 — Sedang (Mulai berkeringat)</option>
+                <option value="6">🟣 RPE 6 — Lumayan Keras (Napas agak berat)</option>
+                <option value="7">🟡 RPE 7 — Keras (Susah bicara panjang)</option>
+                <option value="8">🔥 RPE 8 — Sangat Keras (Bicara terputus)</option>
+                <option value="9">🔴 RPE 9 — Hampir Maksimal (Hanya 1-2 kata)</option>
+                <option value="10">🔴 RPE 10 — Maksimal Usaha (Tidak bisa bicara)</option>
+              </select>
             </div>
 
-            {/* Lokasi Latihan Field + Quick Location Chips + Smart Auto-fill */}
-            <div className="form-group" style={{ marginTop: 16 }}>
+            {/* REVISI 2: Lokasi Latihan Field Input Manual + Smart Auto-fill */}
+            <div className="form-group" style={{ marginTop: 14 }}>
               <label className="form-label">Lokasi Latihan</label>
-              
-              {/* Quick Location Selection Chips */}
-              <div className="sc-location-chips">
-                {LOCATION_QUICK_PRESETS.map(loc => (
-                  <button
-                    key={loc}
-                    type="button"
-                    onClick={() => setValue('location', loc)}
-                    className={`sc-loc-chip ${currentLocation === loc ? 'active' : ''}`}
-                  >
-                    <MapPin size={12} />
-                    <span>{loc}</span>
-                  </button>
-                ))}
-              </div>
-
-              <div className="input-with-icon" style={{ marginTop: 8 }}>
+              <div className="input-with-icon">
                 <input
                   type="text"
-                  placeholder="Ketik tempat baru atau pilih di atas..."
+                  placeholder="Ketik lokasi (misal: Gym Hang Lekir)..."
                   className="sc-input-field"
                   {...register('location')}
                   id="input-session-location"
@@ -419,7 +372,7 @@ export function SessionForm({
                 <MapPin size={16} className="sc-input-icon" />
               </div>
 
-              {/* Smart Auto-fill suggestion if typing 'hang' */}
+              {/* Smart Reminder suggestion badge if typing 'hang' */}
               {currentLocation && currentLocation.toLowerCase().includes('hang') && currentLocation.toLowerCase() !== 'gym hang lekir' && (
                 <button
                   type="button"
@@ -431,8 +384,8 @@ export function SessionForm({
               )}
             </div>
 
-            {/* Catatan / Notes Sesi Direct In-Line */}
-            <div className="form-group" style={{ marginTop: 16 }}>
+            {/* Catatan / Notes Sesi */}
+            <div className="form-group" style={{ marginTop: 14 }}>
               <label className="form-label">Catatan / Notes Sesi (Opsional)</label>
               <div className="input-with-icon">
                 <textarea
@@ -550,12 +503,6 @@ export function SessionForm({
             flex-direction: column;
             gap: 6px;
           }
-          .form-label-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 8px;
-          }
           .form-label {
             font-size: 13px;
             font-weight: 700;
@@ -650,58 +597,6 @@ export function SessionForm({
             color: var(--text-muted);
             pointer-events: none;
           }
-          .sc-rpe-grid {
-            display: grid;
-            grid-template-columns: repeat(10, 1fr);
-            gap: 4px;
-          }
-          .sc-rpe-chip {
-            height: 38px;
-            background: var(--bg-elevated);
-            border: 1px solid var(--border-default);
-            border-radius: 8px;
-            color: var(--text-secondary);
-            font-size: 13px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all var(--transition-fast);
-          }
-          .sc-rpe-chip.active {
-            transform: scale(1.04);
-          }
-          .sc-rpe-badge {
-            font-size: 11.5px;
-            font-weight: 700;
-          }
-          .sc-location-chips {
-            display: flex;
-            gap: 6px;
-            flex-wrap: wrap;
-          }
-          .sc-loc-chip {
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            padding: 6px 12px;
-            background: var(--bg-elevated);
-            border: 1px solid var(--border-default);
-            border-radius: 100px;
-            color: var(--text-secondary);
-            font-size: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all var(--transition-fast);
-          }
-          .sc-loc-chip:hover {
-            border-color: var(--brand-primary);
-            color: var(--text-primary);
-          }
-          .sc-loc-chip.active {
-            background: rgba(99, 102, 241, 0.15);
-            border-color: var(--brand-primary);
-            color: var(--brand-primary);
-            font-weight: 700;
-          }
           .sc-hang-suggest-btn {
             margin-top: 6px;
             padding: 8px 12px;
@@ -746,7 +641,7 @@ export function SessionForm({
             pointer-events: none;
           }
           
-          /* 🚀 SEJAJAR ACTION BUTTONS (SIMPAN & BATAL MERAH) */
+          /* SEJAJAR ACTION BUTTONS (SIMPAN & BATAL MERAH) */
           .sc-action-row {
             display: flex;
             align-items: center;
@@ -817,14 +712,6 @@ export function SessionForm({
             .sc-card {
               padding: 14px 14px;
               border-radius: 16px;
-            }
-            .sc-rpe-grid {
-              gap: 3px;
-            }
-            .sc-rpe-chip {
-              height: 32px;
-              font-size: 11px;
-              border-radius: 6px;
             }
             :global(.sc-save-btn), :global(.sc-cancel-red-btn) {
               height: 48px;
