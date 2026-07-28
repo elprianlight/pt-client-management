@@ -850,7 +850,7 @@ export function SuperAdminDashboard({
                   key={i}
                   style={{
                     display: 'flex',
-                    justify-content: 'space-between',
+                    justifyContent: 'space-between',
                     alignItems: 'center',
                     padding: '12px',
                     background: 'var(--bg-elevated)',
@@ -995,7 +995,7 @@ export function PTDashboard({
                   style={{
                     display: 'flex',
                     alignItems: 'center',
-                    justify-content: 'space-between',
+                    justifyContent: 'space-between',
                     padding: '12px',
                     background: 'var(--bg-elevated)',
                     borderRadius: 'var(--radius-md)',
@@ -1058,8 +1058,8 @@ export function PTDashboard({
                       background: 'var(--gradient-brand)',
                       color: 'white',
                       display: 'flex',
-                      align-items: 'center',
-                      justify-content: 'center',
+                      alignItems: 'center',
+                      justifyContent: 'center',
                       fontWeight: 700,
                     }}
                   >
