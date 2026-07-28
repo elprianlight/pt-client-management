@@ -17,7 +17,6 @@ export default async function PackagesPage() {
 
   const [profile] = await db.select().from(users).where(eq(users.id, user.id))
   if (!profile) redirect('/login')
-  if (profile.role === 'super_admin' || profile.role === 'personal_trainer') redirect('/clients')
 
   return (
     <div className="page-container">

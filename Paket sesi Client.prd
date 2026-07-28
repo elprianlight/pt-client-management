@@ -1,0 +1,414 @@
+Perbaharui 100% halaman Paket Sesi Client menjadi tampilan Mobile-First, modern, premium, dan mudah digunakan di layar HP.
+
+Jangan mengubah business logic, database, API, maupun struktur data yang sudah berjalan. Fokus pada redesign UI/UX, optimasi mobile, dan penerapan Role Permission yang benar antara PT dan Client.
+
+1. Hilangkan Table Layout
+
+Hapus seluruh tampilan tabel berikut:
+
+Nama Paket
+Client
+Sesi
+Total Harga
+Status
+Aksi
+
+Jangan lagi menggunakan format tabel pada tampilan mobile.
+
+Seluruh data harus diubah menjadi Premium Membership Card.
+
+2. Hilangkan Search
+
+Hapus:
+
+❌ Cari paket atau client
+
+Karena Client hanya memiliki paket miliknya sendiri.
+
+Search tidak diperlukan.
+
+3. Hilangkan Nama Client
+
+Jangan tampilkan:
+
+Dana Gading
+
+Karena Client sudah login menggunakan akun miliknya.
+
+Informasi tersebut hanya memenuhi ruang.
+
+4. Hilangkan Action Button
+
+Hapus seluruh tombol:
+
+❌ Edit
+
+❌ Delete
+
+❌ Update
+
+❌ Status
+
+Client hanya boleh melihat informasi paket.
+
+5. Premium Membership Card
+
+Setiap paket ditampilkan sebagai satu Card.
+
+Gunakan:
+
+Rounded 24px
+Soft Shadow
+Glassmorphism
+Gradient Border
+Padding lega
+Premium Animation
+Header Card
+
+Tampilkan:
+
+📦
+
+Nama Paket
+
+Contoh
+
+July 2026
+
+Badge Status
+
+🟢 Aktif
+
+🔴 Selesai
+
+🟡 Akan Datang
+
+Gunakan Status Pill modern.
+
+Progress Section
+
+Tampilkan:
+
+Progress Bar besar.
+
+Contoh
+
+5 dari 10 sesi digunakan
+
+██████░░░░
+
+50%
+
+Tambahkan angka:
+
+Sisa
+
+5 Session
+
+Informasi Paket
+
+Gunakan layout dua kolom.
+
+💰 Harga Paket
+
+Rp 3.000.000
+
+📅 Tanggal Mulai
+
+01 Juli 2026
+
+📅 Berakhir
+
+31 Juli 2026
+
+🏋️ Total Session
+
+10
+
+✅ Digunakan
+
+5
+
+⏳ Tersisa
+
+5
+
+6. Circular Progress
+
+Tambahkan Circular Progress.
+
+Isi:
+
+50%
+
+Progress berubah otomatis sesuai jumlah sesi.
+
+7. AI Insight
+
+Tambahkan AI Card.
+
+Contoh
+
+✨ AI Insight
+
+Anda telah menggunakan 50% paket latihan.
+
+Disarankan menjadwalkan sesi minggu ini agar target tercapai sebelum masa paket berakhir.
+
+8. Membership Timeline
+
+Tambahkan Timeline kecil.
+
+Contoh
+
+Paket Dibuat
+
+Sesi Pertama
+
+Sesi Terakhir
+
+Berakhir
+
+Gunakan Timeline horizontal.
+
+9. Session History Preview
+
+Di bawah Card.
+
+Tampilkan maksimal 3 sesi terakhir.
+
+Contoh
+
+25 Jul
+
+Total Body
+
+✅
+
+24 Jul
+
+Upper Body
+
+✅
+
+18 Jul
+
+Lower Body
+
+✅
+
+Button
+
+Lihat Semua Riwayat
+
+10. Renewal Card
+
+Jika sisa sesi ≤ 3.
+
+Tampilkan Card.
+
+Contoh
+
+⚠️ Paket Anda hampir habis.
+
+Sisa 3 sesi lagi.
+
+Button
+
+Hubungi PT
+
+11. Empty State
+
+Jika belum memiliki paket.
+
+Gunakan Illustration modern.
+
+Judul
+
+Belum Memiliki Paket
+
+Deskripsi
+
+Hubungi Personal Trainer untuk membeli paket latihan.
+
+Button
+
+Hubungi PT
+
+12. Loading Experience
+
+Gunakan:
+
+Skeleton Membership Card
+
+Glass Skeleton
+
+Transparent Overlay
+
+Blur Background
+
+Jangan menggunakan spinner bawaan browser.
+
+13. Premium Bottom Sheet
+
+Saat Card ditekan.
+
+Buka Bottom Sheet.
+
+Isi:
+
+Nama Paket
+
+Status
+
+Progress
+
+Riwayat
+
+Harga
+
+Tanggal
+
+Catatan PT
+
+Target
+
+Sisa Session
+
+14. Compact Layout
+
+Kurangi tinggi Card sekitar 30–35%.
+
+Target:
+
+Dalam satu layar HP dapat terlihat minimal 2 Membership Card tanpa harus banyak melakukan scroll.
+
+15. Responsive Design
+
+Optimalkan untuk:
+
+Android
+
+iPhone
+
+Tablet
+
+PWA
+
+Tidak boleh ada:
+
+Horizontal Scroll
+
+Overflow
+
+Table
+
+Elemen bertumpuk
+
+16. Custom In-App Modal Dialog
+
+Seluruh popup menggunakan:
+
+✅ Custom In-App Modal Dialog
+
+Jangan menggunakan:
+
+❌ alert()
+
+❌ confirm()
+
+❌ prompt()
+
+Gunakan animasi:
+
+Fade
+
+Scale
+
+Blur Background
+
+17. Toast Notification
+
+Gunakan:
+
+Premium Toast
+
+Top Center
+
+Glass Background
+
+Slide Down
+
+Jenis:
+
+Success
+
+Warning
+
+Info
+
+Error
+
+18. Business Rules
+Personal Trainer
+
+PT dapat:
+
+✅ Tambah Paket
+
+✅ Edit Paket
+
+✅ Hapus Paket
+
+✅ Perpanjang Paket
+
+✅ Mengubah Status
+
+✅ Menambah Session
+
+Client
+
+Client hanya dapat:
+
+✅ Melihat Paket
+
+✅ Melihat Progress
+
+✅ Melihat Riwayat Session
+
+✅ Melihat Detail Paket
+
+✅ Menghubungi PT
+
+Client TIDAK BOLEH:
+
+❌ Edit Paket
+
+❌ Delete Paket
+
+❌ Menambah Session
+
+❌ Mengubah Progress
+
+❌ Mengubah Status
+
+❌ Mengubah Harga
+
+❌ Mengubah Jumlah Session
+
+Semua kontrol edit harus disembunyikan dari tampilan Client.
+
+19. Optimasi UX Mobile
+
+Seluruh halaman harus dioptimalkan untuk penggunaan satu tangan (one-handed usability):
+
+Area sentuh minimal 44×44 px.
+Informasi terpenting (status paket, sisa sesi, dan progres) berada di bagian atas card.
+Gunakan tipografi yang ringkas namun jelas.
+Pastikan semua elemen mudah dijangkau dengan ibu jari pada layar 5–7 inci.
+20. Ketentuan Pengembangan
+Jangan mengubah business logic yang sudah berjalan.
+Jangan mengubah struktur database, API, maupun autentikasi.
+Pertahankan seluruh integrasi data yang sudah ada.
+Ubah halaman ini menjadi pengalaman Mobile-First dengan desain Membership Wallet Card yang ringkas, elegan, dan mudah dipahami.
+Terapkan secara konsisten Glassmorphism, Premium Membership Card, Circular Progress, AI Insight Card, Custom In-App Modal Dialog, Premium Bottom Sheet, Skeleton Loading, Transparent Loading Overlay, Premium Toast Notification, Responsive Layout, dan Smooth Micro Animation agar halaman Paket Sesi Client terasa setara dengan aplikasi fitness premium modern seperti Trainerize, Technogym, Apple Fitness, dan WHOOP.
