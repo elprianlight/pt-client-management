@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
+import { createPortal } from 'react-dom'
 import Link from 'next/link'
 import {
   Calendar as CalendarIcon,
@@ -35,6 +36,7 @@ export function SessionList() {
   const { role } = useAuthStore()
   const isClient = role === 'client'
 
+  const [mounted, setMounted] = useState(false)
   const [data, setData] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [processingId, setProcessingId] = useState<string | null>(null)
@@ -50,6 +52,25 @@ export function SessionList() {
   const [selectedPackage, setSelectedPackage] = useState<string>('')
   const [selectedClient, setSelectedClient] = useState<string>('')
   const [searchQuery, setSearchQuery] = useState<string>('')
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  // Lock body scroll when modal is open to ensure 100% viewport centering on mobile HP
+  useEffect(() => {
+    if (selectedDetailSession) {
+      document.body.style.overflow = 'hidden'
+      document.body.style.touchAction = 'none'
+    } else {
+      document.body.style.overflow = ''
+      document.body.style.touchAction = ''
+    }
+    return () => {
+      document.body.style.overflow = ''
+      document.body.style.touchAction = ''
+    }
+  }, [selectedDetailSession])
 
   const loadData = async () => {
     setIsLoading(true)
@@ -93,14 +114,24 @@ export function SessionList() {
     setProcessingId(null)
   }
 
-  // Client's unique packages for single PT Package Filter
+  // Client's unique packages (sorted descending so newest/latest package is first!)
   const clientPackages = useMemo(() => {
     const pkgs = new Set<string>()
-    data.forEach(item => {
+    const sortedData = [...data].sort(
+      (a, b) => new Date(b.scheduledAt).getTime() - new Date(a.scheduledAt).getTime()
+    )
+    sortedData.forEach(item => {
       if (item.packageName) pkgs.add(item.packageName)
     })
     return Array.from(pkgs)
   }, [data])
+
+  // DEFAULT TERBARU: Set default package filter to latest active package for client
+  useEffect(() => {
+    if (isClient && clientPackages.length > 0 && !selectedPackage) {
+      setSelectedPackage(clientPackages[0])
+    }
+  }, [isClient, clientPackages, selectedPackage])
 
   const uniqueClients = useMemo(() => {
     const clients = new Set<string>()
@@ -428,8 +459,8 @@ export function SessionList() {
         </div>
       )}
 
-      {/* ==================== 9. PREMIUM BOTTOM SHEET DETAIL (CARD ON-CLICK) ==================== */}
-      {selectedDetailSession && (
+      {/* ==================== 9. PREMIUM DIALOG DETAIL MODAL (REACT PORTAL TO DOCUMENT.BODY) ==================== */}
+      {mounted && selectedDetailSession && createPortal(
         <div
           className="bottom-sheet-backdrop animate-fade-in"
           onClick={() => setSelectedDetailSession(null)}
@@ -541,7 +572,8 @@ export function SessionList() {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* ==================== STYLES ==================== */}
