@@ -50,7 +50,7 @@ const PRIMARY_NAV: NavItem[] = [
     title: 'Check-In',
     href: '/session/new',
     icon: CheckCircle2,
-    roles: ['super_admin', 'personal_trainer', 'client'],
+    roles: ['super_admin', 'personal_trainer'],
     isCenter: true,
   },
   {
@@ -58,18 +58,6 @@ const PRIMARY_NAV: NavItem[] = [
     href: '/session',
     icon: Calendar,
     roles: ['super_admin', 'personal_trainer'],
-  },
-  {
-    title: 'Workout',
-    href: '/workout',
-    icon: Dumbbell,
-    roles: ['client'],
-  },
-  {
-    title: 'Progress',
-    href: '/progress',
-    icon: TrendingUp,
-    roles: ['client'],
   },
   {
     title: 'Laporan',
