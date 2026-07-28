@@ -114,6 +114,8 @@ export function SessionList() {
     setProcessingId(null)
   }
 
+  const [hasDefaultPackageBeenSet, setHasDefaultPackageBeenSet] = useState(false)
+
   // Client's unique packages (sorted descending so newest/latest package is first!)
   const clientPackages = useMemo(() => {
     const pkgs = new Set<string>()
@@ -126,12 +128,13 @@ export function SessionList() {
     return Array.from(pkgs)
   }, [data])
 
-  // DEFAULT TERBARU: Set default package filter to latest active package for client
+  // DEFAULT TERBARU: Set default package filter ONCE to latest active package for client
   useEffect(() => {
-    if (isClient && clientPackages.length > 0 && !selectedPackage) {
+    if (isClient && clientPackages.length > 0 && !hasDefaultPackageBeenSet) {
       setSelectedPackage(clientPackages[0])
+      setHasDefaultPackageBeenSet(true)
     }
-  }, [isClient, clientPackages, selectedPackage])
+  }, [isClient, clientPackages, hasDefaultPackageBeenSet])
 
   const uniqueClients = useMemo(() => {
     const clients = new Set<string>()
@@ -193,10 +196,29 @@ export function SessionList() {
       : data
 
     const completed = targetSessions.filter(s => s.status === 'completed').length
-    const total = targetSessions[0]?.totalSessions || (targetSessions.length > 0 ? Math.max(10, targetSessions.length) : 10)
-    const used = Math.min(completed > 0 ? completed : 5, total) // default 5 for demonstration if 0 completed
+
+    let total = 10
+    if (selectedPackage && targetSessions.length > 0 && targetSessions[0].totalSessions) {
+      total = targetSessions[0].totalSessions
+    } else if (!selectedPackage && data.length > 0) {
+      const uniquePkgsMap = new Map<string, number>()
+      data.forEach(s => {
+        if (s.packageName && s.totalSessions) {
+          uniquePkgsMap.set(s.packageName, s.totalSessions)
+        }
+      })
+      if (uniquePkgsMap.size > 0) {
+        total = Array.from(uniquePkgsMap.values()).reduce((a, b) => a + b, 0)
+      } else {
+        total = Math.max(10, data.length)
+      }
+    } else if (targetSessions.length > 0) {
+      total = Math.max(10, targetSessions.length)
+    }
+
+    const used = completed
     const remaining = Math.max(0, total - used)
-    const percent = Math.min(100, Math.round((used / total) * 100))
+    const percent = total > 0 ? Math.min(100, Math.round((used / total) * 100)) : 0
 
     return { used, total, remaining, percent }
   }, [data, selectedPackage])
