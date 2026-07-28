@@ -157,6 +157,8 @@ export async function listSessions() {
       sessionNotes: workoutSessions.sessionNotes,
       clientName: users.fullName,
       packageName: ptPackages.packageName,
+      totalSessions: ptPackages.totalSessions,
+      usedSessions: ptPackages.usedSessions,
     })
     .from(workoutSessions)
     .innerJoin(clients, eq(workoutSessions.clientId, clients.id))

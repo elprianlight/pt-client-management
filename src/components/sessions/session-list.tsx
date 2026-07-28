@@ -191,37 +191,23 @@ export function SessionList() {
 
   // Active Package Session Usage Info for Client
   const activePackageInfo = useMemo(() => {
-    const targetSessions = selectedPackage
-      ? data.filter(s => s.packageName === selectedPackage)
+    // If a specific package is selected, target that package.
+    // Otherwise, target the latest active package (clientPackages[0]) so calculation reflects active package stats!
+    const targetPackageName = selectedPackage || (clientPackages.length > 0 ? clientPackages[0] : '')
+
+    const pkgSessions = targetPackageName
+      ? data.filter(s => s.packageName === targetPackageName)
       : data
 
-    const completed = targetSessions.filter(s => s.status === 'completed').length
-
-    let total = 10
-    if (selectedPackage && targetSessions.length > 0 && targetSessions[0].totalSessions) {
-      total = targetSessions[0].totalSessions
-    } else if (!selectedPackage && data.length > 0) {
-      const uniquePkgsMap = new Map<string, number>()
-      data.forEach(s => {
-        if (s.packageName && s.totalSessions) {
-          uniquePkgsMap.set(s.packageName, s.totalSessions)
-        }
-      })
-      if (uniquePkgsMap.size > 0) {
-        total = Array.from(uniquePkgsMap.values()).reduce((a, b) => a + b, 0)
-      } else {
-        total = Math.max(10, data.length)
-      }
-    } else if (targetSessions.length > 0) {
-      total = Math.max(10, targetSessions.length)
-    }
-
-    const used = completed
+    const firstRow = pkgSessions[0]
+    const total = firstRow?.totalSessions || 10
+    const completed = pkgSessions.filter(s => s.status === 'completed').length
+    const used = firstRow?.usedSessions !== undefined ? firstRow.usedSessions : completed
     const remaining = Math.max(0, total - used)
     const percent = total > 0 ? Math.min(100, Math.round((used / total) * 100)) : 0
 
     return { used, total, remaining, percent }
-  }, [data, selectedPackage])
+  }, [data, selectedPackage, clientPackages])
 
   // Proportional Status Pill
   const renderStatusPill = (status: string) => {
