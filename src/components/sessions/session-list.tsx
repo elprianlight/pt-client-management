@@ -17,22 +17,32 @@ import {
   List,
   GitCommit,
   CalendarDays,
-  Filter,
+  X,
+  Eye,
+  Package,
+  RefreshCw,
+  Info,
   CheckCircle2,
-  XCircle,
-  AlertCircle,
-  Plus,
+  FileText,
+  TrendingUp,
 } from 'lucide-react'
 import { listSessions, updateSessionStatus, deleteSession } from '@/lib/actions/session'
+import { useAuthStore } from '@/store/auth-store'
 import { format } from 'date-fns'
 import { id } from 'date-fns/locale'
 
 export function SessionList() {
+  const { role } = useAuthStore()
+  const isClient = role === 'client'
+
   const [data, setData] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [processingId, setProcessingId] = useState<string | null>(null)
 
-  // 5. TIMELINE & VIEW MODE SEGMENTED CONTROL OPTIONS
+  // Detail Bottom Sheet state for Client & PT
+  const [selectedDetailSession, setSelectedDetailSession] = useState<any | null>(null)
+
+  // View Mode Options (For PT / Admin view)
   const [viewMode, setViewMode] = useState<'card' | 'timeline' | 'calendar' | 'list'>('card')
 
   // Filters & Search
@@ -53,6 +63,8 @@ export function SessionList() {
   }, [])
 
   const handleStatusChange = async (sessionId: string, status: any) => {
+    if (isClient) return // Client Read-Only Protection
+
     let msg = `Ubah status sesi?`
     if (status === 'completed') msg = 'Tandai sesi ini sebagai selesai? Ini akan memotong kuota paket client.'
     if (!confirm(msg)) return
@@ -68,6 +80,7 @@ export function SessionList() {
   }
 
   const handleDelete = async (sessionId: string) => {
+    if (isClient) return // Client Read-Only Protection
     if (!confirm('Apakah Anda yakin ingin menghapus sesi ini? Tindakan ini tidak dapat dibatalkan.')) return
 
     setProcessingId(sessionId)
@@ -80,7 +93,15 @@ export function SessionList() {
     setProcessingId(null)
   }
 
-  // Filter derivations
+  // Client's unique packages for single PT Package Filter
+  const clientPackages = useMemo(() => {
+    const pkgs = new Set<string>()
+    data.forEach(item => {
+      if (item.packageName) pkgs.add(item.packageName)
+    })
+    return Array.from(pkgs)
+  }, [data])
+
   const uniqueClients = useMemo(() => {
     const clients = new Set<string>()
     data.forEach(item => {
@@ -125,232 +146,255 @@ export function SessionList() {
         return format(date, 'yyyy-MM') === selectedMonth
       })
     }
-    if (selectedClient) {
+    if (selectedClient && !isClient) {
       result = result.filter(row => row.clientName === selectedClient)
     }
     if (selectedPackage) {
       result = result.filter(row => row.packageName === selectedPackage)
     }
     return result
-  }, [data, selectedMonth, selectedPackage, selectedClient, searchQuery])
+  }, [data, selectedMonth, selectedPackage, selectedClient, searchQuery, isClient])
 
-  // Helper for Status Pills
+  // Proportional Status Pill
   const renderStatusPill = (status: string) => {
     switch (status) {
       case 'completed':
-        return (
-          <span className="sc-status-pill sc-pill-success">
-            🟢 Selesai
-          </span>
-        )
+        return <span className="compact-status-pill pill-success">🟢 Selesai</span>
       case 'cancelled':
-        return (
-          <span className="sc-status-pill sc-pill-danger">
-            🔴 Dibatalkan
-          </span>
-        )
+        return <span className="compact-status-pill pill-danger">🔴 Dibatalkan</span>
       case 'no_show':
-        return (
-          <span className="sc-status-pill sc-pill-danger">
-            🚫 No Show
-          </span>
-        )
+        return <span className="compact-status-pill pill-danger">🚫 No Show</span>
       default:
-        return (
-          <span className="sc-status-pill sc-pill-brand">
-            🔵 Terjadwal
-          </span>
-        )
+        return <span className="compact-status-pill pill-brand">🔵 Scheduled</span>
     }
   }
 
   return (
-    <div className="session-history-wrapper">
-      {/* 5. SEGMENTED CONTROL VIEW MODES & FILTERS BAR */}
-      <div className="session-header-card animate-slide-down">
-        <div className="session-header-top">
-          <div>
-            <h2 className="session-header-title">Riwayat & Jadwal Sesi</h2>
-            <p className="session-header-desc">Kelola seluruh aktivitas sesi latihan client Anda</p>
-          </div>
-
-          {/* Segmented Control Buttons */}
-          <div className="segmented-control">
-            <button
-              type="button"
-              onClick={() => setViewMode('card')}
-              className={`seg-btn ${viewMode === 'card' ? 'active' : ''}`}
-            >
-              <LayoutGrid size={14} />
-              <span>Cards</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setViewMode('timeline')}
-              className={`seg-btn ${viewMode === 'timeline' ? 'active' : ''}`}
-            >
-              <GitCommit size={14} />
-              <span>Timeline</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setViewMode('calendar')}
-              className={`seg-btn ${viewMode === 'calendar' ? 'active' : ''}`}
-            >
-              <CalendarDays size={14} />
-              <span>Kalender</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setViewMode('list')}
-              className={`seg-btn ${viewMode === 'list' ? 'active' : ''}`}
-            >
-              <List size={14} />
-              <span>List</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Filter Inputs Grid */}
-        <div className="session-filter-grid">
-          <div className="filter-input-wrap search-wrap">
-            <Search size={14} className="filter-search-icon" />
-            <input
-              type="text"
-              placeholder="Cari client, program, lokasi..."
-              className="filter-input"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-
-          <div className="filter-input-wrap">
+    <div className="compact-session-wrapper">
+      {/* ==================== 1. FILTER SECTION ==================== */}
+      {isClient ? (
+        /* SINGLE FILTER UNTUK CLIENT: HANYA DROPDOWN PAKET PT */
+        <div className="client-single-filter-card animate-slide-down">
+          <div className="csf-inner">
+            <Package size={16} className="csf-icon" />
             <select
-              className="filter-select"
-              value={selectedClient}
-              onChange={(e) => setSelectedClient(e.target.value)}
-            >
-              <option value="">Semua Client</option>
-              {uniqueClients.map(c => (
-                <option key={c} value={c}>{c}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="filter-input-wrap">
-            <select
-              className="filter-select"
-              value={selectedMonth}
-              onChange={(e) => setSelectedMonth(e.target.value)}
-            >
-              <option value="">Semua Bulan</option>
-              {uniqueMonths.map(m => {
-                const [year, month] = m.split('-')
-                const date = new Date(parseInt(year), parseInt(month) - 1, 1)
-                return <option key={m} value={m}>{format(date, 'MMMM yyyy', { locale: id })}</option>
-              })}
-            </select>
-          </div>
-
-          <div className="filter-input-wrap">
-            <select
-              className="filter-select"
+              className="csf-select"
               value={selectedPackage}
               onChange={(e) => setSelectedPackage(e.target.value)}
+              id="select-client-package-filter"
             >
-              <option value="">Semua Paket</option>
-              {packageCounts.map(([pkg, count]) => (
-                <option key={pkg} value={pkg}>{pkg} ({count} sesi)</option>
+              <option value="">▼ Semua Paket PT Anda</option>
+              {clientPackages.map(pkg => (
+                <option key={pkg} value={pkg}>
+                  Paket: {pkg}
+                </option>
               ))}
             </select>
           </div>
         </div>
-      </div>
+      ) : (
+        /* FULL FILTER & SEGMENTED CONTROL UNTUK PT / ADMIN */
+        <div className="session-header-card animate-slide-down">
+          <div className="session-header-top">
+            <div>
+              <h2 className="session-header-title">Riwayat & Jadwal Sesi</h2>
+              <p className="session-header-desc">Kelola seluruh aktivitas sesi latihan client Anda</p>
+            </div>
 
-      {/* 6. GLASS SKELETON LOADING EXPERIENCE */}
+            <div className="segmented-control">
+              <button
+                type="button"
+                onClick={() => setViewMode('card')}
+                className={`seg-btn ${viewMode === 'card' ? 'active' : ''}`}
+              >
+                <LayoutGrid size={14} />
+                <span>Cards</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode('timeline')}
+                className={`seg-btn ${viewMode === 'timeline' ? 'active' : ''}`}
+              >
+                <GitCommit size={14} />
+                <span>Timeline</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode('calendar')}
+                className={`seg-btn ${viewMode === 'calendar' ? 'active' : ''}`}
+              >
+                <CalendarDays size={14} />
+                <span>Kalender</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode('list')}
+                className={`seg-btn ${viewMode === 'list' ? 'active' : ''}`}
+              >
+                <List size={14} />
+                <span>List</span>
+              </button>
+            </div>
+          </div>
+
+          <div className="session-filter-grid">
+            <div className="filter-input-wrap search-wrap">
+              <Search size={14} className="filter-search-icon" />
+              <input
+                type="text"
+                placeholder="Cari client, program, lokasi..."
+                className="filter-input"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+
+            <div className="filter-input-wrap">
+              <select
+                className="filter-select"
+                value={selectedClient}
+                onChange={(e) => setSelectedClient(e.target.value)}
+              >
+                <option value="">Semua Client</option>
+                {uniqueClients.map(c => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="filter-input-wrap">
+              <select
+                className="filter-select"
+                value={selectedMonth}
+                onChange={(e) => setSelectedMonth(e.target.value)}
+              >
+                <option value="">Semua Bulan</option>
+                {uniqueMonths.map(m => {
+                  const [year, month] = m.split('-')
+                  const date = new Date(parseInt(year), parseInt(month) - 1, 1)
+                  return <option key={m} value={m}>{format(date, 'MMMM yyyy', { locale: id })}</option>
+                })}
+              </select>
+            </div>
+
+            <div className="filter-input-wrap">
+              <select
+                className="filter-select"
+                value={selectedPackage}
+                onChange={(e) => setSelectedPackage(e.target.value)}
+              >
+                <option value="">Semua Paket</option>
+                {packageCounts.map(([pkg, count]) => (
+                  <option key={pkg} value={pkg}>{pkg} ({count} sesi)</option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ==================== 11. GLASS SKELETON LOADING EXPERIENCE ==================== */}
       {isLoading ? (
-        <div className="session-grid-layout">
+        <div className="compact-session-grid">
           {[1, 2, 3, 4].map(n => (
-            <div key={n} className="session-card skeleton-card">
-              <div className="skeleton-line title-sk" />
-              <div className="skeleton-line text-sk" />
-              <div className="skeleton-line sub-sk" />
+            <div key={n} className="compact-card skeleton-card">
+              <div className="skeleton-line sk-title" />
+              <div className="skeleton-line sk-subtitle" />
+              <div className="skeleton-line sk-body" />
             </div>
           ))}
         </div>
       ) : filteredData.length === 0 ? (
-        <div className="session-empty-card animate-fade-in">
-          <CalendarIcon size={36} style={{ color: 'var(--text-muted)' }} />
-          <h3>Belum Ada Data Sesi</h3>
-          <p>Tidak ada riwayat atau jadwal sesi yang sesuai dengan kriteria filter Anda.</p>
+        /* 12. EMPTY STATE MODEL MODERN */
+        <div className="compact-empty-card animate-fade-in">
+          <div className="empty-icon-wrap">
+            <Dumbbell size={36} />
+          </div>
+          <h3 className="empty-title">Belum Ada Riwayat Latihan</h3>
+          <p className="empty-desc">
+            Riwayat sesi latihan akan muncul setelah Personal Trainer menjadwalkan atau menyelesaikan sesi Anda.
+          </p>
+          <button type="button" onClick={loadData} className="empty-refresh-btn">
+            <RefreshCw size={14} />
+            <span>Refresh</span>
+          </button>
         </div>
       ) : (
-        <>
-          {/* VIEW MODE 1: CARD VIEW (DEFAULT GRID 20PX ROUNDED) */}
-          {viewMode === 'card' && (
-            <div className="session-grid-layout">
-              {filteredData.map((row, idx) => (
-                <div
-                  key={row.id}
-                  className="session-card animate-slide-up"
-                  style={{ animationDelay: `${idx * 40}ms` }}
-                >
-                  {/* Top Bar: Date & Status */}
-                  <div className="sc-header">
-                    <div className="sc-date-badge">
-                      <CalendarIcon size={13} />
-                      <span>
-                        {format(new Date(row.scheduledAt), 'E, dd MMM yyyy', { locale: id })}
-                      </span>
-                      <span className="sc-time-dot">•</span>
-                      <Clock size={12} />
-                      <span>{format(new Date(row.scheduledAt), 'HH:mm')}</span>
-                    </div>
-                    {renderStatusPill(row.status)}
-                  </div>
+        /* ==================== COMPACT SESSION CARD GRID ==================== */
+        <div className="compact-session-grid">
+          {filteredData.map((row, idx) => (
+            <div
+              key={row.id}
+              onClick={() => setSelectedDetailSession(row)}
+              className="compact-card animate-slide-up"
+              style={{ animationDelay: `${idx * 30}ms` }}
+            >
+              {/* BARIS 1: Tanggal, Jam, Status Pill */}
+              <div className="c-row-1">
+                <div className="c-datetime-group">
+                  <span className="c-date-text">
+                    📅 {format(new Date(row.scheduledAt), 'dd MMM yyyy', { locale: id })}
+                  </span>
+                  <span className="c-dot">•</span>
+                  <span className="c-time-text">
+                    🕘 {format(new Date(row.scheduledAt), 'HH:mm')}
+                  </span>
+                </div>
+                {renderStatusPill(row.status)}
+              </div>
 
-                  {/* Body Details: Program, Location, RPE */}
-                  <div className="sc-body">
-                    <div className="sc-program-row">
-                      <Dumbbell size={16} className="sc-prog-icon" />
-                      <h4 className="sc-program-name">{row.programType || 'Latihan Regular'}</h4>
-                    </div>
+              {/* BARIS 2: Judul Program (22px bold) & RPE */}
+              <div className="c-row-2">
+                <h3 className="c-program-title">
+                  🏋️ {row.programType || 'Total Body'}
+                </h3>
+                {row.rpe && (
+                  <span className="c-rpe-badge">
+                    🔥 RPE {row.rpe}
+                  </span>
+                )}
+              </div>
 
-                    <div className="sc-meta-pills">
-                      {row.location && (
-                        <div className="sc-meta-pill">
-                          <MapPin size={13} style={{ color: 'var(--brand-primary)' }} />
-                          <span>{row.location}</span>
-                        </div>
-                      )}
+              {/* BARIS 3: Lokasi & Nama Paket */}
+              <div className="c-row-3">
+                <span className="c-meta-item">
+                  📍 {row.location || 'Gym Hang Lekir'}
+                </span>
+                <span className="c-meta-dot">•</span>
+                <span className="c-meta-item c-package-tag">
+                  📦 {row.packageName || 'Paket PT'}
+                </span>
+              </div>
 
-                      {row.rpe && (
-                        <div className="sc-meta-pill sc-rpe-pill">
-                          <Flame size={13} style={{ color: '#f97316' }} />
-                          <span>🔥 RPE {row.rpe}</span>
-                        </div>
-                      )}
-                    </div>
+              {/* BARIS 4: Ringkasan Catatan PT (Max 2 Baris + ... Selengkapnya) */}
+              {row.sessionNotes && (
+                <div className="c-row-4">
+                  <p className="c-notes-preview">
+                    💬 "{row.sessionNotes.length > 80 ? `${row.sessionNotes.slice(0, 80)}...` : row.sessionNotes}"
+                    <span className="c-read-more"> ... Selengkapnya</span>
+                  </p>
+                </div>
+              )}
 
-                    {/* Client & Package info */}
-                    <div className="sc-client-box">
-                      <User size={14} style={{ color: 'var(--text-muted)' }} />
-                      <span className="sc-client-name">{row.clientName || 'Client'}</span>
-                      <span className="sc-pkg-name">({row.packageName || 'Paket Sesi'})</span>
-                    </div>
-
-                    {row.sessionNotes && (
-                      <p className="sc-notes-text">"{row.sessionNotes}"</p>
-                    )}
-                  </div>
-
-                  {/* Actions Footer */}
-                  <div className="sc-footer">
+              {/* BARIS 5: BUTTON HANYA LIHAT DETAIL (UNTUK CLIENT) ATAU MANAJEMEN PT */}
+              <div className="c-row-5">
+                {isClient ? (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setSelectedDetailSession(row)
+                    }}
+                    className="c-detail-btn"
+                  >
+                    <Eye size={14} />
+                    <span>Lihat Detail</span>
+                  </button>
+                ) : (
+                  /* PT / ADMIN FULL MANAGEMENT CONTROLS */
+                  <div className="pt-control-bar" onClick={e => e.stopPropagation()}>
                     <select
-                      className="sc-status-select"
+                      className="pt-status-select"
                       value={row.status}
                       disabled={processingId === row.id}
                       onChange={(e) => handleStatusChange(row.id, e.target.value)}
@@ -361,115 +405,188 @@ export function SessionList() {
                       <option value="no_show">🚫 No Show</option>
                     </select>
 
-                    <div className="sc-action-btns">
-                      <Link href={`/session/${row.id}/edit`} className="sc-btn-edit" title="Edit Sesi">
-                        <Edit size={15} />
+                    <div className="pt-btn-group">
+                      <Link href={`/session/${row.id}/edit`} className="pt-edit-btn" title="Edit Sesi">
+                        <Edit size={14} />
                       </Link>
 
                       <button
                         type="button"
                         onClick={() => handleDelete(row.id)}
                         disabled={processingId === row.id}
-                        className="sc-btn-delete"
+                        className="pt-delete-btn"
                         title="Hapus Sesi"
                       >
-                        {processingId === row.id ? <Loader2 size={15} className="spin" /> : <Trash2 size={15} />}
+                        {processingId === row.id ? <Loader2 size={14} className="spin" /> : <Trash2 size={14} />}
                       </button>
                     </div>
                   </div>
-                </div>
-              ))}
+                )}
+              </div>
             </div>
-          )}
-
-          {/* VIEW MODE 2: TIMELINE VIEW */}
-          {viewMode === 'timeline' && (
-            <div className="session-timeline-layout">
-              {filteredData.map((row, idx) => (
-                <div key={row.id} className="timeline-item animate-slide-up" style={{ animationDelay: `${idx * 40}ms` }}>
-                  <div className="tl-node-line">
-                    <div className="tl-node-dot" />
-                    <div className="tl-line" />
-                  </div>
-                  <div className="tl-card session-card">
-                    <div className="sc-header">
-                      <span className="tl-time-badge">
-                        📅 {format(new Date(row.scheduledAt), 'dd MMM yyyy — HH:mm', { locale: id })}
-                      </span>
-                      {renderStatusPill(row.status)}
-                    </div>
-                    <div className="sc-body" style={{ marginTop: 8 }}>
-                      <h4 className="sc-program-name">🏋️ {row.programType || 'Latihan Regular'}</h4>
-                      <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 4 }}>
-                        👤 {row.clientName} • 📍 {row.location || 'Gym Utama'} {row.rpe ? `• 🔥 RPE ${row.rpe}` : ''}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* VIEW MODE 3: CALENDAR VIEW */}
-          {viewMode === 'calendar' && (
-            <div className="session-grid-layout">
-              {filteredData.map((row, idx) => (
-                <div key={row.id} className="session-card calendar-card-item animate-fade-in">
-                  <div className="cal-date-header">
-                    <span className="cal-day-num">{format(new Date(row.scheduledAt), 'dd')}</span>
-                    <span className="cal-month-name">{format(new Date(row.scheduledAt), 'MMM yyyy', { locale: id })}</span>
-                  </div>
-                  <div className="cal-details">
-                    <h4>{row.programType || 'Latihan'}</h4>
-                    <p>{row.clientName} • {format(new Date(row.scheduledAt), 'HH:mm')}</p>
-                    <div style={{ marginTop: 6 }}>{renderStatusPill(row.status)}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* VIEW MODE 4: LIST VIEW */}
-          {viewMode === 'list' && (
-            <div className="session-list-compact-layout">
-              {filteredData.map((row, idx) => (
-                <div key={row.id} className="session-list-item animate-fade-in">
-                  <div className="sli-left">
-                    <div className="sli-icon">
-                      <Dumbbell size={16} />
-                    </div>
-                    <div>
-                      <h4 className="sli-title">{row.programType || 'Latihan'} — {row.clientName}</h4>
-                      <p className="sli-sub">
-                        {format(new Date(row.scheduledAt), 'dd MMM, HH:mm', { locale: id })} • 📍 {row.location || 'Gym Utama'}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="sli-right">
-                    {renderStatusPill(row.status)}
-                    <Link href={`/session/${row.id}/edit`} className="sc-btn-edit">
-                      <Edit size={14} />
-                    </Link>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </>
+          ))}
+        </div>
       )}
 
+      {/* ==================== 9. PREMIUM BOTTOM SHEET DETAIL (CARD ON-CLICK) ==================== */}
+      {selectedDetailSession && (
+        <div
+          className="bottom-sheet-backdrop animate-fade-in"
+          onClick={() => setSelectedDetailSession(null)}
+        >
+          <div
+            className="bottom-sheet-card animate-slide-up"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Sheet Handle */}
+            <div className="sheet-handle-bar" />
+
+            {/* Sheet Header */}
+            <div className="sheet-header">
+              <div className="sheet-title-group">
+                <div className="sheet-icon-badge">
+                  <Dumbbell size={20} />
+                </div>
+                <div>
+                  <h3 className="sheet-title">Detail Sesi Latihan</h3>
+                  <p className="sheet-subtitle">Informasi lengkap pelaksanaan latihan</p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setSelectedDetailSession(null)}
+                className="sheet-close-btn"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Sheet Body Content */}
+            <div className="sheet-body">
+              {/* Program & Status */}
+              <div className="sheet-section-card">
+                <div className="bs-row-between">
+                  <h2 className="bs-program-title">
+                    🏋️ {selectedDetailSession.programType || 'Total Body'}
+                  </h2>
+                  {renderStatusPill(selectedDetailSession.status)}
+                </div>
+
+                <div className="bs-grid-2">
+                  <div className="bs-info-item">
+                    <span className="bs-label">Tanggal & Jam</span>
+                    <span className="bs-val">
+                      📅 {format(new Date(selectedDetailSession.scheduledAt), 'EEEE, dd MMMM yyyy', { locale: id })} • {format(new Date(selectedDetailSession.scheduledAt), 'HH:mm')}
+                    </span>
+                  </div>
+
+                  <div className="bs-info-item">
+                    <span className="bs-label">Lokasi Latihan</span>
+                    <span className="bs-val">
+                      📍 {selectedDetailSession.location || 'Gym Hang Lekir'}
+                    </span>
+                  </div>
+
+                  <div className="bs-info-item">
+                    <span className="bs-label">Tingkat Intensitas (RPE)</span>
+                    <span className="bs-val" style={{ color: '#f97316', fontWeight: 800 }}>
+                      🔥 RPE {selectedDetailSession.rpe || 8}
+                    </span>
+                  </div>
+
+                  <div className="bs-info-item">
+                    <span className="bs-label">Paket Sesi</span>
+                    <span className="bs-val">
+                      📦 {selectedDetailSession.packageName || 'Paket PT'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Catatan PT Lengkap */}
+              {selectedDetailSession.sessionNotes && (
+                <div className="sheet-section-card">
+                  <h4 className="sheet-sec-title">
+                    <FileText size={15} />
+                    <span>Catatan Latihan dari Personal Trainer</span>
+                  </h4>
+                  <p className="bs-full-notes">
+                    "{selectedDetailSession.sessionNotes}"
+                  </p>
+                </div>
+              )}
+
+              {/* Progress Summary */}
+              <div className="sheet-section-card">
+                <h4 className="sheet-sec-title">
+                  <TrendingUp size={15} />
+                  <span>Ringkasan Evaluasi Performance</span>
+                </h4>
+                <div className="bs-eval-box">
+                  <CheckCircle2 size={16} style={{ color: '#10b981' }} />
+                  <span>Sesi telah tercatat resmi di database StrengthLab System.</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Sheet Footer Button */}
+            <div className="sheet-footer">
+              <button
+                type="button"
+                onClick={() => setSelectedDetailSession(null)}
+                className="sheet-close-action-btn"
+              >
+                Tutup Detail
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ==================== STYLES ==================== */}
       <style jsx>{`
-        .session-history-wrapper {
+        .compact-session-wrapper {
           display: flex;
           flex-direction: column;
-          gap: 16px;
+          gap: 12px;
         }
 
+        /* CLIENT SINGLE FILTER */
+        .client-single-filter-card {
+          background: var(--bg-surface);
+          border: 1px solid var(--border-default);
+          border-radius: 16px;
+          padding: 10px 14px;
+          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+          backdrop-filter: blur(16px);
+        }
+        .csf-inner {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          color: var(--brand-primary);
+        }
+        .csf-select {
+          width: 100%;
+          height: 40px;
+          background: var(--bg-elevated);
+          border: 1px solid var(--border-default);
+          border-radius: 12px;
+          color: var(--text-primary);
+          font-size: 13.5px;
+          font-weight: 700;
+          padding: 0 12px;
+          outline: none;
+          cursor: pointer;
+        }
+
+        /* PT HEADER & FILTERS */
         .session-header-card {
           background: var(--bg-surface);
           border: 1px solid var(--border-default);
           border-radius: 20px;
-          padding: 20px;
+          padding: 18px;
           box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
           backdrop-filter: blur(16px);
         }
@@ -477,23 +594,20 @@ export function SessionList() {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          gap: 16px;
+          gap: 12px;
           flex-wrap: wrap;
-          padding-bottom: 16px;
+          padding-bottom: 14px;
           border-bottom: 1px solid var(--border-default);
         }
         .session-header-title {
-          font-size: 18px;
+          font-size: 17px;
           font-weight: 800;
           color: var(--text-primary);
         }
         .session-header-desc {
-          font-size: 12.5px;
+          font-size: 12px;
           color: var(--text-muted);
-          margin-top: 2px;
         }
-
-        /* 5. SEGMENTED CONTROL BUTTONS */
         .segmented-control {
           display: flex;
           align-items: center;
@@ -506,32 +620,25 @@ export function SessionList() {
         .seg-btn {
           display: flex;
           align-items: center;
-          gap: 6px;
-          padding: 6px 12px;
+          gap: 5px;
+          padding: 5px 10px;
           border-radius: 8px;
           border: none;
           background: transparent;
           color: var(--text-secondary);
-          font-size: 12.5px;
+          font-size: 12px;
           font-weight: 600;
           cursor: pointer;
-          transition: all var(--transition-fast);
-        }
-        .seg-btn:hover {
-          color: var(--text-primary);
         }
         .seg-btn.active {
           background: var(--brand-primary);
           color: white;
-          box-shadow: 0 4px 12px rgba(99, 102, 241, 0.35);
         }
-
-        /* FILTERS GRID */
         .session-filter-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-          gap: 10px;
-          margin-top: 14px;
+          grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+          gap: 8px;
+          margin-top: 12px;
         }
         .filter-input-wrap {
           position: relative;
@@ -540,393 +647,469 @@ export function SessionList() {
         }
         .filter-search-icon {
           position: absolute;
-          left: 12px;
+          left: 10px;
           color: var(--text-muted);
-          pointer-events: none;
         }
         .filter-input {
           width: 100%;
-          height: 42px;
+          height: 38px;
           background: var(--bg-elevated);
           border: 1px solid var(--border-default);
-          border-radius: 12px;
+          border-radius: 10px;
           color: var(--text-primary);
-          font-size: 13px;
-          padding: 0 12px 0 34px;
+          font-size: 12.5px;
+          padding: 0 10px 0 32px;
           outline: none;
-          transition: all var(--transition-fast);
         }
         .filter-select {
           width: 100%;
-          height: 42px;
+          height: 38px;
           background: var(--bg-elevated);
           border: 1px solid var(--border-default);
-          border-radius: 12px;
+          border-radius: 10px;
           color: var(--text-primary);
-          font-size: 13px;
-          font-weight: 500;
-          padding: 0 12px;
+          font-size: 12.5px;
+          padding: 0 10px;
           outline: none;
         }
 
-        /* 2. PREMIUM SESSION CARD (20PX ROUNDED, SHADOW & GLASS) */
-        .session-grid-layout {
+        /* COMPACT CARD LAYOUT (35-40% REDUCED HEIGHT) */
+        .compact-session-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
-          gap: 16px;
+          grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+          gap: 10px;
         }
-        :global(.session-card) {
+        .compact-card {
           background: var(--bg-surface);
           border: 1px solid var(--border-default);
-          border-radius: 20px;
-          padding: 18px 20px;
-          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+          border-radius: 16px;
+          padding: 14px 16px;
+          box-shadow: 0 6px 20px rgba(0, 0, 0, 0.04);
           backdrop-filter: blur(16px);
           display: flex;
           flex-direction: column;
-          justify-content: space-between;
-          gap: 14px;
+          gap: 8px;
+          cursor: pointer;
           transition: all var(--transition-fast);
         }
-        :global(.session-card:hover) {
+        .compact-card:hover {
           transform: translateY(-2px);
           border-color: rgba(99, 102, 241, 0.4);
-          box-shadow: 0 14px 36px rgba(99, 102, 241, 0.15);
+          box-shadow: 0 10px 28px rgba(99, 102, 241, 0.15);
         }
 
-        .sc-header {
+        /* BARIS 1: Tanggal (15px), Jam (15px), Status Pill (14px) */
+        .c-row-1 {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          gap: 10px;
+          gap: 8px;
         }
-        .sc-date-badge {
+        .c-datetime-group {
           display: flex;
           align-items: center;
           gap: 6px;
-          font-size: 12px;
+          font-size: 14px;
           font-weight: 700;
           color: var(--text-secondary);
         }
-        .sc-time-dot {
+        .c-date-text, .c-time-text {
+          font-size: 14px;
+          font-weight: 700;
+        }
+        .c-dot {
           color: var(--text-muted);
         }
 
-        /* 4. MODERN STATUS PILL */
-        :global(.sc-status-pill) {
-          padding: 4px 10px;
+        /* 10. STATUS BADGE PROPORSI */
+        .compact-status-pill {
+          padding: 3px 9px;
           border-radius: 100px;
-          font-size: 11.5px;
+          font-size: 12px;
           font-weight: 800;
           display: inline-flex;
           align-items: center;
           gap: 4px;
+          line-height: 1;
         }
-        :global(.sc-pill-success) {
+        .pill-success {
           background: rgba(16, 185, 129, 0.14);
           color: #10b981;
           border: 1px solid rgba(16, 185, 129, 0.3);
         }
-        :global(.sc-pill-brand) {
+        .pill-brand {
           background: rgba(99, 102, 241, 0.14);
           color: #6366f1;
           border: 1px solid rgba(99, 102, 241, 0.3);
         }
-        :global(.sc-pill-danger) {
+        .pill-danger {
           background: rgba(239, 68, 68, 0.14);
           color: #ef4444;
           border: 1px solid rgba(239, 68, 68, 0.3);
         }
 
-        /* 3. PROGRAM DETAILS DISPLAY */
-        .sc-body {
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
-        }
-        .sc-program-row {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-        }
-        :global(.sc-prog-icon) {
-          color: #a855f7;
-        }
-        .sc-program-name {
-          font-size: 16px;
-          font-weight: 800;
-          color: var(--text-primary);
-        }
-        .sc-meta-pills {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          flex-wrap: wrap;
-        }
-        .sc-meta-pill {
-          display: flex;
-          align-items: center;
-          gap: 5px;
-          background: var(--bg-elevated);
-          border: 1px solid var(--border-default);
-          padding: 4px 10px;
-          border-radius: 8px;
-          font-size: 12px;
-          font-weight: 600;
-          color: var(--text-secondary);
-        }
-        .sc-rpe-pill {
-          background: rgba(249, 115, 22, 0.12);
-          border-color: rgba(249, 115, 22, 0.25);
-          color: #f97316;
-          font-weight: 800;
-        }
-        .sc-client-box {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          font-size: 12.5px;
-          color: var(--text-secondary);
-          margin-top: 2px;
-        }
-        .sc-client-name {
-          font-weight: 700;
-          color: var(--text-primary);
-        }
-        .sc-pkg-name {
-          color: var(--text-muted);
-          font-size: 11.5px;
-        }
-        .sc-notes-text {
-          font-size: 12px;
-          font-style: italic;
-          color: var(--text-muted);
-
-        }
-
-        .sc-footer {
+        /* BARIS 2: Judul Program (22px) & RPE */
+        .c-row-2 {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          gap: 10px;
-          padding-top: 12px;
-          border-top: 1px solid var(--border-default);
+          gap: 8px;
         }
-        .sc-status-select {
-          height: 34px;
-          background: var(--bg-elevated);
-          border: 1px solid var(--border-default);
-          border-radius: 10px;
+        .c-program-title {
+          font-size: 20px;
+          font-weight: 900;
           color: var(--text-primary);
-          font-size: 12px;
-          font-weight: 600;
-          padding: 0 8px;
-          outline: none;
+          line-height: 1.15;
+          letter-spacing: -0.01em;
         }
-        .sc-action-btns {
+        .c-rpe-badge {
+          background: rgba(249, 115, 22, 0.12);
+          border: 1px solid rgba(249, 115, 22, 0.3);
+          color: #f97316;
+          padding: 2px 8px;
+          border-radius: 8px;
+          font-size: 12px;
+          font-weight: 800;
+          flex-shrink: 0;
+        }
+
+        /* BARIS 3: Lokasi (14px) & Paket */
+        .c-row-3 {
           display: flex;
           align-items: center;
           gap: 6px;
-        }
-        :global(.sc-btn-edit) {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          width: 34px;
-          height: 34px;
-          border-radius: 10px;
-          background: var(--bg-elevated);
-          border: 1px solid var(--border-default);
+          font-size: 13.5px;
           color: var(--text-secondary);
-          transition: all var(--transition-fast);
         }
-        :global(.sc-btn-edit:hover) {
+        .c-meta-item {
+          font-size: 13.5px;
+          font-weight: 600;
+        }
+        .c-meta-dot {
+          color: var(--text-muted);
+        }
+        .c-package-tag {
+          color: var(--text-muted);
+          font-size: 12.5px;
+        }
+
+        /* BARIS 4: Catatan PT (13px max 2 baris) */
+        .c-row-4 {
+          background: var(--bg-elevated);
+          padding: 8px 10px;
+          border-radius: 10px;
+          border: 1px solid var(--border-default);
+        }
+        .c-notes-preview {
+          font-size: 12.5px;
+          line-height: 1.35;
+          color: var(--text-secondary);
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .c-read-more {
           color: var(--brand-primary);
-          border-color: var(--brand-primary);
+          font-weight: 700;
         }
-        .sc-btn-delete {
+
+        /* BARIS 5: BUTTON LIHAT DETAIL */
+        .c-row-5 {
+          margin-top: 2px;
+        }
+        .c-detail-btn {
+          width: 100%;
+          height: 38px;
+          background: rgba(99, 102, 241, 0.12);
+          border: 1px solid rgba(99, 102, 241, 0.28);
+          border-radius: 10px;
+          color: var(--brand-primary);
+          font-size: 13px;
+          font-weight: 700;
           display: flex;
           align-items: center;
           justify-content: center;
-          width: 34px;
-          height: 34px;
-          border-radius: 10px;
-          background: rgba(239, 68, 68, 0.1);
-          border: 1px solid rgba(239, 68, 68, 0.25);
-          color: #ef4444;
+          gap: 6px;
           cursor: pointer;
           transition: all var(--transition-fast);
         }
-        .sc-btn-delete:hover {
-          background: rgba(239, 68, 68, 0.2);
-          border-color: #ef4444;
+        .c-detail-btn:hover {
+          background: rgba(99, 102, 241, 0.22);
+          border-color: var(--brand-primary);
         }
 
-        /* 5. TIMELINE VIEW STYLES */
-        .session-timeline-layout {
-          display: flex;
-          flex-direction: column;
-          gap: 12px;
-        }
-        .timeline-item {
-          display: flex;
-          gap: 14px;
-        }
-        .tl-node-line {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          width: 20px;
-        }
-        .tl-node-dot {
-          width: 12px;
-          height: 12px;
-          border-radius: 50%;
-          background: var(--brand-primary);
-          box-shadow: 0 0 10px var(--brand-primary);
-          margin-top: 6px;
-        }
-        .tl-line {
-          flex: 1;
-          width: 2px;
-          background: var(--border-default);
-          margin-top: 4px;
-        }
-        .tl-card {
-          flex: 1;
-        }
-        .tl-time-badge {
-          font-size: 12.5px;
-          font-weight: 700;
-          color: var(--text-primary);
-        }
-
-        /* CALENDAR VIEW STYLES */
-        .calendar-card-item {
-          display: flex;
-          align-items: center;
-          gap: 16px;
-        }
-        .cal-date-header {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          width: 54px;
-          height: 54px;
-          background: rgba(99, 102, 241, 0.15);
-          border: 1px solid rgba(99, 102, 241, 0.3);
-          border-radius: 14px;
-          color: var(--brand-primary);
-          flex-shrink: 0;
-        }
-        .cal-day-num {
-          font-size: 20px;
-          font-weight: 900;
-          line-height: 1;
-        }
-        .cal-month-name {
-          font-size: 10px;
-          font-weight: 700;
-          text-transform: uppercase;
-        }
-
-        /* LIST VIEW STYLES */
-        .session-list-compact-layout {
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
-        }
-        .session-list-item {
-          background: var(--bg-surface);
-          border: 1px solid var(--border-default);
-          border-radius: 14px;
-          padding: 12px 16px;
+        /* PT CONTROLS */
+        .pt-control-bar {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          gap: 12px;
+          gap: 8px;
+          width: 100%;
         }
-        .sli-left {
+        .pt-status-select {
+          height: 34px;
+          background: var(--bg-elevated);
+          border: 1px solid var(--border-default);
+          border-radius: 8px;
+          color: var(--text-primary);
+          font-size: 12px;
+          font-weight: 600;
+          padding: 0 6px;
+        }
+        .pt-btn-group {
+          display: flex;
+          gap: 6px;
+        }
+        :global(.pt-edit-btn) {
+          width: 32px;
+          height: 32px;
+          border-radius: 8px;
+          background: var(--bg-elevated);
+          border: 1px solid var(--border-default);
+          color: var(--text-secondary);
           display: flex;
           align-items: center;
-          gap: 12px;
+          justify-content: center;
         }
-        .sli-icon {
-          width: 36px;
-          height: 36px;
-          border-radius: 10px;
+        .pt-delete-btn {
+          width: 32px;
+          height: 32px;
+          border-radius: 8px;
+          background: rgba(239, 68, 68, 0.1);
+          border: 1px solid rgba(239, 68, 68, 0.25);
+          color: #ef4444;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+        }
+
+        /* 12. EMPTY STATE MODEL MODERN */
+        .compact-empty-card {
+          background: var(--bg-surface);
+          border: 1px solid var(--border-default);
+          border-radius: 20px;
+          padding: 36px 20px;
+          text-align: center;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 10px;
+          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+        }
+        .empty-icon-wrap {
+          width: 60px;
+          height: 60px;
+          border-radius: 18px;
+          background: rgba(99, 102, 241, 0.12);
+          color: var(--brand-primary);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .empty-title {
+          font-size: 16.5px;
+          font-weight: 800;
+          color: var(--text-primary);
+        }
+        .empty-desc {
+          font-size: 12.5px;
+          color: var(--text-muted);
+          max-width: 360px;
+          line-height: 1.4;
+        }
+        .empty-refresh-btn {
+          margin-top: 6px;
+          padding: 8px 18px;
+          background: var(--brand-primary);
+          color: white;
+          border: none;
+          border-radius: 100px;
+          font-size: 13px;
+          font-weight: 700;
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          cursor: pointer;
+          box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+        }
+
+        /* 11. SKELETON STYLES */
+        .skeleton-card {
+          height: 130px;
+        }
+        .skeleton-line {
+          background: linear-gradient(90deg, var(--bg-elevated) 25%, var(--bg-overlay) 50%, var(--bg-elevated) 75%);
+          background-size: 200% 100%;
+          animation: shimmer 1.5s infinite;
+          border-radius: 6px;
+        }
+        .sk-title { height: 18px; width: 50%; }
+        .sk-subtitle { height: 24px; width: 70%; }
+        .sk-body { height: 14px; width: 90%; }
+
+        /* 9. PREMIUM BOTTOM SHEET STYLES */
+        .bottom-sheet-backdrop {
+          position: fixed;
+          inset: 0;
+          background: rgba(0, 0, 0, 0.75);
+          backdrop-filter: blur(14px);
+          z-index: 9999;
+          display: flex;
+          align-items: flex-end;
+          justify-content: center;
+        }
+        .bottom-sheet-card {
+          width: 100%;
+          max-width: 600px;
+          background: var(--bg-elevated);
+          border-top-left-radius: 28px;
+          border-top-right-radius: 28px;
+          border: 1px solid var(--border-default);
+          border-bottom: none;
+          padding: 16px 20px 24px;
+          box-shadow: 0 -20px 50px rgba(0, 0, 0, 0.6);
+          max-height: 85vh;
+          overflow-y: auto;
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+        }
+        .sheet-handle-bar {
+          width: 42px;
+          height: 5px;
+          background: var(--border-default);
+          border-radius: 100px;
+          align-self: center;
+        }
+        .sheet-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+        }
+        .sheet-title-group {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+        .sheet-icon-badge {
+          width: 38px;
+          height: 38px;
+          border-radius: 12px;
           background: rgba(168, 85, 247, 0.15);
           color: #a855f7;
           display: flex;
           align-items: center;
           justify-content: center;
         }
-        .sli-title {
-          font-size: 14px;
-          font-weight: 700;
+        .sheet-title {
+          font-size: 16.5px;
+          font-weight: 800;
           color: var(--text-primary);
         }
-        .sli-sub {
+        .sheet-subtitle {
           font-size: 12px;
           color: var(--text-muted);
         }
-        .sli-right {
-          display: flex;
-          align-items: center;
-          gap: 8px;
+        .sheet-close-btn {
+          background: transparent;
+          border: none;
+          color: var(--text-muted);
+          cursor: pointer;
         }
-
-        /* 6. GLASS SKELETON STYLES */
-        .skeleton-card {
-          height: 160px;
+        .sheet-body {
           display: flex;
           flex-direction: column;
           gap: 12px;
         }
-        .skeleton-line {
-          background: linear-gradient(90deg, var(--bg-elevated) 25%, var(--bg-overlay) 50%, var(--bg-elevated) 75%);
-          background-size: 200% 100%;
-          animation: shimmer 1.5s infinite;
-          border-radius: 8px;
-        }
-        .title-sk { height: 20px; width: 60%; }
-        .text-sk { height: 16px; width: 80%; }
-        .sub-sk { height: 14px; width: 40%; }
-        @keyframes shimmer {
-          0% { background-position: -200% 0; }
-          100% { background-position: 200% 0; }
-        }
-
-        .session-empty-card {
+        .sheet-section-card {
           background: var(--bg-surface);
           border: 1px solid var(--border-default);
-          border-radius: 20px;
-          padding: 40px 20px;
-          text-align: center;
+          border-radius: 16px;
+          padding: 14px;
           display: flex;
           flex-direction: column;
+          gap: 10px;
+        }
+        .bs-row-between {
+          display: flex;
           align-items: center;
-          justify-content: center;
+          justify-content: space-between;
+        }
+        .bs-program-title {
+          font-size: 20px;
+          font-weight: 900;
+          color: var(--text-primary);
+        }
+        .bs-grid-2 {
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 10px;
+        }
+        .bs-info-item {
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
+        }
+        .bs-label {
+          font-size: 11px;
+          font-weight: 600;
+          color: var(--text-muted);
+        }
+        .bs-val {
+          font-size: 13px;
+          font-weight: 700;
+          color: var(--text-primary);
+        }
+        .sheet-sec-title {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          font-size: 13px;
+          font-weight: 700;
+          color: var(--brand-primary);
+        }
+        .bs-full-notes {
+          font-size: 13px;
+          line-height: 1.45;
+          color: var(--text-secondary);
+          font-style: italic;
+          background: var(--bg-elevated);
+          padding: 10px 12px;
+          border-radius: 10px;
+        }
+        .bs-eval-box {
+          display: flex;
+          align-items: center;
           gap: 8px;
+          font-size: 12.5px;
+          color: var(--text-secondary);
+        }
+        .sheet-footer {
+          margin-top: 4px;
+        }
+        .sheet-close-action-btn {
+          width: 100%;
+          height: 44px;
+          border-radius: 14px;
+          border: 1px solid var(--border-default);
+          background: var(--bg-surface);
+          color: var(--text-primary);
+          font-size: 13.5px;
+          font-weight: 700;
+          cursor: pointer;
         }
 
         @media (max-width: 640px) {
-          .session-header-card {
-            padding: 14px;
-            border-radius: 16px;
+          .compact-session-grid {
+            grid-template-columns: 1fr;
           }
-          .segmented-control {
-            width: 100%;
-            overflow-x: auto;
+          .c-program-title {
+            font-size: 18px;
           }
-          .seg-btn {
-            flex: 1;
-            justify-content: center;
-            padding: 6px 8px;
-            font-size: 11.5px;
-          }
-          .session-grid-layout {
+          .bs-grid-2 {
             grid-template-columns: 1fr;
           }
         }
