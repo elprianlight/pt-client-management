@@ -26,40 +26,78 @@ import {
   CheckCircle2,
   FileText,
   TrendingUp,
+  Sparkles,
+  ChevronLeft,
+  ChevronRight,
+  Plus,
+  Filter,
+  Check,
+  Ban,
+  Activity,
+  Award,
 } from 'lucide-react'
-import { listSessions, updateSessionStatus, deleteSession } from '@/lib/actions/session'
+import { listSessions, updateSessionStatus, deleteSession, scheduleSession } from '@/lib/actions/session'
+import { listPackages } from '@/lib/actions/package'
 import { useAuthStore } from '@/store/auth-store'
-import { format } from 'date-fns'
-import { id } from 'date-fns/locale'
+import { format, addDays, subDays, startOfWeek, isSameDay, parseISO } from 'date-fns'
+import { id as idLocale } from 'date-fns/locale'
 
 export function SessionList() {
-  const { role } = useAuthStore()
+  const { role, user } = useAuthStore()
   const isClient = role === 'client'
 
   const [mounted, setMounted] = useState(false)
   const [data, setData] = useState<any[]>([])
+  const [packagesData, setPackagesData] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [processingId, setProcessingId] = useState<string | null>(null)
 
-  // Detail Bottom Sheet state for Client & PT
+  // PT Selected Date for Day/Week Schedule View
+  const [currentDate, setCurrentDate] = useState<Date>(new Date())
+
+  // View Mode: 'day' (Hari) vs 'week' (Minggu)
+  const [scheduleViewMode, setScheduleViewMode] = useState<'day' | 'week'>('day')
+
+  // Filter Chip selection for PT
+  const [activeFilterChip, setActiveFilterChip] = useState<'all' | 'today' | 'tomorrow' | 'scheduled' | 'completed' | 'cancelled'>('all')
+
+  // Search Query & Search Modal state
+  const [searchQuery, setSearchQuery] = useState('')
+  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false)
+
+  // Session Detail Bottom Sheet Modal state
   const [selectedDetailSession, setSelectedDetailSession] = useState<any | null>(null)
 
-  // View Mode Options (For PT / Admin view)
-  const [viewMode, setViewMode] = useState<'card' | 'timeline' | 'calendar' | 'list'>('card')
+  // Add / Edit Session Bottom Sheet Modal state
+  const [isAddSessionModalOpen, setIsAddSessionModalOpen] = useState(false)
+  const [newSessionPkgId, setNewSessionPkgId] = useState('')
+  const [newSessionProgram, setNewSessionProgram] = useState('Total Body')
+  const [newSessionTime, setNewSessionTime] = useState('09:00')
+  const [newSessionLocation, setNewSessionLocation] = useState('Gym Hang Lekir')
+  const [newSessionRpe, setNewSessionRpe] = useState('8')
+  const [newSessionNotes, setNewSessionNotes] = useState('')
+  const [isSubmittingNewSession, setIsSubmittingNewSession] = useState(false)
 
-  // Filters & Search
-  const [selectedMonth, setSelectedMonth] = useState<string>('')
+  // Delete Confirmation Modal state
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
+
+  // Client Single Package Filter State
   const [selectedPackage, setSelectedPackage] = useState<string>('')
-  const [selectedClient, setSelectedClient] = useState<string>('')
-  const [searchQuery, setSearchQuery] = useState<string>('')
+  const [hasDefaultPackageBeenSet, setHasDefaultPackageBeenSet] = useState(false)
 
   useEffect(() => {
     setMounted(true)
   }, [])
 
-  // Lock body scroll when modal is open to ensure 100% viewport centering on mobile HP
+  // Lock body scroll when any modal is open to ensure 100% viewport centering on mobile HP
   useEffect(() => {
-    if (selectedDetailSession) {
+    const isAnyModalOpen =
+      Boolean(selectedDetailSession) ||
+      isAddSessionModalOpen ||
+      isSearchModalOpen ||
+      Boolean(deleteConfirmId)
+
+    if (isAnyModalOpen) {
       document.body.style.overflow = 'hidden'
       document.body.style.touchAction = 'none'
     } else {
@@ -70,53 +108,29 @@ export function SessionList() {
       document.body.style.overflow = ''
       document.body.style.touchAction = ''
     }
-  }, [selectedDetailSession])
+  }, [selectedDetailSession, isAddSessionModalOpen, isSearchModalOpen, deleteConfirmId])
 
   const loadData = async () => {
     setIsLoading(true)
-    const res = await listSessions()
-    setData(res)
-    setIsLoading(false)
+    try {
+      const [sessionsRes, pkgsRes] = await Promise.all([
+        listSessions(),
+        listPackages(),
+      ])
+      setData(sessionsRes || [])
+      setPackagesData(pkgsRes || [])
+    } catch (err) {
+      console.error('Error loading schedule data:', err)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   useEffect(() => {
     loadData()
   }, [])
 
-  const handleStatusChange = async (sessionId: string, status: any) => {
-    if (isClient) return // Client Read-Only Protection
-
-    let msg = `Ubah status sesi?`
-    if (status === 'completed') msg = 'Tandai sesi ini sebagai selesai? Ini akan memotong kuota paket client.'
-    if (!confirm(msg)) return
-
-    setProcessingId(sessionId)
-    const res = await updateSessionStatus(sessionId, status)
-    if (res.success) {
-      await loadData()
-    } else {
-      alert(res.error || 'Gagal memperbarui status sesi')
-    }
-    setProcessingId(null)
-  }
-
-  const handleDelete = async (sessionId: string) => {
-    if (isClient) return // Client Read-Only Protection
-    if (!confirm('Apakah Anda yakin ingin menghapus sesi ini? Tindakan ini tidak dapat dibatalkan.')) return
-
-    setProcessingId(sessionId)
-    const res = await deleteSession(sessionId)
-    if (res.success) {
-      await loadData()
-    } else {
-      alert(res.error || 'Gagal menghapus sesi')
-    }
-    setProcessingId(null)
-  }
-
-  const [hasDefaultPackageBeenSet, setHasDefaultPackageBeenSet] = useState(false)
-
-  // Client's unique packages (sorted descending so newest/latest package is first!)
+  // Client's unique packages
   const clientPackages = useMemo(() => {
     const pkgs = new Set<string>()
     const sortedData = [...data].sort(
@@ -128,7 +142,7 @@ export function SessionList() {
     return Array.from(pkgs)
   }, [data])
 
-  // DEFAULT TERBARU: Set default package filter ONCE to latest active package for client
+  // Set default package filter for Client
   useEffect(() => {
     if (isClient && clientPackages.length > 0 && !hasDefaultPackageBeenSet) {
       setSelectedPackage(clientPackages[0])
@@ -136,65 +150,73 @@ export function SessionList() {
     }
   }, [isClient, clientPackages, hasDefaultPackageBeenSet])
 
-  const uniqueClients = useMemo(() => {
-    const clients = new Set<string>()
-    data.forEach(item => {
-      if (item.clientName) clients.add(item.clientName)
-    })
-    return Array.from(clients).sort()
-  }, [data])
+  // Dynamic Greeting based on time of day
+  const dynamicGreeting = useMemo(() => {
+    const hour = new Date().getHours()
+    if (hour < 12) return '🌅 Good Morning'
+    if (hour < 18) return '☀️ Good Afternoon'
+    return '🌙 Good Evening'
+  }, [])
 
-  const uniqueMonths = useMemo(() => {
-    const months = new Set<string>()
-    data.forEach(item => {
-      if (item.scheduledAt) {
-        months.add(format(new Date(item.scheduledAt), 'yyyy-MM'))
-      }
+  // Filtered Sessions for the active selected date (PT Day View)
+  const sessionsForCurrentDate = useMemo(() => {
+    return data.filter(item => {
+      if (!item.scheduledAt) return false
+      const sessionDate = new Date(item.scheduledAt)
+      return isSameDay(sessionDate, currentDate)
     })
-    return Array.from(months).sort().reverse()
-  }, [data])
+  }, [data, currentDate])
 
-  const packageCounts = useMemo(() => {
-    const counts: Record<string, number> = {}
-    data.forEach(item => {
-      if (item.packageName) {
-        counts[item.packageName] = (counts[item.packageName] || 0) + 1
-      }
-    })
-    return Object.entries(counts).sort((a, b) => a[1] - b[1])
-  }, [data])
-
-  const filteredData = useMemo(() => {
+  // Filtered Sessions with Filter Chips & Search for PT
+  const ptFilteredSessions = useMemo(() => {
     let result = data
-    if (searchQuery) {
+
+    // Date Filter Chip
+    if (activeFilterChip === 'today') {
+      result = result.filter(item => isSameDay(new Date(item.scheduledAt), new Date()))
+    } else if (activeFilterChip === 'tomorrow') {
+      const tomorrow = addDays(new Date(), 1)
+      result = result.filter(item => isSameDay(new Date(item.scheduledAt), tomorrow))
+    } else if (activeFilterChip === 'scheduled') {
+      result = result.filter(item => item.status === 'scheduled')
+    } else if (activeFilterChip === 'completed') {
+      result = result.filter(item => item.status === 'completed')
+    } else if (activeFilterChip === 'cancelled') {
+      result = result.filter(item => item.status === 'cancelled')
+    }
+
+    // Search Query Filter
+    if (searchQuery.trim()) {
       const term = searchQuery.toLowerCase()
-      result = result.filter(row =>
-        Object.values(row).some(val =>
-          typeof val === 'string' && val.toLowerCase().includes(term)
-        )
+      result = result.filter(item =>
+        (item.clientName && item.clientName.toLowerCase().includes(term)) ||
+        (item.programType && item.programType.toLowerCase().includes(term)) ||
+        (item.location && item.location.toLowerCase().includes(term))
       )
     }
-    if (selectedMonth) {
-      result = result.filter(row => {
-        const date = new Date(row.scheduledAt)
-        return format(date, 'yyyy-MM') === selectedMonth
-      })
-    }
-    if (selectedClient && !isClient) {
-      result = result.filter(row => row.clientName === selectedClient)
-    }
-    if (selectedPackage) {
-      result = result.filter(row => row.packageName === selectedPackage)
-    }
+
     return result
-  }, [data, selectedMonth, selectedPackage, selectedClient, searchQuery, isClient])
+  }, [data, activeFilterChip, searchQuery])
 
-  // Active Package Session Usage Info for Client
+  // Quick Stats Calculation for Today's PT View
+  const todayStats = useMemo(() => {
+    const todaySessions = data.filter(item => isSameDay(new Date(item.scheduledAt), currentDate))
+    const uniqueClientsCount = new Set(todaySessions.map(s => s.clientName)).size
+    const totalSessionsCount = todaySessions.length
+    const occupiedHours = Math.min(12, totalSessionsCount) // assuming 1 hr per session
+    const availableHours = Math.max(0, 10 - occupiedHours)
+
+    return {
+      uniqueClients: uniqueClientsCount,
+      totalSessions: totalSessionsCount,
+      occupiedHours,
+      availableHours,
+    }
+  }, [data, currentDate])
+
+  // Active Package Info for Client
   const activePackageInfo = useMemo(() => {
-    // If a specific package is selected, target that package.
-    // Otherwise, target the latest active package (clientPackages[0]) so calculation reflects active package stats!
     const targetPackageName = selectedPackage || (clientPackages.length > 0 ? clientPackages[0] : '')
-
     const pkgSessions = targetPackageName
       ? data.filter(s => s.packageName === targetPackageName)
       : data
@@ -209,25 +231,107 @@ export function SessionList() {
     return { used, total, remaining, percent }
   }, [data, selectedPackage, clientPackages])
 
-  // Proportional Status Pill
-  const renderStatusPill = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return <span className="compact-status-pill pill-success">🟢 Selesai</span>
-      case 'cancelled':
-        return <span className="compact-status-pill pill-danger">🔴 Dibatalkan</span>
-      case 'no_show':
-        return <span className="compact-status-pill pill-danger">🚫 No Show</span>
-      default:
-        return <span className="compact-status-pill pill-brand">🔵 Scheduled</span>
+  // Status Change Handler for PT
+  const handleStatusChange = async (sessionId: string, status: any) => {
+    if (isClient) return
+
+    setProcessingId(sessionId)
+    try {
+      const res = await updateSessionStatus(sessionId, status)
+      if (res.success) {
+        await loadData()
+        if (selectedDetailSession && selectedDetailSession.id === sessionId) {
+          setSelectedDetailSession({ ...selectedDetailSession, status })
+        }
+      } else {
+        alert(res.error || 'Gagal memperbarui status sesi')
+      }
+    } catch (err: any) {
+      alert(err.message)
+    } finally {
+      setProcessingId(null)
     }
   }
 
-  return (
-    <div className="compact-session-wrapper">
-      {/* ==================== 1. FILTER SECTION ==================== */}
-      {isClient ? (
-        /* SINGLE FILTER UNTUK CLIENT: DROPDOWN PAKET PT & UNIFIED TAMPILAN PENGGUNAAN SESI */
+  // Delete Session Handler for PT
+  const handleConfirmDelete = async () => {
+    if (!deleteConfirmId || isClient) return
+    setProcessingId(deleteConfirmId)
+    try {
+      const res = await deleteSession(deleteConfirmId)
+      if (res.success) {
+        await loadData()
+        setSelectedDetailSession(null)
+        setDeleteConfirmId(null)
+      } else {
+        alert(res.error || 'Gagal menghapus sesi')
+      }
+    } catch (err: any) {
+      alert(err.message)
+    } finally {
+      setProcessingId(null)
+    }
+  }
+
+  // Add Session Submission Handler for PT
+  const handleCreateSession = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (isClient || !newSessionPkgId) return
+
+    setIsSubmittingNewSession(true)
+    try {
+      // Build ISO date time string
+      const dateStr = format(currentDate, 'yyyy-MM-dd')
+      const scheduledAtStr = `${dateStr}T${newSessionTime}:00`
+
+      const res = await scheduleSession({
+        packageId: newSessionPkgId,
+        scheduledAt: scheduledAtStr,
+        status: 'scheduled',
+        programType: newSessionProgram,
+        rpe: Number(newSessionRpe),
+        location: newSessionLocation,
+        sessionNotes: newSessionNotes,
+      })
+
+      if (res.success) {
+        await loadData()
+        setIsAddSessionModalOpen(false)
+        setNewSessionNotes('')
+      } else {
+        alert(res.error || 'Gagal menambah sesi baru')
+      }
+    } catch (err: any) {
+      alert(err.message)
+    } finally {
+      setIsSubmittingNewSession(false)
+    }
+  }
+
+  // Status Badge Helper
+  const renderStatusPill = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return <span className="pt-status-pill pill-completed">✅ Completed</span>
+      case 'cancelled':
+        return <span className="pt-status-pill pill-cancelled">🔴 Cancelled</span>
+      case 'check_in':
+        return <span className="pt-status-pill pill-checkin">🟢 Check-In</span>
+      default:
+        return <span className="pt-status-pill pill-scheduled">🔵 Scheduled</span>
+    }
+  }
+
+  // Week View Days Array (7 days starting from Monday of currentDate)
+  const weekDays = useMemo(() => {
+    const start = startOfWeek(currentDate, { weekStartsOn: 1 })
+    return Array.from({ length: 7 }, (_, i) => addDays(start, i))
+  }, [currentDate])
+
+  // ==================== RENDER CLIENT VIEW (PRESERVATION OF CLIENT SPEC) ====================
+  if (isClient) {
+    return (
+      <div className="compact-session-wrapper">
         <div className="client-single-filter-card animate-slide-down">
           <div className="csf-inner">
             <Package size={16} className="csf-icon" />
@@ -246,7 +350,6 @@ export function SessionList() {
             </select>
           </div>
 
-          {/* TAMPILAN PENGGUNAAN SESI (UNIFIED SISA SESI PROGRESS CARD) */}
           <div className="csf-usage-box">
             <div className="csf-usage-top">
               <span className="csf-usage-text">
@@ -267,353 +370,602 @@ export function SessionList() {
             </div>
           </div>
         </div>
-      ) : (
-        /* FULL FILTER & SEGMENTED CONTROL UNTUK PT / ADMIN */
-        <div className="session-header-card animate-slide-down">
-          <div className="session-header-top">
-            <div>
-              <h2 className="session-header-title">Riwayat & Jadwal Sesi</h2>
-              <p className="session-header-desc">Kelola seluruh aktivitas sesi latihan client Anda</p>
-            </div>
 
-            <div className="segmented-control">
-              <button
-                type="button"
-                onClick={() => setViewMode('card')}
-                className={`seg-btn ${viewMode === 'card' ? 'active' : ''}`}
-              >
-                <LayoutGrid size={14} />
-                <span>Cards</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setViewMode('timeline')}
-                className={`seg-btn ${viewMode === 'timeline' ? 'active' : ''}`}
-              >
-                <GitCommit size={14} />
-                <span>Timeline</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setViewMode('calendar')}
-                className={`seg-btn ${viewMode === 'calendar' ? 'active' : ''}`}
-              >
-                <CalendarDays size={14} />
-                <span>Kalender</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setViewMode('list')}
-                className={`seg-btn ${viewMode === 'list' ? 'active' : ''}`}
-              >
-                <List size={14} />
-                <span>List</span>
-              </button>
-            </div>
-          </div>
-
-          <div className="session-filter-grid">
-            <div className="filter-input-wrap search-wrap">
-              <Search size={14} className="filter-search-icon" />
-              <input
-                type="text"
-                placeholder="Cari client, program, lokasi..."
-                className="filter-input"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-
-            <div className="filter-input-wrap">
-              <select
-                className="filter-select"
-                value={selectedClient}
-                onChange={(e) => setSelectedClient(e.target.value)}
-              >
-                <option value="">Semua Client</option>
-                {uniqueClients.map(c => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
-              </select>
-            </div>
-
-            <div className="filter-input-wrap">
-              <select
-                className="filter-select"
-                value={selectedMonth}
-                onChange={(e) => setSelectedMonth(e.target.value)}
-              >
-                <option value="">Semua Bulan</option>
-                {uniqueMonths.map(m => {
-                  const [year, month] = m.split('-')
-                  const date = new Date(parseInt(year), parseInt(month) - 1, 1)
-                  return <option key={m} value={m}>{format(date, 'MMMM yyyy', { locale: id })}</option>
-                })}
-              </select>
-            </div>
-
-            <div className="filter-input-wrap">
-              <select
-                className="filter-select"
-                value={selectedPackage}
-                onChange={(e) => setSelectedPackage(e.target.value)}
-              >
-                <option value="">Semua Paket</option>
-                {packageCounts.map(([pkg, count]) => (
-                  <option key={pkg} value={pkg}>{pkg} ({count} sesi)</option>
-                ))}
-              </select>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ==================== 11. GLASS SKELETON LOADING EXPERIENCE ==================== */}
-      {isLoading ? (
+        {/* CLIENT SESSIONS LIST */}
         <div className="compact-session-grid">
-          {[1, 2, 3, 4].map(n => (
-            <div key={n} className="compact-card skeleton-card">
-              <div className="skeleton-line sk-title" />
-              <div className="skeleton-line sk-subtitle" />
-              <div className="skeleton-line sk-body" />
-            </div>
-          ))}
-        </div>
-      ) : filteredData.length === 0 ? (
-        /* 12. EMPTY STATE MODEL MODERN */
-        <div className="compact-empty-card animate-fade-in">
-          <div className="empty-icon-wrap">
-            <Dumbbell size={36} />
-          </div>
-          <h3 className="empty-title">Belum Ada Riwayat Latihan</h3>
-          <p className="empty-desc">
-            Riwayat sesi latihan akan muncul setelah Personal Trainer menjadwalkan atau menyelesaikan sesi Anda.
-          </p>
-          <button type="button" onClick={loadData} className="empty-refresh-btn">
-            <RefreshCw size={14} />
-            <span>Refresh</span>
-          </button>
-        </div>
-      ) : (
-        /* ==================== COMPACT SESSION CARD GRID ==================== */
-        <div className="compact-session-grid">
-          {filteredData.map((row, idx) => (
+          {data.map((s, idx) => (
             <div
-              key={row.id}
-              onClick={() => setSelectedDetailSession(row)}
+              key={s.id}
+              onClick={() => setSelectedDetailSession(s)}
               className="compact-card animate-slide-up"
               style={{ animationDelay: `${idx * 30}ms` }}
             >
-              {/* BARIS 1: Tanggal, Jam, Status Pill */}
               <div className="c-row-1">
-                <div className="c-datetime-group">
-                  <span className="c-date-text">
-                    📅 {format(new Date(row.scheduledAt), 'dd MMM yyyy', { locale: id })}
-                  </span>
-                  <span className="c-dot">•</span>
-                  <span className="c-time-text">
-                    🕘 {format(new Date(row.scheduledAt), 'HH:mm')}
-                  </span>
-                </div>
-                {renderStatusPill(row.status)}
-              </div>
-
-              {/* BARIS 2: Judul Program (22px bold) & RPE */}
-              <div className="c-row-2">
-                <h3 className="c-program-title">
-                  🏋️ {row.programType || 'Total Body'}
-                </h3>
-                {row.rpe && (
-                  <span className="c-rpe-badge">
-                    🔥 RPE {row.rpe}
-                  </span>
-                )}
-              </div>
-
-              {/* BARIS 3: Lokasi & Nama Paket */}
-              <div className="c-row-3">
-                <span className="c-meta-item">
-                  📍 {row.location || 'Gym Hang Lekir'}
+                <span className="c-datetime">
+                  📅 {format(new Date(s.scheduledAt), 'EEEE, dd MMM yyyy • HH:mm', { locale: idLocale })}
                 </span>
-                <span className="c-meta-dot">•</span>
-                <span className="c-meta-item c-package-tag">
-                  📦 {row.packageName || 'Paket PT'}
-                </span>
+                {renderStatusPill(s.status)}
               </div>
-
-              {/* BARIS 4: Ringkasan Catatan PT (Max 2 Baris + ... Selengkapnya) */}
-              {row.sessionNotes && (
-                <div className="c-row-4">
-                  <p className="c-notes-preview">
-                    💬 "{row.sessionNotes.length > 80 ? `${row.sessionNotes.slice(0, 80)}...` : row.sessionNotes}"
-                    <span className="c-read-more"> ... Selengkapnya</span>
-                  </p>
-                </div>
-              )}
-
-              {/* BARIS 5: BUTTON HANYA LIHAT DETAIL (UNTUK CLIENT) ATAU MANAJEMEN PT */}
-              <div className="c-row-5">
-                {isClient ? (
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      setSelectedDetailSession(row)
-                    }}
-                    className="c-detail-btn"
-                  >
-                    <Eye size={14} />
-                    <span>Lihat Detail</span>
-                  </button>
-                ) : (
-                  /* PT / ADMIN FULL MANAGEMENT CONTROLS */
-                  <div className="pt-control-bar" onClick={e => e.stopPropagation()}>
-                    <select
-                      className="pt-status-select"
-                      value={row.status}
-                      disabled={processingId === row.id}
-                      onChange={(e) => handleStatusChange(row.id, e.target.value)}
-                    >
-                      <option value="completed">✓ Selesai</option>
-                      <option value="scheduled">📅 Terjadwal</option>
-                      <option value="cancelled">❌ Batal</option>
-                      <option value="no_show">🚫 No Show</option>
-                    </select>
-
-                    <div className="pt-btn-group">
-                      <Link href={`/session/${row.id}/edit`} className="pt-edit-btn" title="Edit Sesi">
-                        <Edit size={14} />
-                      </Link>
-
-                      <button
-                        type="button"
-                        onClick={() => handleDelete(row.id)}
-                        disabled={processingId === row.id}
-                        className="pt-delete-btn"
-                        title="Hapus Sesi"
-                      >
-                        {processingId === row.id ? <Loader2 size={14} className="spin" /> : <Trash2 size={14} />}
-                      </button>
-                    </div>
-                  </div>
-                )}
+              <h4 className="c-program">{s.programType || 'Total Body Workout'}</h4>
+              <div className="c-details-row">
+                <span>📍 {s.location || 'Gym Hang Lekir'}</span>
+                <span>🔥 RPE {s.rpe || 8}</span>
               </div>
             </div>
           ))}
         </div>
-      )}
 
-      {/* ==================== 9. PREMIUM DIALOG DETAIL MODAL (REACT PORTAL TO DOCUMENT.BODY) ==================== */}
-      {mounted && selectedDetailSession && createPortal(
-        <div
-          className="bottom-sheet-backdrop animate-fade-in"
-          onClick={() => setSelectedDetailSession(null)}
-        >
-          <div
-            className="bottom-sheet-card animate-slide-up"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Sheet Handle */}
-            <div className="sheet-handle-bar" />
-
-            {/* Sheet Header */}
-            <div className="sheet-header">
-              <div className="sheet-title-group">
-                <div className="sheet-icon-badge">
-                  <Dumbbell size={20} />
-                </div>
-                <div>
-                  <h3 className="sheet-title">Detail Sesi Latihan</h3>
-                  <p className="sheet-subtitle">Informasi lengkap pelaksanaan latihan</p>
-                </div>
+        {/* CLIENT DETAIL MODAL */}
+        {mounted && selectedDetailSession && createPortal(
+          <div className="modal-backdrop animate-fade-in" onClick={() => setSelectedDetailSession(null)}>
+            <div className="modal-card animate-slide-up" onClick={(e) => e.stopPropagation()}>
+              <div className="mc-header">
+                <h3>Detail Sesi Latihan</h3>
+                <button type="button" onClick={() => setSelectedDetailSession(null)} className="mc-close-btn"><X size={18} /></button>
               </div>
+              <div className="mc-body">
+                <p><strong>Program:</strong> {selectedDetailSession.programType}</p>
+                <p><strong>Waktu:</strong> {format(new Date(selectedDetailSession.scheduledAt), 'dd MMMM yyyy HH:mm', { locale: idLocale })}</p>
+                <p><strong>Lokasi:</strong> {selectedDetailSession.location || 'Gym Hang Lekir'}</p>
+                <p><strong>Status:</strong> {selectedDetailSession.status}</p>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
+      </div>
+    )
+  }
 
+  // ==================== RENDER PT MOBILE SCHEDULING SYSTEM (Jadwal Role PT.prd) ====================
+  return (
+    <div className="pt-scheduling-system animate-fade-in">
+      {/* 1. PREMIUM SCHEDULE HERO HEADER */}
+      <div className="pt-hero-header animate-slide-down">
+        <div className="pt-hero-top">
+          <div>
+            <span className="pt-greeting">{dynamicGreeting}</span>
+            <h1 className="pt-name">{user?.fullName || 'Elprian Light'}</h1>
+            <p className="pt-date-str">{format(currentDate, 'EEEE, dd MMMM yyyy', { locale: idLocale })}</p>
+          </div>
+          <div className="pt-session-badge">
+            <span>{todayStats.totalSessions} Session Hari Ini</span>
+          </div>
+        </div>
+      </div>
+
+      {/* 2. AI SCHEDULE INSIGHT CARD */}
+      <div className="pt-ai-insight-card">
+        <div className="pt-ai-header">
+          <Sparkles size={16} className="pt-ai-sparkle" />
+          <h4 className="pt-ai-title">✨ AI Schedule Insight</h4>
+        </div>
+        <p className="pt-ai-text">
+          Hari ini Anda memiliki <strong>{todayStats.totalSessions} sesi latihan</strong>. Masih tersedia <strong>{todayStats.availableHours} jam kosong</strong>. Disarankan menambahkan maksimal 2 sesi lagi agar jadwal tetap optimal.
+        </p>
+      </div>
+
+      {/* 4. QUICK STATISTICS (4 COMPACT CARDS) */}
+      <div className="pt-quick-stats-grid">
+        <div className="pt-stat-card">
+          <span className="pt-stat-icon">👥</span>
+          <div>
+            <span className="pt-stat-val">{todayStats.uniqueClients}</span>
+            <span className="pt-stat-lbl">Client</span>
+          </div>
+        </div>
+
+        <div className="pt-stat-card">
+          <span className="pt-stat-icon">🏋️</span>
+          <div>
+            <span className="pt-stat-val">{todayStats.totalSessions}</span>
+            <span className="pt-stat-lbl">Session</span>
+          </div>
+        </div>
+
+        <div className="pt-stat-card">
+          <span className="pt-stat-icon">🟢</span>
+          <div>
+            <span className="pt-stat-val">{todayStats.availableHours} Jam</span>
+            <span className="pt-stat-lbl">Available</span>
+          </div>
+        </div>
+
+        <div className="pt-stat-card">
+          <span className="pt-stat-icon">⏰</span>
+          <div>
+            <span className="pt-stat-val">{todayStats.occupiedHours} Jam</span>
+            <span className="pt-stat-lbl">Occupied</span>
+          </div>
+        </div>
+      </div>
+
+      {/* 2 & 5. TOGGLE VIEW & DATE NAVIGATION BAR */}
+      <div className="pt-nav-control-bar">
+        {/* Date Navigation Switcher */}
+        <div className="pt-date-switcher">
+          <button
+            type="button"
+            onClick={() => setCurrentDate(subDays(currentDate, scheduleViewMode === 'day' ? 1 : 7))}
+            className="pt-date-nav-btn"
+          >
+            <ChevronLeft size={16} />
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setCurrentDate(new Date())}
+            className="pt-today-btn"
+          >
+            Hari Ini
+          </button>
+
+          <span className="pt-current-date-txt">
+            {format(currentDate, scheduleViewMode === 'day' ? 'dd MMM yyyy' : 'dd MMM', { locale: idLocale })}
+          </span>
+
+          <button
+            type="button"
+            onClick={() => setCurrentDate(addDays(currentDate, scheduleViewMode === 'day' ? 1 : 7))}
+            className="pt-date-nav-btn"
+          >
+            <ChevronRight size={16} />
+          </button>
+        </div>
+
+        {/* Toggle View Mode (Hari vs Minggu) */}
+        <div className="pt-segmented-control">
+          <button
+            type="button"
+            onClick={() => setScheduleViewMode('day')}
+            className={`pt-seg-btn ${scheduleViewMode === 'day' ? 'active' : ''}`}
+          >
+            📅 Hari
+          </button>
+          <button
+            type="button"
+            onClick={() => setScheduleViewMode('week')}
+            className={`pt-seg-btn ${scheduleViewMode === 'week' ? 'active' : ''}`}
+          >
+            📆 Minggu
+          </button>
+        </div>
+
+        {/* Search Modal Trigger */}
+        <button
+          type="button"
+          onClick={() => setIsSearchModalOpen(true)}
+          className="pt-search-trigger-btn"
+          title="Cari Sesi / Client"
+        >
+          <Search size={16} />
+        </button>
+      </div>
+
+      {/* 17. SMART FILTER CHIPS (HORIZONTAL SCROLL) */}
+      <div className="pt-filter-chips-wrap">
+        {[
+          { id: 'all', label: 'Semua' },
+          { id: 'today', label: 'Hari Ini' },
+          { id: 'tomorrow', label: 'Besok' },
+          { id: 'scheduled', label: 'Scheduled 🔵' },
+          { id: 'completed', label: 'Completed ✅' },
+          { id: 'cancelled', label: 'Cancelled 🔴' },
+        ].map(chip => (
+          <button
+            key={chip.id}
+            type="button"
+            onClick={() => setActiveFilterChip(chip.id as any)}
+            className={`pt-chip-btn ${activeFilterChip === chip.id ? 'active' : ''}`}
+          >
+            {chip.label}
+          </button>
+        ))}
+      </div>
+
+      {/* ==================== 5 & 13. SCHEDULE VIEWS ==================== */}
+      {scheduleViewMode === 'day' ? (
+        /* DAY VIEW TIMELINE GRID */
+        <div className="pt-day-timeline">
+          {isLoading ? (
+            <div className="pt-skeleton-timeline">
+              {[1, 2, 3].map(n => <div key={n} className="pt-sk-card" />)}
+            </div>
+          ) : ptFilteredSessions.length === 0 ? (
+            /* EMPTY STATE MODEL MODERN */
+            <div className="pt-empty-schedule animate-fade-in">
+              <div className="pt-empty-icon">📅</div>
+              <h3 className="pt-empty-title">Belum Ada Jadwal</h3>
+              <p className="pt-empty-desc">Tekan tombol + untuk membuat sesi latihan baru pada tanggal ini.</p>
               <button
                 type="button"
-                onClick={() => setSelectedDetailSession(null)}
-                className="sheet-close-btn"
+                onClick={() => setIsAddSessionModalOpen(true)}
+                className="pt-empty-add-btn"
               >
+                <Plus size={15} />
+                <span>Tambah Session</span>
+              </button>
+            </div>
+          ) : (
+            /* COMPACT SESSION TIMELINE CARDS */
+            <div className="pt-timeline-list">
+              {ptFilteredSessions.map((session, idx) => {
+                const sessionTime = format(new Date(session.scheduledAt), 'HH:mm')
+                return (
+                  <div
+                    key={session.id}
+                    onClick={() => setSelectedDetailSession(session)}
+                    className="pt-timeline-row animate-slide-up"
+                    style={{ animationDelay: `${idx * 40}ms` }}
+                  >
+                    <div className="pt-time-col">
+                      <span className="pt-time-txt">{sessionTime}</span>
+                      <div className="pt-time-dot" />
+                    </div>
+
+                    <div className={`pt-compact-card ${session.status}`}>
+                      <div className="pt-cc-header">
+                        <span className="pt-cc-client">{session.clientName}</span>
+                        {renderStatusPill(session.status)}
+                      </div>
+
+                      <div className="pt-cc-body">
+                        <span className="pt-cc-prog">🏋️ {session.programType || 'Total Body'}</span>
+                        <span className="pt-cc-meta">📍 {session.location || 'Gym Hang Lekir'} • 🔥 RPE {session.rpe || 8}</span>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+
+              {/* AVAILABLE SLOT CARD */}
+              <div
+                className="pt-available-slot-card"
+                onClick={() => setIsAddSessionModalOpen(true)}
+              >
+                <span>➕ Slot Kosong (2 Jam Available) • Klik untuk Tambah Session</span>
+              </div>
+            </div>
+          )}
+        </div>
+      ) : (
+        /* WEEK VIEW SCHEDULE GRID */
+        <div className="pt-week-grid-container">
+          <div className="pt-week-header-row">
+            {weekDays.map(day => {
+              const isToday = isSameDay(day, new Date())
+              const isSelected = isSameDay(day, currentDate)
+              return (
+                <div
+                  key={day.toISOString()}
+                  onClick={() => setCurrentDate(day)}
+                  className={`pt-week-day-col ${isToday ? 'is-today' : ''} ${isSelected ? 'is-selected' : ''}`}
+                >
+                  <span className="pt-wd-name">{format(day, 'EEE', { locale: idLocale })}</span>
+                  <span className="pt-wd-num">{format(day, 'dd')}</span>
+                </div>
+              )
+            })}
+          </div>
+
+          <div className="pt-week-body-list">
+            {weekDays.map(day => {
+              const daySessions = data.filter(s => isSameDay(new Date(s.scheduledAt), day))
+              return (
+                <div key={day.toISOString()} className="pt-week-day-row">
+                  <div className="pt-wdr-header">
+                    <span>{format(day, 'EEEE, dd MMMM', { locale: idLocale })}</span>
+                    <span className="pt-wdr-count">{daySessions.length} Sesi</span>
+                  </div>
+
+                  {daySessions.length === 0 ? (
+                    <div className="pt-week-empty-slot" onClick={() => { setCurrentDate(day); setIsAddSessionModalOpen(true); }}>
+                      + Tambah Sesi
+                    </div>
+                  ) : (
+                    <div className="pt-week-cards-grid">
+                      {daySessions.map(s => (
+                        <div
+                          key={s.id}
+                          onClick={() => setSelectedDetailSession(s)}
+                          className="pt-week-card"
+                        >
+                          <span className="pt-wc-time">{format(new Date(s.scheduledAt), 'HH:mm')}</span>
+                          <span className="pt-wc-name">{s.clientName}</span>
+                          <span className="pt-wc-prog">{s.programType}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* 10. FLOATING GLASS ADD BUTTON (FAB) */}
+      <button
+        type="button"
+        onClick={() => setIsAddSessionModalOpen(true)}
+        className="pt-floating-fab animate-scale"
+        title="Tambah Sesi Latihan Baru"
+      >
+        <Plus size={24} />
+      </button>
+
+      {/* ==================== 11. ADD SESSION BOTTOM SHEET MODAL (PORTAL) ==================== */}
+      {mounted && isAddSessionModalOpen && createPortal(
+        <div className="modal-backdrop animate-fade-in" onClick={() => setIsAddSessionModalOpen(false)}>
+          <div className="modal-card animate-slide-up" onClick={(e) => e.stopPropagation()}>
+            <div className="mc-header">
+              <div className="mc-title-group">
+                <div className="mc-icon-badge">
+                  <CalendarIcon size={18} />
+                </div>
+                <div>
+                  <h3 className="mc-title">Tambah Sesi Latihan Baru</h3>
+                  <p className="mc-sub">Jadwalkan sesi untuk client Anda</p>
+                </div>
+              </div>
+              <button type="button" onClick={() => setIsAddSessionModalOpen(false)} className="mc-close-btn">
                 <X size={18} />
               </button>
             </div>
 
-            {/* Sheet Body Content */}
-            <div className="sheet-body">
-              {/* Program & Status */}
-              <div className="sheet-section-card">
-                <div className="bs-row-between">
-                  <h2 className="bs-program-title">
-                    🏋️ {selectedDetailSession.programType || 'Total Body'}
-                  </h2>
+            <form onSubmit={handleCreateSession} className="mc-form">
+              <div className="mc-field">
+                <label className="mc-label">Pilih Paket / Client</label>
+                <select
+                  required
+                  value={newSessionPkgId}
+                  onChange={(e) => setNewSessionPkgId(e.target.value)}
+                  className="mc-select"
+                >
+                  <option value="">-- Pilih Paket Client --</option>
+                  {packagesData.map(pkg => (
+                    <option key={pkg.id} value={pkg.id}>
+                      {pkg.clientName} • {pkg.packageName} (Sisa {pkg.totalSessions - pkg.usedSessions} Sesi)
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="mc-field-grid">
+                <div className="mc-field">
+                  <label className="mc-label">Program Latihan</label>
+                  <select
+                    value={newSessionProgram}
+                    onChange={(e) => setNewSessionProgram(e.target.value)}
+                    className="mc-select"
+                  >
+                    <option value="Total Body">Total Body 🔥</option>
+                    <option value="Upper Body">Upper Body 💪</option>
+                    <option value="Lower Body">Lower Body 🦵</option>
+                    <option value="Hybrid Training">Hybrid Training ⚡</option>
+                    <option value="Muaythai">Muaythai 🥊</option>
+                    <option value="Circuit Training">Circuit Training 🔄</option>
+                  </select>
+                </div>
+
+                <div className="mc-field">
+                  <label className="mc-label">Jam Latihan</label>
+                  <input
+                    type="time"
+                    required
+                    value={newSessionTime}
+                    onChange={(e) => setNewSessionTime(e.target.value)}
+                    className="mc-input"
+                  />
+                </div>
+              </div>
+
+              <div className="mc-field-grid">
+                <div className="mc-field">
+                  <label className="mc-label">Lokasi Latihan</label>
+                  <input
+                    type="text"
+                    value={newSessionLocation}
+                    onChange={(e) => setNewSessionLocation(e.target.value)}
+                    className="mc-input"
+                    placeholder="e.g. Gym Hang Lekir"
+                  />
+                </div>
+
+                <div className="mc-field">
+                  <label className="mc-label">Target RPE (1-10)</label>
+                  <select
+                    value={newSessionRpe}
+                    onChange={(e) => setNewSessionRpe(e.target.value)}
+                    className="mc-select"
+                  >
+                    {[5, 6, 7, 8, 9, 10].map(n => (
+                      <option key={n} value={n}>RPE {n}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="mc-field">
+                <label className="mc-label">Catatan Sesi (Opsional)</label>
+                <textarea
+                  rows={2}
+                  value={newSessionNotes}
+                  onChange={(e) => setNewSessionNotes(e.target.value)}
+                  className="mc-textarea"
+                  placeholder="Instruksi khusus latihan..."
+                />
+              </div>
+
+              <div className="mc-actions">
+                <button type="button" onClick={() => setIsAddSessionModalOpen(false)} className="mc-btn-cancel">
+                  Batal
+                </button>
+                <button type="submit" disabled={isSubmittingNewSession} className="mc-btn-save">
+                  {isSubmittingNewSession ? <Loader2 size={16} className="spin" /> : 'Simpan Sesi'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* ==================== 12. SESSION DETAIL BOTTOM SHEET MODAL (PORTAL) ==================== */}
+      {mounted && selectedDetailSession && createPortal(
+        <div className="modal-backdrop animate-fade-in" onClick={() => setSelectedDetailSession(null)}>
+          <div className="modal-card animate-slide-up" onClick={(e) => e.stopPropagation()}>
+            <div className="mc-header">
+              <div className="mc-title-group">
+                <div className="mc-icon-badge">
+                  <Dumbbell size={18} />
+                </div>
+                <div>
+                  <h3 className="mc-title">Detail Sesi Latihan PT</h3>
+                  <p className="mc-sub">Rincian & Kelola Status Sesi Client</p>
+                </div>
+              </div>
+              <button type="button" onClick={() => setSelectedDetailSession(null)} className="mc-close-btn">
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="mc-modal-body">
+              <div className="pt-detail-sec">
+                <div className="flex-between">
+                  <h3 className="pt-dt-client">{selectedDetailSession.clientName}</h3>
                   {renderStatusPill(selectedDetailSession.status)}
                 </div>
 
-                <div className="bs-grid-2">
-                  <div className="bs-info-item">
-                    <span className="bs-label">Tanggal & Jam</span>
-                    <span className="bs-val">
-                      📅 {format(new Date(selectedDetailSession.scheduledAt), 'EEEE, dd MMMM yyyy', { locale: id })} • {format(new Date(selectedDetailSession.scheduledAt), 'HH:mm')}
+                <div className="pt-dt-grid">
+                  <div className="pt-dt-item">
+                    <span className="pt-dt-lbl">🏋️ Program</span>
+                    <span className="pt-dt-val">{selectedDetailSession.programType || 'Total Body'}</span>
+                  </div>
+
+                  <div className="pt-dt-item">
+                    <span className="pt-dt-lbl">📅 Tanggal & Jam</span>
+                    <span className="pt-dt-val">
+                      {format(new Date(selectedDetailSession.scheduledAt), 'dd MMM yyyy • HH:mm', { locale: idLocale })}
                     </span>
                   </div>
 
-                  <div className="bs-info-item">
-                    <span className="bs-label">Lokasi Latihan</span>
-                    <span className="bs-val">
-                      📍 {selectedDetailSession.location || 'Gym Hang Lekir'}
-                    </span>
+                  <div className="pt-dt-item">
+                    <span className="pt-dt-lbl">📍 Lokasi</span>
+                    <span className="pt-dt-val">{selectedDetailSession.location || 'Gym Hang Lekir'}</span>
                   </div>
 
-                  <div className="bs-info-item">
-                    <span className="bs-label">Tingkat Intensitas (RPE)</span>
-                    <span className="bs-val" style={{ color: '#f97316', fontWeight: 800 }}>
-                      🔥 RPE {selectedDetailSession.rpe || 8}
-                    </span>
-                  </div>
-
-                  <div className="bs-info-item">
-                    <span className="bs-label">Paket Sesi</span>
-                    <span className="bs-val">
-                      📦 {selectedDetailSession.packageName || 'Paket PT'}
-                    </span>
+                  <div className="pt-dt-item">
+                    <span className="pt-dt-lbl">🔥 Intensitas RPE</span>
+                    <span className="pt-dt-val">RPE {selectedDetailSession.rpe || 8}</span>
                   </div>
                 </div>
               </div>
 
-              {/* Catatan PT Lengkap */}
-              {selectedDetailSession.sessionNotes && (
-                <div className="sheet-section-card">
-                  <h4 className="sheet-sec-title">
-                    <FileText size={15} />
-                    <span>Catatan Latihan dari Personal Trainer</span>
-                  </h4>
-                  <p className="bs-full-notes">
-                    "{selectedDetailSession.sessionNotes}"
-                  </p>
-                </div>
-              )}
+              {/* PT STATUS ACTION BUTTONS */}
+              <div className="pt-action-buttons-wrap">
+                <button
+                  type="button"
+                  onClick={() => handleStatusChange(selectedDetailSession.id, 'check_in')}
+                  disabled={processingId === selectedDetailSession.id}
+                  className="pt-act-btn btn-checkin"
+                >
+                  🟢 Check-In
+                </button>
 
-              {/* Progress Summary */}
-              <div className="sheet-section-card">
-                <h4 className="sheet-sec-title">
-                  <TrendingUp size={15} />
-                  <span>Ringkasan Evaluasi Performance</span>
-                </h4>
-                <div className="bs-eval-box">
-                  <CheckCircle2 size={16} style={{ color: '#10b981' }} />
-                  <span>Sesi telah tercatat resmi di database StrengthLab System.</span>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => handleStatusChange(selectedDetailSession.id, 'completed')}
+                  disabled={processingId === selectedDetailSession.id}
+                  className="pt-act-btn btn-complete"
+                >
+                  ✅ Complete Sesi
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleStatusChange(selectedDetailSession.id, 'cancelled')}
+                  disabled={processingId === selectedDetailSession.id}
+                  className="pt-act-btn btn-cancel"
+                >
+                  🔴 Cancel
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setDeleteConfirmId(selectedDetailSession.id)}
+                  disabled={processingId === selectedDetailSession.id}
+                  className="pt-act-btn btn-delete"
+                >
+                  🗑️ Hapus Sesi
+                </button>
               </div>
             </div>
+          </div>
+        </div>,
+        document.body
+      )}
 
-            {/* Sheet Footer Button */}
-            <div className="sheet-footer">
-              <button
-                type="button"
-                onClick={() => setSelectedDetailSession(null)}
-                className="sheet-close-action-btn"
-              >
-                Tutup Detail
+      {/* ==================== 16. SMART SEARCH MODAL (PORTAL) ==================== */}
+      {mounted && isSearchModalOpen && createPortal(
+        <div className="modal-backdrop animate-fade-in" onClick={() => setIsSearchModalOpen(false)}>
+          <div className="modal-card animate-slide-up" onClick={(e) => e.stopPropagation()}>
+            <div className="mc-header">
+              <div className="mc-title-group">
+                <Search size={18} className="text-brand" />
+                <h3 className="mc-title">Pencarian Pintar Sesi</h3>
+              </div>
+              <button type="button" onClick={() => setIsSearchModalOpen(false)} className="mc-close-btn">
+                <X size={18} />
               </button>
+            </div>
+
+            <div className="mc-body">
+              <div className="pt-search-input-wrap">
+                <Search size={16} className="pt-si-icon" />
+                <input
+                  type="text"
+                  autoFocus
+                  placeholder="Ketik nama client, program, lokasi..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pt-si-input"
+                />
+              </div>
+
+              <div className="pt-search-results">
+                <span className="pt-sr-count">Ditemukan {ptFilteredSessions.length} sesi</span>
+                {ptFilteredSessions.map(s => (
+                  <div
+                    key={s.id}
+                    onClick={() => {
+                      setSelectedDetailSession(s)
+                      setIsSearchModalOpen(false)
+                    }}
+                    className="pt-sr-item"
+                  >
+                    <span>{s.clientName} • {s.programType}</span>
+                    <span>{format(new Date(s.scheduledAt), 'dd MMM HH:mm')}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* ==================== DELETE CONFIRMATION MODAL (PORTAL) ==================== */}
+      {mounted && deleteConfirmId && createPortal(
+        <div className="modal-backdrop animate-fade-in" onClick={() => setDeleteConfirmId(null)}>
+          <div className="modal-card animate-slide-up" onClick={(e) => e.stopPropagation()}>
+            <div className="mc-header">
+              <h3 className="mc-title">Konfirmasi Hapus Sesi</h3>
+            </div>
+            <p className="mc-modal-desc">Yakin ingin menghapus sesi latihan ini? Kuota paket client akan diperbarui secara otomatis.</p>
+            <div className="mc-actions">
+              <button type="button" onClick={() => setDeleteConfirmId(null)} className="mc-btn-cancel">Batal</button>
+              <button type="button" onClick={handleConfirmDelete} className="mc-btn-danger">Hapus Sesi</button>
             </div>
           </div>
         </div>,
@@ -622,641 +974,252 @@ export function SessionList() {
 
       {/* ==================== STYLES ==================== */}
       <style jsx>{`
-        .compact-session-wrapper {
-          display: flex;
-          flex-direction: column;
-          gap: 12px;
+        .pt-scheduling-system {
+          display: flex; flex-direction: column; gap: 14px;
+          max-width: 680px; margin: 0 auto; padding-bottom: 70px;
         }
 
-        /* CLIENT SINGLE FILTER */
-        .client-single-filter-card {
-          background: var(--bg-surface);
-          border: 1px solid var(--border-default);
-          border-radius: 16px;
-          padding: 10px 14px;
-          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
-          backdrop-filter: blur(16px);
+        /* HERO COMPACT */
+        .pt-hero-header {
+          background: linear-gradient(135deg, rgba(30, 27, 75, 0.6) 0%, rgba(15, 23, 42, 0.85) 100%);
+          border: 1px solid rgba(255, 255, 255, 0.14);
+          border-radius: 24px; padding: 18px 20px;
+          box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2); backdrop-filter: blur(20px);
         }
-        .csf-inner {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          color: var(--brand-primary);
-        }
-        .csf-select {
-          width: 100%;
-          height: 40px;
-          background: var(--bg-elevated);
-          border: 1px solid var(--border-default);
-          border-radius: 12px;
-          color: var(--text-primary);
-          font-size: 13.5px;
-          font-weight: 700;
-          padding: 0 12px;
-          outline: none;
-          cursor: pointer;
+        .pt-hero-top { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+        .pt-greeting { font-size: 12px; font-weight: 700; color: #818cf8; text-transform: uppercase; letter-spacing: 0.5px; }
+        .pt-name { font-size: 20px; font-weight: 900; color: #ffffff; line-height: 1.2; }
+        .pt-date-str { font-size: 12.5px; color: var(--text-secondary); }
+        .pt-session-badge {
+          background: rgba(99, 102, 241, 0.16); border: 1px solid rgba(99, 102, 241, 0.35);
+          color: var(--brand-primary); padding: 6px 12px; border-radius: 100px; font-size: 12px; font-weight: 800;
         }
 
-        /* TAMPILAN PENGGUNAAN SESI CARD UNIFIED */
-        .csf-usage-box {
-          margin-top: 10px;
-          padding-top: 10px;
-          border-top: 1px solid var(--border-default);
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
+        /* AI SCHEDULE INSIGHT CARD */
+        .pt-ai-insight-card {
+          background: linear-gradient(135deg, rgba(168, 85, 247, 0.14) 0%, rgba(99, 102, 241, 0.1) 100%);
+          border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 18px; padding: 12px 16px;
+          backdrop-filter: blur(16px); display: flex; flex-direction: column; gap: 4px;
         }
-        .csf-usage-top {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          font-size: 13.5px;
+        .pt-ai-header { display: flex; align-items: center; gap: 6px; }
+        :global(.pt-ai-sparkle) { color: #a855f7; }
+        .pt-ai-title { font-size: 13px; font-weight: 800; color: #a855f7; }
+        .pt-ai-text { font-size: 12px; color: var(--text-secondary); line-height: 1.4; }
+
+        /* QUICK STATS */
+        .pt-quick-stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+        .pt-stat-card {
+          background: var(--bg-surface); border: 1px solid var(--border-default);
+          border-radius: 16px; padding: 10px 8px; display: flex; align-items: center; gap: 8px;
+          backdrop-filter: blur(14px);
         }
-        .csf-usage-text {
-          color: var(--text-secondary);
-          font-weight: 500;
+        .pt-stat-icon { font-size: 16px; }
+        .pt-stat-val { font-size: 14px; font-weight: 800; color: var(--text-primary); display: block; line-height: 1.1; }
+        .pt-stat-lbl { font-size: 10px; color: var(--text-muted); display: block; }
+
+        /* CONTROL BAR & DATE NAV */
+        .pt-nav-control-bar {
+          display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap;
         }
-        .csf-usage-text strong {
-          color: var(--text-primary);
-          font-weight: 800;
+        .pt-date-switcher {
+          display: flex; align-items: center; gap: 6px; background: var(--bg-surface);
+          border: 1px solid var(--border-default); border-radius: 16px; padding: 4px 8px;
         }
-        .csf-usage-percent {
-          color: #818cf8;
-          font-weight: 900;
-          font-size: 15px;
+        .pt-date-nav-btn, .pt-search-trigger-btn {
+          background: transparent; border: none; color: var(--text-primary);
+          width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer;
         }
-        .csf-progress-bar-bg {
-          width: 100%;
-          height: 7px;
-          background: rgba(255, 255, 255, 0.08);
-          border-radius: 100px;
-          overflow: hidden;
+        .pt-today-btn {
+          background: rgba(99, 102, 241, 0.15); border: 1px solid rgba(99, 102, 241, 0.3);
+          color: var(--brand-primary); font-size: 11.5px; font-weight: 800; padding: 3px 8px; border-radius: 8px; cursor: pointer;
         }
-        .csf-progress-bar-fill {
-          height: 100%;
-          background: linear-gradient(90deg, #6366f1 0%, #a855f7 100%);
-          border-radius: 100px;
-          transition: width 0.3s ease;
+        .pt-current-date-txt { font-size: 12px; font-weight: 700; color: var(--text-primary); min-width: 80px; text-align: center; }
+
+        /* SEGMENTED CONTROL */
+        .pt-segmented-control {
+          display: flex; align-items: center; background: var(--bg-surface);
+          border: 1px solid var(--border-default); border-radius: 16px; padding: 3px; gap: 4px;
         }
-        .csf-usage-bottom {
-          display: flex;
-          align-items: center;
-          font-size: 13px;
+        .pt-seg-btn {
+          padding: 5px 12px; border-radius: 12px; border: none; background: transparent;
+          color: var(--text-muted); font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s;
         }
-        .csf-remaining-text {
-          color: #10b981;
-          font-weight: 800;
-          display: flex;
-          align-items: center;
-          gap: 4px;
+        .pt-seg-btn.active { background: var(--brand-primary); color: white; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3); }
+
+        /* FILTER CHIPS */
+        .pt-filter-chips-wrap {
+          display: flex; align-items: center; gap: 6px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none;
+        }
+        .pt-chip-btn {
+          padding: 5px 12px; border-radius: 100px; background: var(--bg-surface);
+          border: 1px solid var(--border-default); color: var(--text-secondary); font-size: 11.5px; font-weight: 600;
+          white-space: nowrap; cursor: pointer; transition: all 0.2s;
+        }
+        .pt-chip-btn.active { background: rgba(99, 102, 241, 0.15); border-color: var(--brand-primary); color: var(--brand-primary); font-weight: 800; }
+
+        /* DAY TIMELINE GRID */
+        .pt-day-timeline { display: flex; flex-direction: column; gap: 10px; }
+        .pt-timeline-list { display: flex; flex-direction: column; gap: 10px; }
+        .pt-timeline-row { display: flex; gap: 12px; cursor: pointer; }
+        .pt-time-col {
+          width: 50px; display: flex; flex-direction: column; align-items: center; pt-2; flex-shrink: 0;
+        }
+        .pt-time-txt { font-size: 12.5px; font-weight: 800; color: var(--text-muted); }
+        .pt-time-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--brand-primary); margin-top: 4px; }
+
+        .pt-compact-card {
+          flex: 1; background: var(--bg-surface); border: 1px solid var(--border-default);
+          border-radius: 18px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px;
+          backdrop-filter: blur(16px); transition: all 0.2s;
+        }
+        .pt-compact-card:hover { transform: translateY(-2px); border-color: rgba(99, 102, 241, 0.4); }
+        .pt-cc-header { display: flex; align-items: center; justify-content: space-between; }
+        .pt-cc-client { font-size: 14.5px; font-weight: 800; color: var(--text-primary); }
+        .pt-cc-body { display: flex; flex-direction: column; gap: 2px; }
+        .pt-cc-prog { font-size: 13px; font-weight: 700; color: var(--brand-primary); }
+        .pt-cc-meta { font-size: 11.5px; color: var(--text-muted); }
+
+        .pt-status-pill {
+          padding: 2px 8px; border-radius: 100px; font-size: 11px; font-weight: 800;
+        }
+        .pill-scheduled { background: rgba(99, 102, 241, 0.14); color: #6366f1; border: 1px solid rgba(99, 102, 241, 0.3); }
+        .pill-checkin { background: rgba(16, 185, 129, 0.14); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); }
+        .pill-completed { background: rgba(16, 185, 129, 0.18); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.4); }
+        .pill-cancelled { background: rgba(239, 68, 68, 0.14); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); }
+
+        .pt-available-slot-card {
+          background: rgba(99, 102, 241, 0.06); border: 1px dashed rgba(99, 102, 241, 0.3);
+          border-radius: 16px; padding: 12px; text-align: center; color: var(--brand-primary);
+          font-size: 12px; font-weight: 700; cursor: pointer; margin-top: 4px;
         }
 
-        /* PT HEADER & FILTERS */
-        .session-header-card {
-          background: var(--bg-surface);
-          border: 1px solid var(--border-default);
-          border-radius: 20px;
-          padding: 18px;
-          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
-          backdrop-filter: blur(16px);
+        /* WEEK VIEW GRID */
+        .pt-week-grid-container { display: flex; flex-direction: column; gap: 10px; }
+        .pt-week-header-row { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+        .pt-week-day-col {
+          background: var(--bg-surface); border: 1px solid var(--border-default);
+          border-radius: 14px; padding: 8px 4px; text-align: center; display: flex; flex-direction: column; gap: 2px; cursor: pointer;
         }
-        .session-header-top {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 12px;
-          flex-wrap: wrap;
-          padding-bottom: 14px;
-          border-bottom: 1px solid var(--border-default);
+        .pt-week-day-col.is-today { border-color: var(--brand-primary); background: rgba(99, 102, 241, 0.1); }
+        .pt-week-day-col.is-selected { background: var(--brand-primary); color: white; }
+        .pt-wd-name { font-size: 10.5px; font-weight: 600; }
+        .pt-wd-num { font-size: 13px; font-weight: 800; }
+
+        .pt-week-body-list { display: flex; flex-direction: column; gap: 8px; }
+        .pt-week-day-row {
+          background: var(--bg-surface); border: 1px solid var(--border-default);
+          border-radius: 16px; padding: 10px 12px; display: flex; flex-direction: column; gap: 6px;
         }
-        .session-header-title {
-          font-size: 17px;
-          font-weight: 800;
-          color: var(--text-primary);
+        .pt-wdr-header { display: flex; align-items: center; justify-content: space-between; font-size: 12px; font-weight: 700; color: var(--text-primary); }
+        .pt-wdr-count { font-size: 11px; color: var(--brand-primary); }
+        .pt-week-empty-slot { font-size: 11.5px; color: var(--text-muted); cursor: pointer; padding: 4px 0; }
+        .pt-week-cards-grid { display: flex; flex-direction: column; gap: 4px; }
+        .pt-week-card {
+          background: var(--bg-elevated); border-radius: 8px; padding: 6px 10px;
+          display: flex; align-items: center; justify-content: space-between; font-size: 12px; cursor: pointer;
         }
-        .session-header-desc {
-          font-size: 12px;
-          color: var(--text-muted);
-        }
-        .segmented-control {
-          display: flex;
-          align-items: center;
-          background: var(--bg-elevated);
-          border: 1px solid var(--border-default);
-          border-radius: 12px;
-          padding: 4px;
-          gap: 4px;
-        }
-        .seg-btn {
-          display: flex;
-          align-items: center;
-          gap: 5px;
-          padding: 5px 10px;
-          border-radius: 8px;
-          border: none;
-          background: transparent;
-          color: var(--text-secondary);
-          font-size: 12px;
-          font-weight: 600;
-          cursor: pointer;
-        }
-        .seg-btn.active {
-          background: var(--brand-primary);
-          color: white;
-        }
-        .session-filter-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-          gap: 8px;
-          margin-top: 12px;
-        }
-        .filter-input-wrap {
-          position: relative;
-          display: flex;
-          align-items: center;
-        }
-        .filter-search-icon {
-          position: absolute;
-          left: 10px;
-          color: var(--text-muted);
-        }
-        .filter-input {
-          width: 100%;
-          height: 38px;
-          background: var(--bg-elevated);
-          border: 1px solid var(--border-default);
-          border-radius: 10px;
-          color: var(--text-primary);
-          font-size: 12.5px;
-          padding: 0 10px 0 32px;
-          outline: none;
-        }
-        .filter-select {
-          width: 100%;
-          height: 38px;
-          background: var(--bg-elevated);
-          border: 1px solid var(--border-default);
-          border-radius: 10px;
-          color: var(--text-primary);
-          font-size: 12.5px;
-          padding: 0 10px;
-          outline: none;
+        .pt-wc-time { font-weight: 800; color: var(--brand-primary); }
+        .pt-wc-name { font-weight: 700; color: var(--text-primary); }
+        .pt-wc-prog { color: var(--text-muted); font-size: 11px; }
+
+        /* FAB */
+        .pt-floating-fab {
+          position: fixed; bottom: 80px; right: 20px;
+          width: 52px; height: 52px; border-radius: 50%;
+          background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+          color: white; border: 1px solid rgba(255, 255, 255, 0.3);
+          box-shadow: 0 10px 28px rgba(99, 102, 241, 0.5);
+          display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 99;
         }
 
-        /* COMPACT CARD LAYOUT (35-40% REDUCED HEIGHT) */
-        .compact-session-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-          gap: 10px;
+        /* EMPTY STATE */
+        .pt-empty-schedule {
+          background: var(--bg-surface); border: 1px solid var(--border-default);
+          border-radius: 20px; padding: 32px 20px; text-align: center;
+          display: flex; flex-direction: column; align-items: center; gap: 8px;
         }
-        .compact-card {
-          background: var(--bg-surface);
-          border: 1px solid var(--border-default);
-          border-radius: 16px;
-          padding: 14px 16px;
-          box-shadow: 0 6px 20px rgba(0, 0, 0, 0.04);
-          backdrop-filter: blur(16px);
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
-          cursor: pointer;
-          transition: all var(--transition-fast);
-        }
-        .compact-card:hover {
-          transform: translateY(-2px);
-          border-color: rgba(99, 102, 241, 0.4);
-          box-shadow: 0 10px 28px rgba(99, 102, 241, 0.15);
+        .pt-empty-icon { font-size: 36px; }
+        .pt-empty-title { font-size: 16px; font-weight: 800; color: var(--text-primary); }
+        .pt-empty-desc { font-size: 12px; color: var(--text-muted); max-width: 320px; }
+        .pt-empty-add-btn {
+          margin-top: 6px; padding: 8px 16px; background: var(--brand-primary);
+          color: white; border: none; border-radius: 100px; font-size: 12.5px; font-weight: 700;
+          display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
         }
 
-        /* BARIS 1: Tanggal (15px), Jam (15px), Status Pill (14px) */
-        .c-row-1 {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 8px;
+        /* DETAIL MODAL SECTIONS */
+        .pt-detail-sec { display: flex; flex-direction: column; gap: 10px; }
+        .pt-dt-client { font-size: 18px; font-weight: 900; color: var(--text-primary); }
+        .pt-dt-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+        .pt-dt-item { background: var(--bg-surface); border-radius: 10px; padding: 8px 10px; display: flex; flex-direction: column; gap: 2px; }
+        .pt-dt-lbl { font-size: 10.5px; color: var(--text-muted); }
+        .pt-dt-val { font-size: 12.5px; font-weight: 700; color: var(--text-primary); }
+
+        .pt-action-buttons-wrap { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 10px; }
+        .pt-act-btn {
+          height: 38px; border-radius: 12px; border: none; font-size: 12.5px; font-weight: 800; cursor: pointer;
         }
-        .c-datetime-group {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          font-size: 14px;
-          font-weight: 700;
-          color: var(--text-secondary);
+        .btn-checkin { background: rgba(16, 185, 129, 0.16); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); }
+        .btn-complete { background: #10b981; color: white; }
+        .btn-cancel { background: rgba(239, 68, 68, 0.16); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); }
+        .btn-delete { background: var(--bg-surface); border: 1px solid var(--border-default); color: var(--text-secondary); }
+
+        /* SEARCH MODAL */
+        .pt-search-input-wrap { position: relative; display: flex; align-items: center; }
+        :global(.pt-si-icon) { position: absolute; left: 12px; color: var(--text-muted); }
+        .pt-si-input {
+          width: 100%; height: 42px; background: var(--bg-surface); border: 1px solid var(--border-default);
+          border-radius: 12px; color: var(--text-primary); font-size: 13px; padding-left: 36px; padding-right: 12px; outline: none;
         }
-        .c-date-text, .c-time-text {
-          font-size: 14px;
-          font-weight: 700;
-        }
-        .c-dot {
-          color: var(--text-muted);
+        .pt-search-results { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
+        .pt-sr-count { font-size: 11px; color: var(--text-muted); font-weight: 600; }
+        .pt-sr-item {
+          background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: 10px;
+          padding: 8px 12px; display: flex; align-items: center; justify-content: space-between; font-size: 12.5px; color: var(--text-primary); cursor: pointer;
         }
 
-        /* 10. STATUS BADGE PROPORSI */
-        .compact-status-pill {
-          padding: 3px 9px;
-          border-radius: 100px;
-          font-size: 12px;
-          font-weight: 800;
-          display: inline-flex;
-          align-items: center;
-          gap: 4px;
-          line-height: 1;
-        }
-        .pill-success {
-          background: rgba(16, 185, 129, 0.14);
-          color: #10b981;
-          border: 1px solid rgba(16, 185, 129, 0.3);
-        }
-        .pill-brand {
-          background: rgba(99, 102, 241, 0.14);
-          color: #6366f1;
-          border: 1px solid rgba(99, 102, 241, 0.3);
-        }
-        .pill-danger {
-          background: rgba(239, 68, 68, 0.14);
-          color: #ef4444;
-          border: 1px solid rgba(239, 68, 68, 0.3);
-        }
+        /* CLIENT STYLES */
+        .compact-session-wrapper { display: flex; flex-direction: column; gap: 12px; }
+        .client-single-filter-card { background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: 16px; padding: 10px 14px; backdrop-filter: blur(16px); }
+        .csf-inner { display: flex; align-items: center; gap: 10px; color: var(--brand-primary); }
+        .csf-select { width: 100%; height: 40px; background: var(--bg-elevated); border: 1px solid var(--border-default); border-radius: 12px; color: var(--text-primary); font-size: 13.5px; font-weight: 700; padding: 0 12px; outline: none; }
+        .csf-usage-box { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border-default); display: flex; flex-direction: column; gap: 8px; }
+        .csf-usage-top { display: flex; align-items: center; justify-content: space-between; font-size: 13.5px; }
+        .csf-usage-text { color: var(--text-secondary); font-weight: 500; }
+        .csf-usage-percent { color: #818cf8; font-weight: 900; font-size: 15px; }
+        .csf-progress-bar-bg { width: 100%; height: 7px; background: rgba(255, 255, 255, 0.08); border-radius: 100px; overflow: hidden; }
+        .csf-progress-bar-fill { height: 100%; background: linear-gradient(90deg, #6366f1 0%, #a855f7 100%); border-radius: 100px; }
+        .csf-usage-bottom { display: flex; align-items: center; font-size: 13px; }
+        .csf-remaining-text { color: #10b981; font-weight: 800; }
+        .compact-session-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 10px; }
+        .compact-card { background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: 16px; padding: 14px 16px; backdrop-filter: blur(16px); display: flex; flex-direction: column; gap: 8px; cursor: pointer; }
+        .c-row-1 { display: flex; align-items: center; justify-content: space-between; }
+        .c-datetime { font-size: 12px; font-weight: 700; color: var(--text-secondary); }
+        .c-program { font-size: 15px; font-weight: 800; color: var(--text-primary); }
+        .c-details-row { display: flex; gap: 12px; font-size: 11.5px; color: var(--text-muted); }
 
-        /* BARIS 2: Judul Program (22px) & RPE */
-        .c-row-2 {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 8px;
-        }
-        .c-program-title {
-          font-size: 20px;
-          font-weight: 900;
-          color: var(--text-primary);
-          line-height: 1.15;
-          letter-spacing: -0.01em;
-        }
-        .c-rpe-badge {
-          background: rgba(249, 115, 22, 0.12);
-          border: 1px solid rgba(249, 115, 22, 0.3);
-          color: #f97316;
-          padding: 2px 8px;
-          border-radius: 8px;
-          font-size: 12px;
-          font-weight: 800;
-          flex-shrink: 0;
-        }
-
-        /* BARIS 3: Lokasi (14px) & Paket */
-        .c-row-3 {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          font-size: 13.5px;
-          color: var(--text-secondary);
-        }
-        .c-meta-item {
-          font-size: 13.5px;
-          font-weight: 600;
-        }
-        .c-meta-dot {
-          color: var(--text-muted);
-        }
-        .c-package-tag {
-          color: var(--text-muted);
-          font-size: 12.5px;
-        }
-
-        /* BARIS 4: Catatan PT (13px max 2 baris) */
-        .c-row-4 {
-          background: var(--bg-elevated);
-          padding: 8px 10px;
-          border-radius: 10px;
-          border: 1px solid var(--border-default);
-        }
-        .c-notes-preview {
-          font-size: 12.5px;
-          line-height: 1.35;
-          color: var(--text-secondary);
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-        .c-read-more {
-          color: var(--brand-primary);
-          font-weight: 700;
-        }
-
-        /* BARIS 5: BUTTON LIHAT DETAIL */
-        .c-row-5 {
-          margin-top: 2px;
-        }
-        .c-detail-btn {
-          width: 100%;
-          height: 38px;
-          background: rgba(99, 102, 241, 0.12);
-          border: 1px solid rgba(99, 102, 241, 0.28);
-          border-radius: 10px;
-          color: var(--brand-primary);
-          font-size: 13px;
-          font-weight: 700;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 6px;
-          cursor: pointer;
-          transition: all var(--transition-fast);
-        }
-        .c-detail-btn:hover {
-          background: rgba(99, 102, 241, 0.22);
-          border-color: var(--brand-primary);
-        }
-
-        /* PT CONTROLS */
-        .pt-control-bar {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 8px;
-          width: 100%;
-        }
-        .pt-status-select {
-          height: 34px;
-          background: var(--bg-elevated);
-          border: 1px solid var(--border-default);
-          border-radius: 8px;
-          color: var(--text-primary);
-          font-size: 12px;
-          font-weight: 600;
-          padding: 0 6px;
-        }
-        .pt-btn-group {
-          display: flex;
-          gap: 6px;
-        }
-        :global(.pt-edit-btn) {
-          width: 32px;
-          height: 32px;
-          border-radius: 8px;
-          background: var(--bg-elevated);
-          border: 1px solid var(--border-default);
-          color: var(--text-secondary);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-        .pt-delete-btn {
-          width: 32px;
-          height: 32px;
-          border-radius: 8px;
-          background: rgba(239, 68, 68, 0.1);
-          border: 1px solid rgba(239, 68, 68, 0.25);
-          color: #ef4444;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          cursor: pointer;
-        }
-
-        /* 12. EMPTY STATE MODEL MODERN */
-        .compact-empty-card {
-          background: var(--bg-surface);
-          border: 1px solid var(--border-default);
-          border-radius: 20px;
-          padding: 36px 20px;
-          text-align: center;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 10px;
-          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
-        }
-        .empty-icon-wrap {
-          width: 60px;
-          height: 60px;
-          border-radius: 18px;
-          background: rgba(99, 102, 241, 0.12);
-          color: var(--brand-primary);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-        .empty-title {
-          font-size: 16.5px;
-          font-weight: 800;
-          color: var(--text-primary);
-        }
-        .empty-desc {
-          font-size: 12.5px;
-          color: var(--text-muted);
-          max-width: 360px;
-          line-height: 1.4;
-        }
-        .empty-refresh-btn {
-          margin-top: 6px;
-          padding: 8px 18px;
-          background: var(--brand-primary);
-          color: white;
-          border: none;
-          border-radius: 100px;
-          font-size: 13px;
-          font-weight: 700;
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-          cursor: pointer;
-          box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
-        }
-
-        /* 11. SKELETON STYLES */
-        .skeleton-card {
-          height: 130px;
-        }
-        .skeleton-line {
-          background: linear-gradient(90deg, var(--bg-elevated) 25%, var(--bg-overlay) 50%, var(--bg-elevated) 75%);
-          background-size: 200% 100%;
-          animation: shimmer 1.5s infinite;
-          border-radius: 6px;
-        }
-        .sk-title { height: 18px; width: 50%; }
-        .sk-subtitle { height: 24px; width: 70%; }
-        .sk-body { height: 14px; width: 90%; }
-
-        /* 9. PREMIUM CENTERED DIALOG POPUP STYLES (LANGSUNG TAMPIL DI LAYAR UTAMA) */
-        .bottom-sheet-backdrop {
-          position: fixed;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background: rgba(0, 0, 0, 0.78);
-          backdrop-filter: blur(16px);
-          -webkit-backdrop-filter: blur(16px);
-          z-index: 99999;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: 16px;
-        }
-        .bottom-sheet-card {
-          width: 100%;
-          max-width: 520px;
-          background: var(--bg-elevated);
-          border-radius: 24px;
-          border: 1px solid rgba(255, 255, 255, 0.15);
-          padding: 20px 22px 24px;
-          box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5), 0 0 35px rgba(99, 102, 241, 0.2);
-          max-height: 85vh;
-          overflow-y: auto;
-          display: flex;
-          flex-direction: column;
-          gap: 16px;
-          animation: modalPop 250ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
-        @keyframes modalPop {
-          from {
-            opacity: 0;
-            transform: scale(0.94) translateY(10px);
-          }
-          to {
-            opacity: 1;
-            transform: scale(1) translateY(0);
-          }
-        }
-        .sheet-handle-bar {
-          width: 42px;
-          height: 4px;
-          background: var(--border-default);
-          border-radius: 100px;
-          align-self: center;
-          margin-bottom: 2px;
-        }
-        .sheet-header {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-        }
-        .sheet-title-group {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-        }
-        .sheet-icon-badge {
-          width: 38px;
-          height: 38px;
-          border-radius: 12px;
-          background: rgba(168, 85, 247, 0.15);
-          color: #a855f7;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-        .sheet-title {
-          font-size: 16.5px;
-          font-weight: 800;
-          color: var(--text-primary);
-        }
-        .sheet-subtitle {
-          font-size: 12px;
-          color: var(--text-muted);
-        }
-        .sheet-close-btn {
-          background: transparent;
-          border: none;
-          color: var(--text-muted);
-          cursor: pointer;
-        }
-        .sheet-body {
-          display: flex;
-          flex-direction: column;
-          gap: 12px;
-        }
-        .sheet-section-card {
-          background: var(--bg-surface);
-          border: 1px solid var(--border-default);
-          border-radius: 16px;
-          padding: 14px;
-          display: flex;
-          flex-direction: column;
-          gap: 10px;
-        }
-        .bs-row-between {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-        }
-        .bs-program-title {
-          font-size: 20px;
-          font-weight: 900;
-          color: var(--text-primary);
-        }
-        .bs-grid-2 {
-          display: grid;
-          grid-template-columns: repeat(2, 1fr);
-          gap: 10px;
-        }
-        .bs-info-item {
-          display: flex;
-          flex-direction: column;
-          gap: 2px;
-        }
-        .bs-label {
-          font-size: 11px;
-          font-weight: 600;
-          color: var(--text-muted);
-        }
-        .bs-val {
-          font-size: 13px;
-          font-weight: 700;
-          color: var(--text-primary);
-        }
-        .sheet-sec-title {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          font-size: 13px;
-          font-weight: 700;
-          color: var(--brand-primary);
-        }
-        .bs-full-notes {
-          font-size: 13px;
-          line-height: 1.45;
-          color: var(--text-secondary);
-          font-style: italic;
-          background: var(--bg-elevated);
-          padding: 10px 12px;
-          border-radius: 10px;
-        }
-        .bs-eval-box {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          font-size: 12.5px;
-          color: var(--text-secondary);
-        }
-        .sheet-footer {
-          margin-top: 4px;
-        }
-        .sheet-close-action-btn {
-          width: 100%;
-          height: 44px;
-          border-radius: 14px;
-          border: 1px solid var(--border-default);
-          background: var(--bg-surface);
-          color: var(--text-primary);
-          font-size: 13.5px;
-          font-weight: 700;
-          cursor: pointer;
-        }
+        /* MODAL COMMON */
+        .modal-backdrop { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.78); backdrop-filter: blur(16px); z-index: 99999; display: flex; align-items: center; justify-content: center; padding: 16px; }
+        .modal-card { width: 100%; max-width: 500px; background: var(--bg-elevated); border-radius: 24px; border: 1px solid rgba(255, 255, 255, 0.15); padding: 20px 22px; box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5); display: flex; flex-direction: column; gap: 14px; max-height: 85vh; overflow-y: auto; }
+        .mc-header { display: flex; align-items: center; justify-content: space-between; }
+        .mc-title-group { display: flex; align-items: center; gap: 8px; }
+        .mc-icon-badge { width: 36px; height: 36px; border-radius: 10px; background: rgba(99, 102, 241, 0.15); color: #6366f1; display: flex; align-items: center; justify-content: center; }
+        .mc-title { font-size: 16px; font-weight: 800; color: var(--text-primary); }
+        .mc-sub { font-size: 11.5px; color: var(--text-muted); }
+        .mc-close-btn { background: transparent; border: none; color: var(--text-muted); cursor: pointer; }
+        .mc-form { display: flex; flex-direction: column; gap: 10px; }
+        .mc-field { display: flex; flex-direction: column; gap: 4px; }
+        .mc-field-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+        .mc-label { font-size: 12px; font-weight: 600; color: var(--text-secondary); }
+        .mc-input, .mc-select, .mc-textarea { width: 100%; background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: 10px; color: var(--text-primary); font-size: 13px; padding: 8px 12px; outline: none; }
+        .mc-actions { display: flex; gap: 8px; margin-top: 8px; }
+        .mc-btn-cancel { flex: 1; height: 40px; border-radius: 12px; background: var(--bg-surface); border: 1px solid var(--border-default); color: var(--text-secondary); font-size: 13px; font-weight: 700; cursor: pointer; }
+        .mc-btn-save { flex: 1; height: 40px; border-radius: 12px; background: var(--brand-primary); border: none; color: white; font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .mc-btn-danger { flex: 1; height: 40px; border-radius: 12px; background: #ef4444; border: none; color: white; font-size: 13px; font-weight: 700; cursor: pointer; }
 
         @media (max-width: 640px) {
-          .compact-session-grid {
-            grid-template-columns: 1fr;
-          }
-          .c-program-title {
-            font-size: 18px;
-          }
-          .bs-grid-2 {
-            grid-template-columns: 1fr;
-          }
+          .pt-quick-stats-grid { grid-template-columns: repeat(2, 1fr); }
+          .pt-action-buttons-wrap { grid-template-columns: 1fr; }
         }
       `}</style>
     </div>

@@ -1,0 +1,636 @@
+Perbaharui 100% halaman Jadwal Personal Trainer menjadi Premium Mobile Scheduling System yang modern, cepat, responsif, dan dioptimalkan untuk penggunaan di layar HP.
+
+Gunakan referensi pengalaman pengguna dari Google Calendar, Apple Calendar, Trainerize, Calendly, Notion Calendar, dan Linear.
+
+Jangan mengubah business logic, database, API, maupun struktur data yang sudah berjalan. Fokus pada redesign UI/UX, optimasi mobile, dan peningkatan pengalaman pengguna.
+
+1. Premium Schedule Header
+
+Redesign seluruh bagian atas halaman.
+
+Gunakan Hero Compact.
+
+Isi:
+
+👋 Greeting
+
+Good Morning / Afternoon / Evening
+
+Nama PT
+
+Hari
+
+Tanggal
+
+Jumlah Session Hari Ini
+
+Contoh
+
+Good Morning
+
+Elprian Light
+
+Selasa, 28 Juli 2026
+
+7 Session Hari Ini
+
+Gunakan:
+
+Glassmorphism
+
+Gradient
+
+Rounded 24px
+
+Soft Shadow
+
+Glow Effect
+
+2. Toggle View
+
+Tetap gunakan dua mode.
+
+📅 Hari
+
+📆 Minggu
+
+Gunakan:
+
+Segmented Control Premium
+
+Animated Indicator
+
+Glass Background
+
+Rounded 18px
+
+Swipe Animation
+
+Jangan menggunakan Tab bawaan browser.
+
+3. Date Navigation
+
+Perbarui seluruh navigasi tanggal.
+
+Gunakan:
+
+◀
+
+Hari Ini
+
+Tanggal
+
+▶
+
+Contoh
+
+◀
+
+Hari Ini
+
+Selasa, 28 Juli 2026
+
+▶
+
+Animasi:
+
+Slide
+
+Fade
+
+4. Quick Statistics
+
+Tambahkan Analytics kecil.
+
+Contoh
+
+👥 Client
+
+7
+
+🏋️ Session
+
+7
+
+🟢 Available
+
+4 Jam
+
+⏰ Occupied
+
+6 Jam
+
+Gunakan Compact Analytics Card.
+
+5. Day View
+
+Gunakan Timeline modern.
+
+Jam berada di kiri.
+
+Card Session berada di kanan.
+
+Contoh
+
+08.00
+
+──────────────
+
+🟢 Session
+
+Dana Gading
+
+Upper Body
+
+60 menit
+
+1 Park
+
+RPE 8
+
+6. Compact Session Card
+
+Kurangi ukuran Card sekitar 35%.
+
+Gunakan:
+
+Rounded 20px
+
+Gradient Border
+
+Glass Background
+
+Padding kecil
+
+Target:
+
+Dalam satu layar HP dapat terlihat minimal 6–8 sesi.
+
+Card berisi:
+
+Nama Client
+
+Program
+
+Durasi
+
+Lokasi
+
+Status
+
+Avatar kecil
+
+Warna berdasarkan Status.
+
+7. Color Status
+
+Scheduled
+
+🔵
+
+Check-In
+
+🟢
+
+Completed
+
+✅
+
+Cancelled
+
+🔴
+
+Reschedule
+
+🟡
+
+Gunakan Accent Color.
+
+8. Timeline Grid
+
+Timeline lebih tipis.
+
+Jam:
+
+14px
+
+Card:
+
+Compact
+
+Grid:
+
+Soft
+
+Jangan memenuhi layar dengan garis.
+
+9. Available Slot
+
+Slot kosong.
+
+Gunakan Card kecil.
+
+Tambah Session
+
+2 Jam Kosong
+
+Saat ditekan.
+
+Buka:
+
+Premium Bottom Sheet.
+
+10. Floating Add Button
+
+Perbarui FAB.
+
+Gunakan:
+
+Floating Glass FAB
+
+Gradient
+
+Glow
+
+Shadow
+
+Animasi:
+
+Morph
+
+Scale
+
+Ripple
+
+Saat ditekan.
+
+Buka Bottom Sheet.
+
+11. Premium Bottom Sheet
+
+Isi:
+
+Tambah Session
+
+Pilih Client
+
+Program
+
+Jam
+
+Lokasi
+
+Catatan
+
+Save
+
+Gunakan:
+
+Slide Up
+
+Blur Background
+
+Rounded 28px
+
+12. Session Detail
+
+Saat Card ditekan.
+
+Jangan langsung Edit.
+
+Buka:
+
+Premium Bottom Sheet.
+
+Berisi:
+
+Client
+
+Program
+
+Lokasi
+
+Jam
+
+Status
+
+RPE
+
+Catatan
+
+Button:
+
+Edit
+
+Check-In
+
+Complete
+
+Delete
+
+Hanya untuk PT.
+
+13. Week View
+
+Perbarui tampilan Mingguan.
+
+Gunakan:
+
+Horizontal Scroll
+
+Sticky Header
+
+Sticky Time Column
+
+Card Compact
+
+Hari aktif diberi Highlight.
+
+14. Sticky Time
+
+Jam di kiri.
+
+Tetap terlihat saat Scroll.
+
+Gunakan:
+
+Sticky Position.
+
+15. Sticky Day Header
+
+Nama Hari.
+
+Tetap terlihat.
+
+Gunakan:
+
+Glass Header.
+
+16. Smart Search
+
+Hilangkan Search biasa.
+
+Gunakan:
+
+Custom In-App Search Modal.
+
+Berisi:
+
+Recent Search
+
+Suggestion
+
+Client
+
+Program
+
+Tanggal
+
+Lokasi
+
+17. Smart Filter
+
+Gunakan Filter Chip.
+
+Semua
+
+Hari Ini
+
+Besok
+
+Completed
+
+Scheduled
+
+Cancelled
+
+Online
+
+Offline
+
+Scrollable Horizontal.
+
+18. Loading Experience
+
+Gunakan:
+
+Skeleton Timeline
+
+Skeleton Card
+
+Transparent Loading
+
+Glass Skeleton
+
+Tidak menggunakan Spinner Browser.
+
+19. Empty State
+
+Jika belum ada Session.
+
+Gunakan Illustration modern.
+
+Judul
+
+Belum Ada Jadwal
+
+Deskripsi
+
+Tekan tombol + untuk membuat sesi pertama.
+
+Button
+
+Tambah Session
+
+20. Toast Notification
+
+Gunakan:
+
+Premium Toast
+
+Top Center
+
+Glass
+
+Slide Down
+
+Jenis:
+
+Success
+
+Warning
+
+Info
+
+Error
+
+21. Custom In-App Modal Dialog
+
+Seluruh popup menggunakan:
+
+✅ Custom In-App Modal Dialog
+
+Jangan menggunakan:
+
+❌ alert()
+
+❌ confirm()
+
+❌ prompt()
+
+Digunakan untuk:
+
+Tambah Session
+
+Edit
+
+Delete
+
+Check-In
+
+Complete
+
+Cancel
+
+Reschedule
+
+22. Swipe Gesture
+
+Tambahkan Gesture.
+
+Swipe kanan
+
+Check-In
+
+Swipe kiri
+
+Complete
+
+Long Press
+
+Detail Session
+
+23. Drag & Drop
+
+Pada Mode Minggu.
+
+Session dapat dipindahkan.
+
+Drag ke jam lain.
+
+Drag ke hari lain.
+
+Gunakan Animation.
+
+24. Optimasi Mobile
+
+Target:
+
+Layar 5–7 inci.
+
+Minimal terlihat:
+
+Header
+
+Analytics
+
+5–8 Session
+
+FAB
+
+Bottom Navigation
+
+tanpa harus banyak melakukan scroll.
+
+25. Responsive
+
+Optimalkan untuk:
+
+Android
+
+iPhone
+
+Tablet
+
+PWA
+
+Tidak boleh ada:
+
+Overflow
+
+Horizontal Scroll (kecuali Week View)
+
+Elemen bertumpuk
+
+Card terpotong
+
+FAB menutupi Card
+
+26. Business Rules
+Personal Trainer
+
+PT dapat:
+
+✅ Tambah Session
+
+✅ Edit Session
+
+✅ Delete Session
+
+✅ Check-In
+
+✅ Complete
+
+✅ Cancel
+
+✅ Reschedule
+
+✅ Update Program
+
+✅ Update RPE
+
+✅ Update Lokasi
+
+Client
+
+Client hanya dapat:
+
+✅ Melihat Jadwal
+
+✅ Melihat Detail Session
+
+Client tidak boleh:
+
+❌ Menambah Session
+
+❌ Mengedit Session
+
+❌ Menghapus Session
+
+❌ Mengubah Status
+
+❌ Mengubah Jadwal
+
+❌ Mengubah Lokasi
+
+27. AI Schedule Insight
+
+Tambahkan Card kecil di bawah Hero.
+
+Contoh
+
+✨ AI Schedule Insight
+
+Hari ini Anda memiliki 7 sesi latihan.
+
+Masih tersedia 4 jam kosong.
+
+Disarankan menambahkan maksimal 2 sesi lagi agar jadwal tetap optimal.
+
+Gunakan Glass Card.
+
+28. Ketentuan Pengembangan
+Jangan mengubah business logic, struktur database, API, maupun autentikasi.
+Pertahankan seluruh integrasi data yang sudah berjalan.
+Fokus pada Mobile-First Premium Scheduling Experience dengan tampilan yang ringkas, cepat, dan nyaman digunakan menggunakan satu tangan.
+Terapkan secara konsisten Glassmorphism, Gradient Hero, Compact Timeline Cards, Segmented Control, Custom In-App Modal Dialog, Premium Bottom Sheet, Skeleton Loading, Transparent Loading Overlay, Premium Toast Notification, Sticky Timeline, Sticky Header, Swipe Gesture, Drag & Drop (Week View), AI Schedule Insight, Smooth Micro Animation, dan Responsive Layout sehingga fitur Jadwal Personal Trainer terasa setara dengan aplikasi enterprise seperti Google Calendar, Apple Calendar, Trainerize, Calendly, Notion Calendar, dan Linear, namun tetap dioptimalkan sepenuhnya untuk layar HP.
