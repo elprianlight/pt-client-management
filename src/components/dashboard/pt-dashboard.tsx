@@ -81,7 +81,7 @@ function HeroHeader({
   return (
     <div className="hero-header-banner animate-slide-down">
       <div className="hh-top-bar">
-        {/* Left: Dynamic Greeting */}
+        {/* Left: Dynamic Greeting & User Name */}
         <div className="hh-greeting-wrap">
           <div className="hh-greeting-badge">
             <span>{greeting.icon}</span>
@@ -90,16 +90,13 @@ function HeroHeader({
           <h1 className="hh-user-name">
             {userName} <span className="hh-sparkle">✨</span>
           </h1>
-          <p className="hh-subtitle">
-            Pantau statistik latihan & kinerja client Anda secara real-time.
-          </p>
         </div>
 
-        {/* Right: Live Clock & Search Trigger */}
+        {/* Right: Live Clock & Action Buttons */}
         <div className="hh-right-actions">
           <div className="hh-live-clock-card">
             <div className="hh-clock-row">
-              <Clock size={15} className="hh-clock-icon" />
+              <Clock size={13} className="hh-clock-icon" />
               <span className="hh-time-val">{timeStr || '00:00:00'}</span>
             </div>
             <span className="hh-date-val">{dateStr || 'Loading...'}</span>
@@ -112,13 +109,13 @@ function HeroHeader({
               className="hh-search-btn"
               title="Quick Search (Ctrl + K)"
             >
-              <Search size={16} />
+              <Search size={14} />
               <span className="hh-search-text">Quick Search...</span>
               <kbd className="hh-kbd">⌘K</kbd>
             </button>
 
             <Link href="/session/new" className="hh-checkin-btn">
-              <Zap size={16} />
+              <Zap size={14} />
               <span>Smart Check-In</span>
             </Link>
           </div>
@@ -129,12 +126,12 @@ function HeroHeader({
         .hero-header-banner {
           background: linear-gradient(135deg, var(--bg-surface) 0%, var(--bg-elevated) 100%);
           border: 1px solid var(--border-default);
-          border-radius: 24px;
-          padding: 20px 24px;
-          box-shadow: 0 12px 36px rgba(0, 0, 0, 0.12);
+          border-radius: 18px;
+          padding: 12px 16px;
+          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
           backdrop-filter: blur(16px);
           -webkit-backdrop-filter: blur(16px);
-          margin-bottom: 20px;
+          margin-bottom: 10px;
           position: relative;
           overflow: hidden;
         }
@@ -143,8 +140,8 @@ function HeroHeader({
           position: absolute;
           top: -50px;
           right: -50px;
-          width: 200px;
-          height: 200px;
+          width: 160px;
+          height: 160px;
           background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, rgba(168, 85, 247, 0) 70%);
           pointer-events: none;
         }
@@ -152,92 +149,89 @@ function HeroHeader({
           display: flex;
           align-items: center;
           justify-content: space-between;
-          gap: 16px;
+          gap: 12px;
           flex-wrap: wrap;
         }
         .hh-greeting-wrap {
           display: flex;
           flex-direction: column;
-          gap: 4px;
+          gap: 2px;
         }
         .hh-greeting-badge {
           display: inline-flex;
           align-items: center;
-          gap: 6px;
+          gap: 4px;
           background: rgba(99, 102, 241, 0.12);
           border: 1px solid rgba(99, 102, 241, 0.25);
           color: var(--brand-primary);
-          padding: 3px 10px;
+          padding: 2px 8px;
           border-radius: 100px;
-          font-size: 11px;
+          font-size: 10px;
           font-weight: 800;
-          letter-spacing: 0.04em;
+          letter-spacing: 0.03em;
           width: fit-content;
         }
         .hh-user-name {
-          font-size: 24px;
-          font-weight: 900;
+          font-size: 18px;
+          font-weight: 800;
           color: var(--text-primary);
           line-height: 1.2;
-          letter-spacing: -0.02em;
-        }
-        .hh-subtitle {
-          font-size: 13px;
-          color: var(--text-muted);
+          letter-spacing: -0.01em;
         }
         .hh-right-actions {
           display: flex;
           align-items: center;
-          gap: 14px;
+          gap: 10px;
           flex-wrap: wrap;
         }
         .hh-live-clock-card {
           background: var(--bg-elevated);
           border: 1px solid var(--border-default);
-          border-radius: 16px;
-          padding: 8px 14px;
+          border-radius: 12px;
+          padding: 5px 10px;
           display: flex;
           flex-direction: column;
           align-items: flex-end;
-          gap: 2px;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+          gap: 1px;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
         }
         .hh-clock-row {
           display: flex;
           align-items: center;
-          gap: 6px;
+          gap: 5px;
           color: var(--brand-primary);
         }
         .hh-time-val {
           font-family: monospace;
-          font-size: 15px;
+          font-size: 13.5px;
           font-weight: 800;
-          letter-spacing: 0.05em;
+          letter-spacing: 0.04em;
           color: var(--text-primary);
         }
         .hh-date-val {
-          font-size: 11px;
+          font-size: 10px;
           font-weight: 600;
           color: var(--text-muted);
         }
         .hh-action-buttons {
           display: flex;
           align-items: center;
-          gap: 10px;
+          gap: 8px;
         }
         .hh-search-btn {
           display: inline-flex;
           align-items: center;
-          gap: 8px;
+          gap: 6px;
           background: var(--bg-elevated);
           border: 1px solid var(--border-default);
           color: var(--text-secondary);
-          padding: 10px 14px;
-          border-radius: 14px;
-          font-size: 13px;
+          padding: 7px 12px;
+          border-radius: 12px;
+          font-size: 12px;
           font-weight: 600;
           cursor: pointer;
           transition: all var(--transition-fast);
+          height: 36px;
         }
         .hh-search-btn:hover {
           border-color: var(--border-brand);
@@ -248,47 +242,63 @@ function HeroHeader({
           background: var(--bg-surface);
           border: 1px solid var(--border-default);
           color: var(--text-muted);
-          font-size: 10px;
-          padding: 2px 6px;
+          font-size: 9.5px;
+          padding: 1px 5px;
           border-radius: 4px;
           font-family: monospace;
         }
         :global(.hh-checkin-btn) {
           display: inline-flex;
           align-items: center;
-          gap: 8px;
+          justify-content: center;
+          gap: 6px;
           background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
           color: white;
-          padding: 10px 18px;
-          border-radius: 14px;
-          font-size: 13px;
+          padding: 7px 14px;
+          border-radius: 12px;
+          font-size: 12px;
           font-weight: 800;
           text-decoration: none;
-          box-shadow: 0 8px 20px rgba(99, 102, 241, 0.4);
+          box-shadow: 0 6px 16px rgba(99, 102, 241, 0.35);
           transition: all var(--transition-fast);
+          height: 36px;
         }
         :global(.hh-checkin-btn:hover) {
-          transform: translateY(-2px);
-          box-shadow: 0 12px 26px rgba(99, 102, 241, 0.55);
+          transform: translateY(-1px);
+          box-shadow: 0 10px 22px rgba(99, 102, 241, 0.5);
         }
         @media (max-width: 640px) {
           .hero-header-banner {
-            padding: 16px;
-            border-radius: 20px;
+            padding: 10px 12px;
+            border-radius: 16px;
+            margin-bottom: 8px;
           }
           .hh-user-name {
-            font-size: 19px;
+            font-size: 16px;
           }
           .hh-live-clock-card {
             width: 100%;
+            flex-direction: row;
+            justify-content: space-between;
             align-items: center;
+            padding: 4px 10px;
           }
           .hh-action-buttons {
             width: 100%;
-            justify-content: space-between;
+            display: flex;
+            gap: 6px;
           }
           .hh-search-btn {
             flex: 1;
+            height: 34px;
+            font-size: 11.5px;
+            justify-content: center;
+          }
+          :global(.hh-checkin-btn) {
+            flex: 1;
+            height: 34px;
+            font-size: 11.5px;
+            justify-content: center;
           }
         }
       `}</style>
