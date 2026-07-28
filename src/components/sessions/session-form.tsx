@@ -19,7 +19,8 @@ import {
   Sparkles,
   Zap,
   ArrowLeft,
-  ListFilter,
+  X,
+  Sliders,
 } from 'lucide-react'
 
 const formSchema = z.object({
@@ -87,6 +88,8 @@ export function SessionForm({
   const router = useRouter()
   const [error, setError] = useState<string | null>(null)
   const [submitState, setSubmitState] = useState<'normal' | 'loading' | 'success'>('normal')
+  const [isRpeModalOpen, setIsRpeModalOpen] = useState(false)
+  const [modalLoading, setModalLoading] = useState(false)
   const isEdit = !!initialData
 
   // Initial package matching
@@ -130,6 +133,7 @@ export function SessionForm({
   const selectedProgramType = watch('programType')
   const selectedRpe = Number(watch('rpe')) || 0
   const currentLocation = watch('location') || ''
+  const currentNotes = watch('sessionNotes') || ''
 
   const selectedPackageInfo = useMemo(() => {
     return packages.find(p => p.id === selectedPackageId)
@@ -167,9 +171,17 @@ export function SessionForm({
     }
   }
 
+  const handleSaveModal = () => {
+    setModalLoading(true)
+    setTimeout(() => {
+      setModalLoading(false)
+      setIsRpeModalOpen(false)
+    }, 250)
+  }
+
   return (
     <div className="smart-checkin-wrapper animate-fade-in">
-      {/* 2. REVISI BACK BUTTON: TEXT HANYA 'BACK' */}
+      {/* Back link */}
       <div style={{ marginBottom: 12 }}>
         <Link href="/session" className="back-link">
           <ArrowLeft size={16} />
@@ -178,6 +190,11 @@ export function SessionForm({
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="smart-checkin-form">
+        {/* Hidden inputs to keep form values registered */}
+        <input type="hidden" {...register('rpe')} />
+        <input type="hidden" {...register('location')} />
+        <input type="hidden" {...register('sessionNotes')} />
+
         {error && (
           <div className="sc-error-banner animate-fade-in">
             <span>⚠️ {error}</span>
@@ -217,7 +234,7 @@ export function SessionForm({
               {errors.packageId && <span className="form-error">{errors.packageId.message}</span>}
             </div>
 
-            {/* 1. REVISI FITUR STATUS SESI / BOOKING */}
+            {/* STATUS SESI / BOOKING */}
             <div className="form-group" style={{ marginTop: 14 }}>
               <label className="form-label">Status Sesi / Booking</label>
               <select
@@ -264,7 +281,7 @@ export function SessionForm({
           </div>
         </div>
 
-        {/* 3. REVISI CARD: WAKTU & PROGRAM LATIHAN */}
+        {/* 2. CARD: WAKTU & PROGRAM LATIHAN */}
         <div className="sc-card animate-slide-up" style={{ animationDelay: '50ms' }}>
           <div className="sc-card-header">
             <div className="sc-card-title-group">
@@ -279,7 +296,6 @@ export function SessionForm({
           </div>
 
           <div className="sc-card-body">
-            {/* Waktu Input Saja (Tanpa tombol preset sekarang/+15m/besok) */}
             <div className="form-group">
               <label className="form-label">Tanggal & Jam Sesi</label>
               <div className="input-with-icon">
@@ -294,7 +310,6 @@ export function SessionForm({
               {errors.scheduledAt && <span className="form-error">{errors.scheduledAt.message}</span>}
             </div>
 
-            {/* Program Latihan Dropdown */}
             <div className="form-group" style={{ marginTop: 14 }}>
               <label className="form-label">Program Latihan</label>
               <select
@@ -338,7 +353,7 @@ export function SessionForm({
           </div>
         </div>
 
-        {/* 4. REVISI CARD: INTENSITAS (RPE) & LOKASI MANUAL WITH SMART AUTO-SUGGESTION */}
+        {/* 3. REVISI TOTAL CARD 3: CUSTOM IN-APP MODAL DIALOG TRIGGER FOR RPE & LOKASI 🚀 */}
         <div className="sc-card animate-slide-up" style={{ animationDelay: '100ms' }}>
           <div className="sc-card-header">
             <div className="sc-card-title-group">
@@ -347,87 +362,54 @@ export function SessionForm({
               </div>
               <div>
                 <h3 className="sc-card-title">Intensitas (RPE) & Lokasi</h3>
-                <p className="sc-card-desc">Estimasi beban usaha & tempat pelaksanaan</p>
+                <p className="sc-card-desc">Atur beban usaha, tempat & catatan sesi</p>
               </div>
             </div>
           </div>
 
           <div className="sc-card-body">
-            {/* RPE Segmented Rating Chips (1-10) */}
-            <div className="form-group">
-              <div className="form-label-row">
-                <label className="form-label">Tingkat RPE (Usaha 1-10)</label>
-                {selectedRpe > 0 && RPE_DESCRIPTIONS[selectedRpe] && (
-                  <span className="sc-rpe-badge" style={{ color: RPE_DESCRIPTIONS[selectedRpe].color }}>
-                    RPE {selectedRpe} — {RPE_DESCRIPTIONS[selectedRpe].text}
-                  </span>
-                )}
-              </div>
-              <div className="sc-rpe-grid">
-                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(val => {
-                  const isSelected = selectedRpe === val
-                  const colorInfo = RPE_DESCRIPTIONS[val]
-                  return (
-                    <button
-                      key={val}
-                      type="button"
-                      onClick={() => setValue('rpe', val)}
-                      className={`sc-rpe-chip ${isSelected ? 'active' : ''}`}
-                      style={
-                        isSelected
-                          ? {
-                              background: colorInfo.color,
-                              borderColor: colorInfo.color,
-                              color: '#ffffff',
-                              boxShadow: `0 4px 12px ${colorInfo.color}66`,
-                            }
-                          : {}
-                      }
-                    >
-                      {val}
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
+            {/* Live Summary Preview Badges */}
+            <div className="sc-summary-box">
+              <div className="sc-summary-row">
+                <div className="sc-summary-item">
+                  <span className="sc-summary-label">Tingkat Intensitas (RPE)</span>
+                  <div className="sc-summary-val-badge">
+                    {selectedRpe > 0 && RPE_DESCRIPTIONS[selectedRpe] ? (
+                      <span style={{ color: RPE_DESCRIPTIONS[selectedRpe].color, fontWeight: 800 }}>
+                        🔥 RPE {selectedRpe} — {RPE_DESCRIPTIONS[selectedRpe].text.split('(')[0]}
+                      </span>
+                    ) : (
+                      <span>Belum diatur</span>
+                    )}
+                  </div>
+                </div>
 
-            {/* Lokasi Input Manual + Smart Auto-Suggestion "Hang Lekir" */}
-            <div className="form-group" style={{ marginTop: 14 }}>
-              <label className="form-label">Lokasi Latihan</label>
-              <div className="input-with-icon">
-                <input
-                  type="text"
-                  placeholder="Ketik lokasi (misal: Hang Lekir)..."
-                  className="sc-input-field"
-                  {...register('location')}
-                  id="input-session-location"
-                />
-                <MapPin size={16} className="sc-input-icon" />
+                <div className="sc-summary-item">
+                  <span className="sc-summary-label">Lokasi Latihan</span>
+                  <div className="sc-summary-val-badge">
+                    <MapPin size={13} style={{ color: 'var(--brand-primary)' }} />
+                    <span>{currentLocation || 'Belum diatur'}</span>
+                  </div>
+                </div>
               </div>
 
-              {/* Smart Auto-Suggestion Badge saat ketik 'hang' */}
-              {currentLocation && currentLocation.toLowerCase().includes('hang') && currentLocation.toLowerCase() !== 'hang lekir' && (
-                <button
-                  type="button"
-                  onClick={() => setValue('location', 'Hang Lekir')}
-                  className="sc-hang-suggest-btn animate-fade-in"
-                >
-                  💡 Pengingat Smart: Auto-fill <strong>Hang Lekir</strong>
-                </button>
+              {currentNotes && (
+                <div className="sc-summary-notes-row">
+                  <span className="sc-summary-label">Notes:</span>
+                  <p className="sc-summary-notes-text">"{currentNotes}"</p>
+                </div>
               )}
-            </div>
 
-            {/* Catatan / Notes */}
-            <div className="form-group" style={{ marginTop: 14 }}>
-              <label className="form-label">Catatan / Notes Sesi (Opsional)</label>
-              <div className="input-with-icon">
-                <textarea
-                  placeholder="Catat detail latihan, fokus gerakan, atau catatan kondisi client..."
-                  className="sc-textarea-field"
-                  {...register('sessionNotes')}
-                />
-                <PenLine size={16} className="sc-textarea-icon" />
-              </div>
+              {/* Trigger Button to Open Custom In-App Modal Dialog */}
+              <button
+                type="button"
+                onClick={() => setIsRpeModalOpen(true)}
+                className="sc-trigger-modal-btn"
+                id="btn-open-rpe-modal"
+              >
+                <Sliders size={16} />
+                <span>Atur Intensitas RPE & Lokasi Latihan</span>
+              </button>
             </div>
           </div>
         </div>
@@ -534,12 +516,6 @@ export function SessionForm({
             flex-direction: column;
             gap: 6px;
           }
-          .form-label-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 8px;
-          }
           .form-label {
             font-size: 13px;
             font-weight: 700;
@@ -561,6 +537,78 @@ export function SessionForm({
           .sc-input-select:focus {
             border-color: var(--brand-primary);
             box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+          }
+          .sc-summary-box {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-default);
+            border-radius: 16px;
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+          }
+          .sc-summary-row {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+          }
+          .sc-summary-item {
+            flex: 1;
+            min-width: 200px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+          }
+          .sc-summary-label {
+            font-size: 11.5px;
+            font-weight: 600;
+            color: var(--text-muted);
+          }
+          .sc-summary-val-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-default);
+            padding: 6px 10px;
+            border-radius: 10px;
+            font-size: 12.5px;
+            font-weight: 700;
+            color: var(--text-primary);
+          }
+          .sc-summary-notes-row {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            padding-top: 6px;
+            border-top: 1px dashed var(--border-default);
+          }
+          .sc-summary-notes-text {
+            font-size: 12px;
+            font-style: italic;
+            color: var(--text-secondary);
+          }
+          .sc-trigger-modal-btn {
+            width: 100%;
+            height: 44px;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.12) 0%, rgba(168, 85, 247, 0.12) 100%);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            border-radius: 12px;
+            color: var(--brand-primary);
+            font-size: 13.5px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+          }
+          .sc-trigger-modal-btn:hover {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.25) 0%, rgba(168, 85, 247, 0.25) 100%);
+            border-color: var(--brand-primary);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 14px rgba(99, 102, 241, 0.2);
           }
           .sc-quota-summary {
             margin-top: 14px;
@@ -634,72 +682,6 @@ export function SessionForm({
             color: var(--text-muted);
             pointer-events: none;
           }
-          .sc-rpe-grid {
-            display: grid;
-            grid-template-columns: repeat(10, 1fr);
-            gap: 4px;
-          }
-          .sc-rpe-chip {
-            height: 38px;
-            background: var(--bg-elevated);
-            border: 1px solid var(--border-default);
-            border-radius: 8px;
-            color: var(--text-secondary);
-            font-size: 13px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all var(--transition-fast);
-          }
-          .sc-rpe-chip.active {
-            transform: scale(1.04);
-          }
-          .sc-rpe-badge {
-            font-size: 11.5px;
-            font-weight: 700;
-          }
-          .sc-hang-suggest-btn {
-            margin-top: 6px;
-            padding: 8px 12px;
-            background: rgba(99, 102, 241, 0.15);
-            border: 1px solid rgba(99, 102, 241, 0.3);
-            border-radius: 10px;
-            color: var(--brand-primary);
-            font-size: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            transition: all var(--transition-fast);
-          }
-          .sc-hang-suggest-btn:hover {
-            background: rgba(99, 102, 241, 0.25);
-            transform: translateY(-1px);
-          }
-          .sc-textarea-field {
-            width: 100%;
-            height: 80px;
-            background: var(--bg-elevated);
-            border: 1px solid var(--border-default);
-            border-radius: 14px;
-            color: var(--text-primary);
-            font-size: 13.5px;
-            padding: 10px 42px 10px 14px;
-            outline: none;
-            resize: none;
-            transition: all var(--transition-fast);
-          }
-          .sc-textarea-field:focus {
-            border-color: var(--brand-primary);
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
-          }
-          :global(.sc-textarea-icon) {
-            position: absolute;
-            right: 14px;
-            top: 14px;
-            color: var(--text-muted);
-            pointer-events: none;
-          }
           .sc-action-wrap {
             display: flex;
             flex-direction: column;
@@ -759,14 +741,6 @@ export function SessionForm({
               padding: 14px 14px;
               border-radius: 16px;
             }
-            .sc-rpe-grid {
-              gap: 3px;
-            }
-            .sc-rpe-chip {
-              height: 32px;
-              font-size: 11px;
-              border-radius: 6px;
-            }
             :global(.sc-smart-btn) {
               height: 52px;
               font-size: 15px;
@@ -774,6 +748,314 @@ export function SessionForm({
           }
         `}</style>
       </form>
+
+      {/* 🚀 100% CUSTOM IN-APP MODAL DIALOG INTENSITAS (RPE) & LOKASI LATIHAN */}
+      {isRpeModalOpen && (
+        <div className="rpe-modal-backdrop animate-fade-in" onClick={() => setIsRpeModalOpen(false)}>
+          <div className="rpe-modal-card animate-bounce-in" onClick={e => e.stopPropagation()}>
+            {/* Modal Header */}
+            <div className="rpe-modal-header">
+              <div className="rpe-modal-title-wrap">
+                <div className="rpe-modal-icon">
+                  <Activity size={20} />
+                </div>
+                <div>
+                  <h3 className="rpe-modal-title">⚡ Atur Intensitas (RPE) & Lokasi</h3>
+                  <p className="rpe-modal-desc">Sesuaikan tingkat beban usaha, tempat & catatan sesi</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsRpeModalOpen(false)}
+                className="rpe-modal-close-btn"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="rpe-modal-body">
+              {/* RPE Rating Grid */}
+              <div className="form-group">
+                <div className="form-label-row">
+                  <label className="form-label">Tingkat RPE (Usaha 1-10)</label>
+                  {selectedRpe > 0 && RPE_DESCRIPTIONS[selectedRpe] && (
+                    <span className="sc-rpe-badge" style={{ color: RPE_DESCRIPTIONS[selectedRpe].color }}>
+                      RPE {selectedRpe} — {RPE_DESCRIPTIONS[selectedRpe].text}
+                    </span>
+                  )}
+                </div>
+                <div className="sc-rpe-grid">
+                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(val => {
+                    const isSelected = selectedRpe === val
+                    const colorInfo = RPE_DESCRIPTIONS[val]
+                    return (
+                      <button
+                        key={val}
+                        type="button"
+                        onClick={() => setValue('rpe', val)}
+                        className={`sc-rpe-chip ${isSelected ? 'active' : ''}`}
+                        style={
+                          isSelected
+                            ? {
+                                background: colorInfo.color,
+                                borderColor: colorInfo.color,
+                                color: '#ffffff',
+                                boxShadow: `0 4px 12px ${colorInfo.color}66`,
+                              }
+                            : {}
+                        }
+                      >
+                        {val}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+
+              {/* Lokasi Latihan Input + Smart Auto-fill */}
+              <div className="form-group" style={{ marginTop: 14 }}>
+                <label className="form-label">Lokasi Latihan</label>
+                <div className="input-with-icon">
+                  <input
+                    type="text"
+                    placeholder="Ketik lokasi (misal: Hang Lekir)..."
+                    className="sc-input-field"
+                    value={currentLocation}
+                    onChange={(e) => setValue('location', e.target.value)}
+                    id="modal-input-session-location"
+                  />
+                  <MapPin size={16} className="sc-input-icon" />
+                </div>
+
+                {currentLocation && currentLocation.toLowerCase().includes('hang') && currentLocation.toLowerCase() !== 'hang lekir' && (
+                  <button
+                    type="button"
+                    onClick={() => setValue('location', 'Hang Lekir')}
+                    className="sc-hang-suggest-btn animate-fade-in"
+                  >
+                    💡 Pengingat Smart: Auto-fill <strong>Hang Lekir</strong>
+                  </button>
+                )}
+              </div>
+
+              {/* Catatan Sesi */}
+              <div className="form-group" style={{ marginTop: 14 }}>
+                <label className="form-label">Catatan / Notes Sesi (Opsional)</label>
+                <div className="input-with-icon">
+                  <textarea
+                    placeholder="Catat detail latihan, fokus gerakan, atau catatan kondisi client..."
+                    className="sc-textarea-field"
+                    value={currentNotes}
+                    onChange={(e) => setValue('sessionNotes', e.target.value)}
+                  />
+                  <PenLine size={16} className="sc-textarea-icon" />
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer Actions */}
+            <div className="rpe-modal-footer">
+              <button
+                type="button"
+                onClick={handleSaveModal}
+                disabled={modalLoading}
+                className="rpe-modal-save-btn"
+                id="btn-save-rpe-modal"
+              >
+                {modalLoading ? (
+                  <>
+                    <Loader2 size={18} className="spin" />
+                    <span>Menyimpan...</span>
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 size={18} />
+                    <span>✓ Simpan & Terapkan</span>
+                  </>
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setIsRpeModalOpen(false)}
+                className="rpe-modal-cancel-btn"
+              >
+                Tutup
+              </button>
+            </div>
+          </div>
+
+          <style jsx>{`
+            .rpe-modal-backdrop {
+              position: fixed;
+              inset: 0;
+              background: rgba(0, 0, 0, 0.78);
+              backdrop-filter: blur(16px);
+              -webkit-backdrop-filter: blur(16px);
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              z-index: 9999;
+              padding: 16px;
+            }
+            .rpe-modal-card {
+              background: var(--bg-elevated);
+              border: 1px solid var(--border-default);
+              border-radius: 24px;
+              width: 100%;
+              max-width: 520px;
+              overflow: hidden;
+              box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+              display: flex;
+              flex-direction: column;
+            }
+            .rpe-modal-header {
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              padding: 16px 20px;
+              border-bottom: 1px solid var(--border-default);
+              background: var(--bg-surface);
+            }
+            .rpe-modal-title-wrap {
+              display: flex;
+              align-items: center;
+              gap: 10px;
+            }
+            .rpe-modal-icon {
+              width: 36px;
+              height: 36px;
+              border-radius: 10px;
+              background: rgba(249, 115, 22, 0.15);
+              color: #f97316;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              flex-shrink: 0;
+            }
+            .rpe-modal-title {
+              font-size: 15.5px;
+              font-weight: 800;
+              color: var(--text-primary);
+              line-height: 1.2;
+            }
+            .rpe-modal-desc {
+              font-size: 12px;
+              color: var(--text-muted);
+            }
+            .rpe-modal-close-btn {
+              background: transparent;
+              border: none;
+              color: var(--text-muted);
+              cursor: pointer;
+              display: flex;
+              align-items: center;
+              padding: 4px;
+            }
+            .rpe-modal-body {
+              padding: 20px;
+              display: flex;
+              flex-direction: column;
+              gap: 12px;
+              max-height: 70vh;
+              overflow-y: auto;
+            }
+            .rpe-modal-footer {
+              padding: 16px 20px;
+              border-top: 1px solid var(--border-default);
+              background: var(--bg-surface);
+              display: flex;
+              gap: 10px;
+            }
+            .rpe-modal-save-btn {
+              flex: 1;
+              height: 46px;
+              border-radius: 14px;
+              border: none;
+              background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+              color: white;
+              font-size: 14px;
+              font-weight: 700;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              gap: 8px;
+              cursor: pointer;
+              box-shadow: 0 6px 18px rgba(99, 102, 241, 0.4);
+              transition: all var(--transition-fast);
+            }
+            .rpe-modal-save-btn:hover {
+              transform: translateY(-1px);
+              box-shadow: 0 10px 24px rgba(99, 102, 241, 0.55);
+            }
+            .rpe-modal-cancel-btn {
+              padding: 0 16px;
+              height: 46px;
+              border-radius: 14px;
+              background: var(--bg-elevated);
+              border: 1px solid var(--border-default);
+              color: var(--text-secondary);
+              font-size: 13.5px;
+              font-weight: 600;
+              cursor: pointer;
+              transition: all var(--transition-fast);
+            }
+            .sc-rpe-grid {
+              display: grid;
+              grid-template-columns: repeat(10, 1fr);
+              gap: 4px;
+            }
+            .sc-rpe-chip {
+              height: 38px;
+              background: var(--bg-surface);
+              border: 1px solid var(--border-default);
+              border-radius: 8px;
+              color: var(--text-secondary);
+              font-size: 13px;
+              font-weight: 700;
+              cursor: pointer;
+              transition: all var(--transition-fast);
+            }
+            .sc-rpe-chip.active {
+              transform: scale(1.04);
+            }
+            .sc-rpe-badge {
+              font-size: 11.5px;
+              font-weight: 700;
+            }
+            .sc-hang-suggest-btn {
+              margin-top: 6px;
+              padding: 8px 12px;
+              background: rgba(99, 102, 241, 0.15);
+              border: 1px solid rgba(99, 102, 241, 0.3);
+              border-radius: 10px;
+              color: var(--brand-primary);
+              font-size: 12px;
+              font-weight: 600;
+              cursor: pointer;
+              display: inline-flex;
+              align-items: center;
+              gap: 6px;
+              transition: all var(--transition-fast);
+            }
+            .sc-hang-suggest-btn:hover {
+              background: rgba(99, 102, 241, 0.25);
+              transform: translateY(-1px);
+            }
+            @media (max-width: 640px) {
+              .sc-rpe-grid {
+                gap: 3px;
+              }
+              .sc-rpe-chip {
+                height: 32px;
+                font-size: 11px;
+                border-radius: 6px;
+              }
+            }
+          `}</style>
+        </div>
+      )}
     </div>
   )
 }
