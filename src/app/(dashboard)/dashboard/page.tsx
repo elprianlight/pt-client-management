@@ -4,8 +4,8 @@ import { redirect } from 'next/navigation'
 import {
   SuperAdminDashboard,
   PTDashboard,
-  ClientDashboard,
 } from '@/components/dashboard/pt-dashboard'
+import { ClientDashboard } from '@/components/dashboard/client-dashboard'
 import { getCRMTasks, getCRMAnalytics } from '@/lib/actions/crm'
 import { CRMTaskManager } from '@/components/crm/crm-task-manager'
 import { CRMAnalyticsCharts } from '@/components/crm/crm-analytics-charts'
@@ -219,7 +219,7 @@ export default async function DashboardPage() {
         </>
       )}
 
-      {role === 'client' && <ClientDashboard stats={clientStats} />}
+      {role === 'client' && <ClientDashboard stats={clientStats} userName={profile?.full_name} />}
     </div>
   )
 }

@@ -1,0 +1,487 @@
+Perbaharui 100% Dashboard Client menjadi dashboard modern, premium, mobile-first, dan berfokus pada pengalaman Client seperti aplikasi WHOOP, Apple Fitness, Oura Ring, Trainerize, MyFitnessPal, dan Technogym.
+
+Jangan mengubah business logic, database, API, maupun struktur data yang sudah berjalan. Fokus pada redesign UI/UX, pengalaman pengguna, serta optimasi tampilan untuk layar HP.
+
+1. Premium Hero Dashboard
+
+Hilangkan Hero lama.
+
+Buat Hero baru dengan tinggi sekitar 180–220px.
+
+Gunakan:
+
+Glassmorphism
+Soft Gradient Background
+Rounded Corner 24px
+Blur Effect
+Glow Effect
+Elegant Border
+Hero berisi
+Greeting
+
+🌅 Good Morning
+
+☀️ Good Afternoon
+
+🌙 Good Evening
+
+Nama Client
+
+Welcome Back,
+
+Dana Gading
+
+AI Motivation
+
+Contoh
+
+🔥 Hari ini adalah waktu terbaik untuk menjadi lebih kuat.
+
+atau
+
+💪 Anda tinggal 5 sesi lagi menuju target bulan ini.
+
+Live Clock
+
+Jam Digital
+
+Tanggal
+
+Hari
+
+Update setiap detik.
+
+2. Quick Overview
+
+Tampilkan empat statistik utama.
+
+Gunakan Compact Analytics Card.
+
+Card 1
+
+📦
+
+Sisa Sesi
+
+5
+
+Card 2
+
+✅
+
+Sesi Selesai
+
+15
+
+Card 3
+
+🔥
+
+Training Streak
+
+12 Hari
+
+Card 4
+
+🎯
+
+Target Bulan
+
+72%
+
+Gunakan Circular Progress kecil.
+
+Card maksimal tinggi 110px agar muat 2×2 di layar HP.
+
+3. Next Training Card
+
+Jadikan informasi ini paling penting.
+
+Jika ada jadwal.
+
+Tampilkan:
+
+📅
+
+Tanggal
+
+Jam
+
+Lokasi
+
+Program
+
+Coach
+
+Countdown
+
+Button
+
+Lihat Detail
+
+Jika belum ada jadwal.
+
+Gunakan Empty State modern.
+
+Illustration
+
+Judul
+
+Belum Ada Jadwal
+
+Deskripsi
+
+Hubungi Personal Trainer Anda untuk menjadwalkan sesi berikutnya.
+
+Button
+
+Hubungi PT
+
+4. AI Progress Summary
+
+Tambahkan Card baru.
+
+✨ AI Insight
+
+Contoh
+
+Anda telah menyelesaikan 15 sesi.
+
+Progress meningkat 18%.
+
+Latihan Upper Body meningkat konsisten selama 3 minggu.
+
+Gunakan Glass Card.
+
+5. Body Progress
+
+Tambahkan Card.
+
+Menampilkan:
+
+Berat Badan
+
+Body Fat
+
+Muscle Mass
+
+BMI
+
+Visceral Fat
+
+Progress Chart kecil.
+
+6. Achievement
+
+Tambahkan Badge.
+
+Contoh
+
+🏅 First Workout
+
+🔥 10 Session
+
+💪 50 Session
+
+⚡ 30 Days Streak
+
+🎯 Goal Achieved
+
+Gunakan Horizontal Scroll.
+
+7. Recent Activity
+
+Timeline.
+
+Menampilkan:
+
+Workout terakhir
+
+Progress terbaru
+
+Body Composition
+
+Assessment
+
+Nutrition Update
+
+8. Workout Recommendation
+
+Tambahkan AI Card.
+
+Contoh
+
+Rekomendasi Recovery Hari Ini
+
+Stretching
+
+Mobility
+
+Walking
+
+Water Intake
+
+Sleep
+
+9. Nutrition Reminder
+
+Card kecil.
+
+Isi
+
+Kalori
+
+Protein
+
+Air Minum
+
+Meal Reminder
+
+10. Premium Search
+
+Hilangkan Search biasa.
+
+Gunakan
+
+Custom In-App Search Modal
+
+Dengan:
+
+Blur
+
+Glass Background
+
+Recent Search
+
+Suggestion
+
+Smooth Animation
+
+11. Notification Center
+
+Gunakan
+
+Custom In-App Modal Dialog
+
+Isi
+
+Jadwal
+
+Reminder
+
+Progress
+
+Assessment
+
+Membership
+
+12. Loading Experience
+
+Gunakan
+
+Skeleton Loading
+
+Glass Skeleton
+
+Transparent Overlay
+
+Animated Placeholder
+
+Tidak menggunakan spinner browser.
+
+13. Bottom Navigation
+
+Perbaharui menjadi
+
+Floating Navigation
+
+Glassmorphism
+
+Rounded 24px
+
+Blur
+
+Animated Indicator
+
+Active Glow
+
+Gunakan hanya menu:
+
+🏠 Dashboard
+
+📅 Sesi
+
+📈 Progress
+
+👤 Profil
+
+14. Compact Card Layout
+
+Kurangi ukuran seluruh card sekitar 30–40%.
+
+Gunakan:
+
+Padding lebih kecil
+
+Gap lebih rapat
+
+Typography modern
+
+Target:
+
+Dalam satu layar HP dapat terlihat:
+
+Hero
+
+4 Analytics Card
+
+Next Training
+
+tanpa harus banyak melakukan scroll.
+
+15. Modern Animation
+
+Tambahkan animasi pada:
+
+Hero
+
+Analytics Card
+
+Progress
+
+Timeline
+
+Bottom Navigation
+
+Toast
+
+Modal
+
+FAB
+
+Chart
+
+Durasi:
+
+200–300ms
+
+Gunakan easing natural.
+
+16. Responsive Mobile
+
+Optimalkan untuk:
+
+Android
+
+iPhone
+
+Tablet
+
+PWA
+
+Tidak boleh ada:
+
+Horizontal Scroll
+
+Overflow
+
+Elemen bertumpuk
+
+Card terpotong
+
+Bottom Navigation menutupi konten
+
+Semua card harus fleksibel mengikuti ukuran layar.
+
+17. Premium Empty State
+
+Jika belum ada data.
+
+Gunakan Illustration modern.
+
+Contoh:
+
+Belum Ada Progress
+
+Belum Ada Jadwal
+
+Belum Ada Assessment
+
+Belum Ada Body Composition
+
+Gunakan CTA yang jelas.
+
+18. Custom In-App Modal Dialog
+
+Seluruh popup harus menggunakan:
+
+✅ Custom In-App Modal Dialog
+
+Jangan menggunakan:
+
+❌ alert()
+
+❌ confirm()
+
+❌ prompt()
+
+Gunakan animasi:
+
+Fade
+
+Scale
+
+Blur Background
+
+19. Toast Notification
+
+Gunakan:
+
+Premium Toast
+
+Top Center
+
+Glass Effect
+
+Slide Down
+
+Jenis:
+
+Success
+
+Info
+
+Warning
+
+Error
+
+20. Business Rules
+
+Dashboard Client hanya boleh menampilkan informasi yang relevan untuk Client.
+
+Client TIDAK BOLEH melihat:
+
+❌ Revenue
+
+❌ Statistik PT
+
+❌ Data Client lain
+
+❌ Pengaturan Internal PT
+
+❌ Edit Jadwal
+
+❌ Edit Session
+
+❌ Delete Session
+
+❌ Change Status Session
+
+Dashboard harus bersifat Read Only, kecuali aksi yang memang diperbolehkan seperti melihat detail sesi, progres pribadi, assessment, atau menghubungi Personal Trainer.
+
+21. Ketentuan Pengembangan
+Jangan mengubah business logic yang sudah berjalan.
+Jangan mengubah struktur database, API, maupun autentikasi.
+Pertahankan seluruh integrasi data yang sudah ada.
+Fokus pada pengalaman pengguna Mobile First dengan desain yang ringkas, cepat, dan mudah digunakan menggunakan satu tangan.
+Terapkan secara konsisten Glassmorphism, Gradient Hero, Compact Analytics Cards, Custom In-App Modal Dialog, Premium Bottom Sheet, Skeleton Loading, Transparent Loading Overlay, Premium Toast Notification, AI Insight Cards, Achievement Badges, Interactive Progress Charts, Floating Bottom Navigation, dan Smooth Micro Animation sehingga Dashboard Client terasa modern, ringan, profesional, dan setara dengan aplikasi fitness premium kelas enterprise.
