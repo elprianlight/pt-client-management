@@ -4,8 +4,6 @@ import { createClient } from '@/lib/supabase/server'
 import { db } from '@/lib/db'
 import { users, ptPackages, personalTrainers, clients } from '@/lib/db/schema'
 import { eq, and, sql } from 'drizzle-orm'
-import { ArrowLeft, CheckCircle2, Zap } from 'lucide-react'
-import Link from 'next/link'
 import { SessionForm } from '@/components/sessions/session-form'
 
 export const metadata: Metadata = { title: 'Smart Check-In Latihan' }
@@ -62,118 +60,13 @@ export default async function NewSessionPage({
   }))
 
   return (
-    <div className="page-container smart-checkin-page animate-fade-in">
-      {/* Back link */}
-      <div style={{ marginBottom: 12 }}>
-        <Link href="/session" className="back-link">
-          <ArrowLeft size={16} />
-          Kembali ke Jadwal Sesi
-        </Link>
-      </div>
-
-      {/* Hero Glass Banner Header */}
-      <div className="smart-checkin-banner animate-slide-down">
-        <div className="sc-badge">
-          <Zap size={14} className="sc-zap-icon" />
-          <span>SMART CHECK-IN SYSTEM</span>
-        </div>
-        <div className="sc-header-main">
-          <div className="sc-icon-wrap">
-            <CheckCircle2 size={24} strokeWidth={2.4} />
-          </div>
-          <div>
-            <h1 className="sc-title">Smart Check-In Latihan</h1>
-            <p className="sc-subtitle">
-              Catat kehadiran & jalankan sesi latihan client dalam hitungan detik.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Form Component */}
+    <div className="page-container" style={{ maxWidth: 680, margin: '0 auto', paddingBottom: 40 }}>
+      {/* Main Client Form Component (Handles Header Banner & Styled JSX) */}
       <SessionForm
         packages={packageOptions}
         defaultPackageId={defaultPackageId}
         defaultClientId={defaultClientId}
       />
-
-      <style jsx>{`
-        .smart-checkin-page {
-          max-width: 680px;
-          margin: 0 auto;
-          padding-bottom: 40px;
-        }
-        .smart-checkin-banner {
-          background: linear-gradient(135deg, var(--bg-surface) 0%, var(--bg-elevated) 100%);
-          border: 1px solid var(--border-default);
-          border-radius: 20px;
-          padding: 18px 20px;
-          margin-bottom: 16px;
-          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
-          backdrop-filter: blur(16px);
-          -webkit-backdrop-filter: blur(16px);
-        }
-        .sc-badge {
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-          background: rgba(99, 102, 241, 0.12);
-          border: 1px solid rgba(99, 102, 241, 0.25);
-          color: var(--brand-primary);
-          padding: 4px 10px;
-          border-radius: 100px;
-          font-size: 10.5px;
-          font-weight: 800;
-          letter-spacing: 0.05em;
-          margin-bottom: 10px;
-        }
-        .sc-header-main {
-          display: flex;
-          align-items: center;
-          gap: 14px;
-        }
-        .sc-icon-wrap {
-          width: 48px;
-          height: 48px;
-          border-radius: 14px;
-          background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
-          color: white;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          box-shadow: 0 8px 20px rgba(99, 102, 241, 0.4);
-          flex-shrink: 0;
-        }
-        .sc-title {
-          font-size: 20px;
-          font-weight: 800;
-          color: var(--text-primary);
-          line-height: 1.2;
-          letter-spacing: -0.02em;
-        }
-        .sc-subtitle {
-          font-size: 13px;
-          color: var(--text-muted);
-          margin-top: 2px;
-        }
-        @media (max-width: 640px) {
-          .smart-checkin-banner {
-            padding: 14px 16px;
-            border-radius: 16px;
-          }
-          .sc-icon-wrap {
-            width: 40px;
-            height: 40px;
-            border-radius: 12px;
-          }
-          .sc-title {
-            font-size: 17px;
-          }
-          .sc-subtitle {
-            font-size: 11.5px;
-          }
-        }
-      `}</style>
     </div>
   )
 }
