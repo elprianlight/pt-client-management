@@ -313,12 +313,13 @@ function AICoachInsights({
   stats,
 }: {
   stats?: {
-    totalClients: number
-    todaySessions: number
-    monthSessions: number
-    monthRevenue: number
-    sessionsTrend: number
-    revenueTrend: number
+    totalClients?: number
+    todaySessions?: number
+    monthSessions?: number
+    monthRevenue?: number
+    sessionsTrend?: number
+    revenueTrend?: number
+    totalPTs?: number
   }
 }) {
   const insights = useMemo(() => {
