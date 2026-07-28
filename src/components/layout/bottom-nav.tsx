@@ -8,6 +8,7 @@ import {
   LayoutDashboard,
   Calendar,
   Users,
+  User,
   Package,
   Dumbbell,
   TrendingUp,
@@ -50,6 +51,18 @@ const PRIMARY_NAV: NavItem[] = [
     title: 'Paket',
     href: '/packages',
     icon: Package,
+    roles: ['client'],
+  },
+  {
+    title: 'Progress',
+    href: '/progress',
+    icon: TrendingUp,
+    roles: ['client'],
+  },
+  {
+    title: 'Akun',
+    href: '/settings',
+    icon: User,
     roles: ['client'],
   },
   {
