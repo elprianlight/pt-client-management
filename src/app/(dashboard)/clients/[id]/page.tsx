@@ -67,14 +67,26 @@ export default async function ClientDetailPage({
 
   const isEdit = resolvedSearchParams.edit === 'true'
 
+  let formattedDob = ''
+  if (clientData.dateOfBirth) {
+    try {
+      const d = new Date(clientData.dateOfBirth)
+      if (!isNaN(d.getTime())) {
+        formattedDob = d.toISOString().split('T')[0]
+      }
+    } catch {
+      formattedDob = ''
+    }
+  }
+
   return (
     <div className="page-container">
       {isEdit ? (
         <>
           <div className="client-detail-header animate-fade-in-up" style={{ marginBottom: 20 }}>
-            <Link href="/clients" className="back-link">
+            <Link href={`/clients/${clientData.id}`} className="back-link">
               <ArrowLeft size={16} />
-              Kembali ke Daftar Client
+              Kembali ke Detail Client
             </Link>
             <div className="client-title-row" style={{ marginTop: 12 }}>
               <div className="page-header-icon" style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.2), rgba(6,182,212,0.2))', borderColor: 'rgba(139,92,246,0.25)', color: '#8b5cf6' }}>
@@ -93,10 +105,10 @@ export default async function ClientDetailPage({
               defaultValues={{
                 fullName: clientData.user?.fullName ?? '',
                 phone: clientData.user?.phone ?? '',
-                gender: clientData.gender ?? undefined,
-                dateOfBirth: clientData.dateOfBirth ? new Date(clientData.dateOfBirth).toISOString().split('T')[0] : '',
-                heightCm: clientData.heightCm ?? undefined,
-                weightKg: clientData.weightKg ?? undefined,
+                gender: (clientData.gender as any) ?? undefined,
+                dateOfBirth: formattedDob,
+                heightCm: clientData.heightCm ? Number(clientData.heightCm) : undefined,
+                weightKg: clientData.weightKg ? Number(clientData.weightKg) : undefined,
                 notes: clientData.notes ?? '',
                 fitnessGoal: clientData.fitnessGoal ?? '',
                 isActive: clientData.user?.isActive ?? true,
