@@ -4,7 +4,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 const AUTH_ROUTES = ['/login', '/register', '/forgot-password']
 const PROTECTED_BASE = ['/dashboard', '/pt', '/clients', '/packages', '/workout', '/session', '/nutrition', '/progress', '/reports', '/settings']
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient(
@@ -29,8 +29,20 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  // Refresh session
-  const { data: { user } } = await supabase.auth.getUser()
+  const allCookies = request.cookies.getAll()
+  const hasAuthCookie = allCookies.some((c) => c.name.includes('auth-token') || c.name.startsWith('sb-'))
+
+  let user = null
+  if (hasAuthCookie) {
+    try {
+      const timeoutPromise = new Promise<null>((resolve) => setTimeout(() => resolve(null), 1500))
+      const userPromise = supabase.auth.getUser().then((res) => res.data?.user ?? null)
+      user = await Promise.race([userPromise, timeoutPromise])
+    } catch {
+      user = null
+    }
+  }
+
   const pathname = request.nextUrl.pathname
 
   const isAuthRoute = AUTH_ROUTES.some((r) => pathname.startsWith(r))

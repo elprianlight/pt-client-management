@@ -61,7 +61,7 @@ export default async function ClientDetailPage({
     packageName: ptPackages.packageName,
   })
     .from(workoutSessions)
-    .innerJoin(ptPackages, eq(workoutSessions.packageId, ptPackages.id))
+    .leftJoin(ptPackages, eq(workoutSessions.packageId, ptPackages.id))
     .where(eq(workoutSessions.clientId, clientData.id))
     .orderBy(desc(workoutSessions.scheduledAt))
 

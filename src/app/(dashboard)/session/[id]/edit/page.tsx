@@ -18,14 +18,15 @@ export default async function EditSessionPage({ params }: { params: Promise<{ id
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
+  const [profile] = await db.select().from(users).where(eq(users.id, user.id))
   if (!profile) redirect('/login')
   if (profile.role === 'client') redirect(`/session/${resolvedParams.id}`)
 
   const sessionData = await getSessionById(resolvedParams.id)
   if (!sessionData) return notFound()
 
-  // Ambil paket yang sedang dipakai oleh sesi ini
-  const activePackages = await db.select({
+  // Ambil daftar paket untuk dropdown options
+  const clientPackages = await db.select({
     id: ptPackages.id,
     name: ptPackages.packageName,
     clientName: users.fullName,
@@ -33,20 +34,42 @@ export default async function EditSessionPage({ params }: { params: Promise<{ id
     usedSessions: ptPackages.usedSessions,
   })
   .from(ptPackages)
-  .innerJoin(clients, eq(ptPackages.clientId, clients.id))
-  .innerJoin(users, eq(clients.userId, users.id))
-  .where(eq(ptPackages.id, sessionData.packageId))
+  .leftJoin(clients, eq(ptPackages.clientId, clients.id))
+  .leftJoin(users, eq(clients.userId, users.id))
+  .where(eq(ptPackages.clientId, sessionData.clientId))
 
-  const packageOptions = activePackages.map(p => ({
+  let packageOptions = clientPackages.map(p => ({
     id: p.id,
-    name: p.name,
-    clientName: p.clientName,
-    remaining: p.totalSessions - p.usedSessions,
+    name: p.name || 'Paket Sesi',
+    clientName: p.clientName || 'Client',
+    remaining: (p.totalSessions ?? 0) - (p.usedSessions ?? 0),
   }))
+
+  // Jika paket belum termasuk di list, tambahkan dari sessionData
+  if (!packageOptions.some(p => p.id === sessionData.packageId) && sessionData.packageId) {
+    packageOptions.unshift({
+      id: sessionData.packageId,
+      name: sessionData.packageName || 'Paket Sesi',
+      clientName: sessionData.clientName || 'Client',
+      remaining: 0,
+    })
+  }
+
+  let formattedScheduledAt = ''
+  if (sessionData.scheduledAt) {
+    try {
+      const d = new Date(sessionData.scheduledAt)
+      if (!isNaN(d.getTime())) {
+        formattedScheduledAt = format(d, "yyyy-MM-dd'T'HH:mm")
+      }
+    } catch {
+      formattedScheduledAt = ''
+    }
+  }
 
   const initialData = {
     ...sessionData,
-    scheduledAt: format(new Date(sessionData.scheduledAt), "yyyy-MM-dd'T'HH:mm")
+    scheduledAt: formattedScheduledAt,
   }
 
   return (

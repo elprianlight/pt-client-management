@@ -85,3 +85,26 @@ export function generateAvatarColor(name: string): string {
   const index = name.charCodeAt(0) % colors.length
   return colors[index]
 }
+
+/**
+ * Safely extracts clean human-readable session notes without raw exercise JSON strings
+ */
+export function getCleanNotes(ptNotes?: string | null, sessionNotes?: string | null): string {
+  if (ptNotes && ptNotes.trim()) {
+    const trimmed = ptNotes.trim()
+    if (!trimmed.startsWith('[') && !trimmed.startsWith('{')) {
+      return trimmed
+    }
+  }
+  if (!sessionNotes) return ''
+  const trimmed = sessionNotes.trim()
+  if (trimmed.startsWith('[') || trimmed.startsWith('{')) {
+    try {
+      const parsed = JSON.parse(trimmed)
+      if (Array.isArray(parsed) || typeof parsed === 'object') {
+        return ''
+      }
+    } catch {}
+  }
+  return trimmed
+}

@@ -26,6 +26,7 @@ import Link from 'next/link'
 import { deleteSession } from '@/lib/actions/session'
 import { toggleClientStatus, deleteClient } from '@/lib/actions/client'
 import { CustomModal, ModalType } from '@/components/ui/custom-modal'
+import { getCleanNotes } from '@/lib/utils'
 
 type SubTab = 'overview' | 'packages' | 'sessions' | 'workout' | 'nutrition' | 'progress' | 'reports'
 
@@ -184,7 +185,7 @@ export function ClientDetail({
               <div class="badge">${s.status === 'completed' ? 'Complete' : s.status}</div>
             </div>
             <div class="time">⏱ ${format(new Date(s.scheduledAt), 'dd/MM/yyyy HH:mm', { locale: id })} | Paket: ${s.packageName || '-'}</div>
-            <div class="notes">${s.sessionNotes || 'Tidak ada catatan.'}</div>
+            <div class="notes">${getCleanNotes(s.ptNotes, s.sessionNotes) || 'Tidak ada catatan.'}</div>
           </div>
         `).join('')}
       </body>
@@ -590,7 +591,7 @@ export function ClientDetail({
                         </div>
 
                         <p className="sess-notes">
-                          {sess.sessionNotes || 'Tidak ada catatan khusus.'}
+                          {getCleanNotes(sess.ptNotes, sess.sessionNotes) || 'Tidak ada catatan khusus.'}
                         </p>
                       </div>
 

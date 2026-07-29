@@ -6,6 +6,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { scheduleSession, updateSessionData } from '@/lib/actions/session'
+import { getCleanNotes } from '@/lib/utils'
 import Link from 'next/link'
 import {
   Loader2,
@@ -106,7 +107,7 @@ export function SessionForm({
       status: initialData?.status || 'completed',
       programType: initialData?.programType || 'Total Body',
       rpe: initialData?.rpe || 8,
-      sessionNotes: initialData?.sessionNotes || '',
+      sessionNotes: getCleanNotes(initialData?.ptNotes, initialData?.sessionNotes),
       location: initialData?.location || '',
     },
   })
@@ -127,6 +128,7 @@ export function SessionForm({
     const payload = {
       ...data,
       rpe: data.rpe ? Number(data.rpe) : null,
+      ptNotes: data.sessionNotes || '',
     }
 
     try {

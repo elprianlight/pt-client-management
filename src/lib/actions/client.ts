@@ -302,8 +302,8 @@ export async function updateClient(clientId: string, input: UpdateClientInput) {
       .set({
         gender: (gender as 'male' | 'female' | 'other') ?? undefined,
         dateOfBirth: dateOfBirth ? dateOfBirth : null,
-        height: heightCm ? String(heightCm) : null,
-        currentWeight: weightKg ? String(weightKg) : null,
+        height: (heightCm ? Number(heightCm) : null) as any,
+        currentWeight: (weightKg ? Number(weightKg) : null) as any,
         fitnessGoal: fitnessGoal || 'General Fitness',
         medicalNotes: notes || null,
         emergencyContactName: emergencyContactName || null,

@@ -178,19 +178,7 @@ export default async function ReportsPage() {
                       </span>
                     </td>
                     <td className="py-3 px-2 text-right">
-                      {log.pdfAttachmentUrl ? (
-                        <a
-                          href={log.pdfAttachmentUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs font-bold rounded-lg hover:bg-emerald-500 hover:text-white transition-all"
-                        >
-                          <Download size={12} />
-                          <span>PDF</span>
-                        </a>
-                      ) : (
-                        <span className="text-xs text-slate-500">-</span>
-                      )}
+                      <span className="text-xs text-slate-500">-</span>
                     </td>
                   </tr>
                 ))}

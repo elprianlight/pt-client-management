@@ -16,6 +16,7 @@ const scheduleSessionSchema = z.object({
   programType: z.string().min(1, 'Pilih program latihan'),
   rpe: z.coerce.number().min(1).max(10).optional().nullable(),
   sessionNotes: z.string().optional(),
+  ptNotes: z.string().optional(),
   location: z.string().optional(),
 })
 
@@ -35,8 +36,9 @@ export async function scheduleSession(input: z.infer<typeof scheduleSessionSchem
       return { success: false, error: 'Data tidak valid: ' + validated.error.issues[0].message }
     }
 
-    const { packageId, scheduledAt, status, programType, rpe, sessionNotes, location } = validated.data
+    const { packageId, scheduledAt, status, programType, rpe, sessionNotes, ptNotes, location } = validated.data
     const targetStatus = status || 'scheduled'
+    const userNotes = ptNotes !== undefined ? ptNotes : (sessionNotes || '')
 
     // 1. Validasi ketersediaan kuota paket
     const [selectedPackage] = await db.select().from(ptPackages).where(eq(ptPackages.id, packageId))
@@ -57,7 +59,8 @@ export async function scheduleSession(input: z.infer<typeof scheduleSessionSchem
         duration: 60, // hardcoded 60 minutes
         programType,
         rpe: rpe || null,
-        sessionNotes: sessionNotes || null,
+        sessionNotes: userNotes || null,
+        ptNotes: userNotes || null,
         location: location || null,
         status: targetStatus,
       })
@@ -155,6 +158,7 @@ export async function listSessions() {
       programType: workoutSessions.programType,
       rpe: workoutSessions.rpe,
       sessionNotes: workoutSessions.sessionNotes,
+      ptNotes: workoutSessions.ptNotes,
       clientName: users.fullName,
       packageName: ptPackages.packageName,
       totalSessions: ptPackages.totalSessions,
@@ -183,11 +187,33 @@ export async function listSessions() {
 
 export async function getSessionById(sessionId: string) {
   try {
-    const supabase = await createClient()
-    const { data: { user: authUser } } = await supabase.auth.getUser()
-    if (!authUser) return null
+    const [session] = await db.select({
+      id: workoutSessions.id,
+      packageId: workoutSessions.packageId,
+      trainerId: workoutSessions.trainerId,
+      clientId: workoutSessions.clientId,
+      programId: workoutSessions.programId,
+      scheduledAt: workoutSessions.scheduledAt,
+      completedAt: workoutSessions.completedAt,
+      status: workoutSessions.status,
+      duration: workoutSessions.duration,
+      programType: workoutSessions.programType,
+      rpe: workoutSessions.rpe,
+      sessionNotes: workoutSessions.sessionNotes,
+      ptNotes: workoutSessions.ptNotes,
+      location: workoutSessions.location,
+      pdfAttachmentUrl: workoutSessions.pdfAttachmentUrl,
+      createdAt: workoutSessions.createdAt,
+      updatedAt: workoutSessions.updatedAt,
+      clientName: users.fullName,
+      packageName: ptPackages.packageName,
+    })
+    .from(workoutSessions)
+    .leftJoin(clients, eq(workoutSessions.clientId, clients.id))
+    .leftJoin(users, eq(clients.userId, users.id))
+    .leftJoin(ptPackages, eq(workoutSessions.packageId, ptPackages.id))
+    .where(eq(workoutSessions.id, sessionId))
 
-    const [session] = await db.select().from(workoutSessions).where(eq(workoutSessions.id, sessionId))
     return session || null
   } catch (err) {
     console.error('Get session error:', err)
@@ -243,6 +269,7 @@ const updateSessionSchema = z.object({
   programType: z.string().min(1, 'Pilih program latihan'),
   rpe: z.coerce.number().min(1).max(10).optional().nullable(),
   sessionNotes: z.string().optional(),
+  ptNotes: z.string().optional(),
   location: z.string().optional(),
 })
 
@@ -262,17 +289,42 @@ export async function updateSessionData(sessionId: string, input: z.infer<typeof
       return { success: false, error: 'Data tidak valid: ' + validated.error.issues[0].message }
     }
 
-    const { scheduledAt, programType, rpe, sessionNotes, location } = validated.data
+    const { scheduledAt, programType, rpe, sessionNotes, ptNotes, location } = validated.data
+    const userNotes = ptNotes !== undefined ? ptNotes : (sessionNotes || '')
+
+    const [session] = await db.select().from(workoutSessions).where(eq(workoutSessions.id, sessionId))
+    if (!session) return { success: false, error: 'Sesi tidak ditemukan' }
+
+    // Check if session.sessionNotes is currently holding an exercise JSON array
+    let isExerciseJson = false
+    if (session.sessionNotes) {
+      const trimmed = session.sessionNotes.trim()
+      if (trimmed.startsWith('[') || trimmed.startsWith('{')) {
+        try {
+          const parsed = JSON.parse(trimmed)
+          if (Array.isArray(parsed)) {
+            isExerciseJson = true
+          }
+        } catch {}
+      }
+    }
+
+    const updateFields: any = {
+      scheduledAt: new Date(scheduledAt),
+      programType,
+      rpe: rpe || null,
+      ptNotes: userNotes || null,
+      location: location || null,
+      updatedAt: new Date(),
+    }
+
+    // Only update sessionNotes if it does NOT contain exercise JSON array
+    if (!isExerciseJson) {
+      updateFields.sessionNotes = userNotes || null
+    }
 
     await db.update(workoutSessions)
-      .set({
-        scheduledAt: new Date(scheduledAt),
-        programType,
-        rpe: rpe || null,
-        sessionNotes: sessionNotes || null,
-        location: location || null,
-        updatedAt: new Date(),
-      })
+      .set(updateFields)
       .where(eq(workoutSessions.id, sessionId))
 
     revalidatePath('/session')

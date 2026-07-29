@@ -42,7 +42,6 @@ import { useAuthStore } from '@/store/auth-store'
 import { format, addDays, subDays, startOfWeek, isSameDay, parseISO } from 'date-fns'
 import { id as idLocale } from 'date-fns/locale'
 import { WorkoutBuilder } from './workout-builder'
-import { PDFUploadModal } from './pdf-upload-modal'
 import { CustomModal, ModalType } from '@/components/ui/custom-modal'
 import './session-list.css'
 
@@ -79,7 +78,6 @@ export function SessionList() {
 
   // Add / Edit Session Bottom Sheet Modal state
   const [isAddSessionModalOpen, setIsAddSessionModalOpen] = useState(false)
-  const [isPDFModalOpen, setIsPDFModalOpen] = useState(false)
   const [newSessionPkgId, setNewSessionPkgId] = useState('')
   const [newSessionStatus, setNewSessionStatus] = useState<'scheduled' | 'completed' | 'cancelled' | 'no_show'>('scheduled')
   const [newSessionProgram, setNewSessionProgram] = useState('Total Body')
@@ -548,17 +546,6 @@ export function SessionList() {
             <p className="pt-date-str">{format(currentDate, 'EEEE, dd MMMM yyyy', { locale: idLocale })}</p>
           </div>
           <div className="flex-center gap-2 flex-wrap">
-            {!isClient && (
-              <button
-                type="button"
-                onClick={() => setIsPDFModalOpen(true)}
-                className="btn-import-pdf-hero"
-                title="Import Sesi Lama dari Dokumen PDF"
-              >
-                <FileText size={14} />
-                <span>Import PDF</span>
-              </button>
-            )}
             <div className="pt-session-badge">
               <span>{todayStats.totalSessions} Session Hari Ini</span>
             </div>
@@ -566,38 +553,30 @@ export function SessionList() {
         </div>
       </div>
 
-      {/* 4. QUICK STATISTICS (4 COMPACT CARDS) */}
+      {/* 4. QUICK STATISTICS (4 COMPACT 1:1 SQUARE CARDS) */}
       <div className="pt-quick-stats-grid">
         <div className="pt-stat-card">
           <span className="pt-stat-icon">👥</span>
-          <div>
-            <span className="pt-stat-val">{todayStats.uniqueClients}</span>
-            <span className="pt-stat-lbl">Client</span>
-          </div>
+          <span className="pt-stat-val">{todayStats.uniqueClients}</span>
+          <span className="pt-stat-lbl">Client</span>
         </div>
 
         <div className="pt-stat-card">
           <span className="pt-stat-icon">🏋️</span>
-          <div>
-            <span className="pt-stat-val">{todayStats.totalSessions}</span>
-            <span className="pt-stat-lbl">Session</span>
-          </div>
+          <span className="pt-stat-val">{todayStats.totalSessions}</span>
+          <span className="pt-stat-lbl">Session</span>
         </div>
 
         <div className="pt-stat-card">
           <span className="pt-stat-icon">🟢</span>
-          <div>
-            <span className="pt-stat-val">{todayStats.availableHours} Jam</span>
-            <span className="pt-stat-lbl">Available</span>
-          </div>
+          <span className="pt-stat-val">{todayStats.availableHours} Jam</span>
+          <span className="pt-stat-lbl">Available</span>
         </div>
 
         <div className="pt-stat-card">
           <span className="pt-stat-icon">⏰</span>
-          <div>
-            <span className="pt-stat-val">{todayStats.occupiedHours} Jam</span>
-            <span className="pt-stat-lbl">Occupied</span>
-          </div>
+          <span className="pt-stat-val">{todayStats.occupiedHours} Jam</span>
+          <span className="pt-stat-lbl">Occupied</span>
         </div>
       </div>
 
@@ -610,7 +589,7 @@ export function SessionList() {
             onClick={() => setCurrentDate(subDays(currentDate, scheduleViewMode === 'day' ? 1 : 7))}
             className="pt-date-nav-btn"
           >
-            <ChevronLeft size={16} />
+            <ChevronLeft size={15} />
           </button>
 
           <button
@@ -630,25 +609,25 @@ export function SessionList() {
             onClick={() => setCurrentDate(addDays(currentDate, scheduleViewMode === 'day' ? 1 : 7))}
             className="pt-date-nav-btn"
           >
-            <ChevronRight size={16} />
+            <ChevronRight size={15} />
           </button>
         </div>
 
-        {/* Toggle View Mode (Hari vs Minggu) */}
+        {/* Toggle View Mode (Hari vs Minggu) - Clean Text Without Icons */}
         <div className="pt-segmented-control">
           <button
             type="button"
             onClick={() => setScheduleViewMode('day')}
             className={`pt-seg-btn ${scheduleViewMode === 'day' ? 'active' : ''}`}
           >
-            📅 Hari
+            Hari
           </button>
           <button
             type="button"
             onClick={() => setScheduleViewMode('week')}
             className={`pt-seg-btn ${scheduleViewMode === 'week' ? 'active' : ''}`}
           >
-            📆 Minggu
+            Minggu
           </button>
         </div>
 
@@ -659,7 +638,7 @@ export function SessionList() {
           className="pt-search-trigger-btn"
           title="Cari Sesi / Client"
         >
-          <Search size={16} />
+          <Search size={15} />
         </button>
       </div>
 
@@ -1056,21 +1035,6 @@ export function SessionList() {
               {/* NEW: WORKOUT PLAN BUILDER FOR PHASE 3 */}
               <WorkoutBuilder sessionId={selectedDetailSession.id} />
 
-              {selectedDetailSession.pdfAttachmentUrl && (
-                <div className="pdf-attachment-banner" style={{ marginTop: 12 }}>
-                  <a
-                    href={selectedDetailSession.pdfAttachmentUrl}
-                    download={`Rekap_Sesi_${selectedDetailSession.clientName || 'Latihan'}.pdf`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="btn-view-pdf-attachment"
-                  >
-                    <FileText size={16} />
-                    <span>📄 Buka & Download PDF Rekap Asli</span>
-                  </a>
-                </div>
-              )}
-
               {/* PT STATUS ACTION BUTTONS */}
               <div className="pt-action-buttons-wrap">
                 <button
@@ -1175,14 +1139,6 @@ export function SessionList() {
         type={modalConfig.type}
         title={modalConfig.title}
         message={modalConfig.message}
-      />
-
-      {/* ==================== PDF UPLOAD & AUTO-IMPORT MODAL ==================== */}
-      <PDFUploadModal
-        isOpen={isPDFModalOpen}
-        onClose={() => setIsPDFModalOpen(false)}
-        onSuccess={loadData}
-        activePackages={activePackages}
       />
     </div>
   )

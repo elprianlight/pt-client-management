@@ -80,21 +80,6 @@ export default async function SessionDetailPage({ params }: { params: Promise<{ 
             <span className="font-bold text-white">{sessionData.location || 'Hang Lekir'}</span>
           </div>
         </div>
-
-        {sessionData.pdfAttachmentUrl && (
-          <div className="mt-4">
-            <a
-              href={sessionData.pdfAttachmentUrl}
-              download={`Rekap_Sesi_${sessionData.clientName || 'Latihan'}.pdf`}
-              target="_blank"
-              rel="noreferrer"
-              className="flex items-center justify-center gap-2 w-full py-3 px-4 bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 rounded-xl font-bold text-sm hover:bg-emerald-500 hover:text-white transition-all shadow-lg"
-            >
-              <FileText size={18} />
-              <span>📄 Buka & Download PDF Rekap Asli</span>
-            </a>
-          </div>
-        )}
       </div>
 
       {/* WORKOUT PROGRAM EXERCISES */}
