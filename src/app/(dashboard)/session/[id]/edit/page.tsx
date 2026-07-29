@@ -18,8 +18,8 @@ export default async function EditSessionPage({ params }: { params: Promise<{ id
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const [profile] = await db.select().from(users).where(eq(users.id, user.id))
-  if (!profile || profile.role === 'client') redirect('/dashboard')
+  if (!profile) redirect('/login')
+  if (profile.role === 'client') redirect(`/session/${resolvedParams.id}`)
 
   const sessionData = await getSessionById(resolvedParams.id)
   if (!sessionData) return notFound()
