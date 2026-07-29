@@ -545,14 +545,15 @@ export function ClientDashboard({
           display: inline-flex;
           align-items: center;
           gap: 6px;
-          background: rgba(99, 102, 241, 0.18);
-          border: 1px solid rgba(99, 102, 241, 0.35);
+          background: rgba(99, 102, 241, 0.28);
+          border: 1px solid rgba(165, 180, 252, 0.4);
           padding: 4px 12px;
           border-radius: 100px;
           width: fit-content;
           font-size: 12px;
-          font-weight: 700;
-          color: var(--brand-primary);
+          font-weight: 800;
+          color: #e0e7ff;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
         }
         .c-welcome-typography {
           display: flex;
@@ -561,13 +562,13 @@ export function ClientDashboard({
         .c-welcome-sub {
           font-size: 13px;
           font-weight: 600;
-          color: var(--text-muted);
+          color: #cbd5e1;
         }
         .c-welcome-name {
           font-size: 24px;
           font-weight: 900;
           line-height: 1.15;
-          background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 50%, #818cf8 100%);
+          background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 50%, #a5b4fc 100%);
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
         }
@@ -578,9 +579,10 @@ export function ClientDashboard({
           display: inline-flex;
           align-items: center;
           gap: 6px;
-          font-size: 12px;
+          font-size: 12.5px;
           font-weight: 600;
-          color: var(--text-secondary);
+          color: #e0e7ff;
+          text-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
         }
         .c-mot-icon {
           color: #f97316;
@@ -623,7 +625,7 @@ export function ClientDashboard({
           gap: 5px;
           font-size: 11px;
           font-weight: 600;
-          color: var(--text-muted);
+          color: #94a3b8;
         }
 
         /* 2. QUICK OVERVIEW (2x2 GRID, MAX 110px HEIGHT) */

@@ -889,20 +889,20 @@ export default function SettingsPage() {
         .ah-role-pill {
           padding: 2px 8px; border-radius: 100px; font-size: 11px; font-weight: 800;
         }
-        .role-pt { background: rgba(16, 185, 129, 0.16); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); }
-        .role-client { background: rgba(99, 102, 241, 0.16); color: #6366f1; border: 1px solid rgba(99, 102, 241, 0.3); }
+        .role-pt { background: rgba(16, 185, 129, 0.25); color: #a7f3d0; border: 1px solid rgba(16, 185, 129, 0.4); }
+        .role-client { background: rgba(99, 102, 241, 0.25); color: #e0e7ff; border: 1px solid rgba(165, 180, 252, 0.4); }
         .ah-verified-pill {
           padding: 2px 8px; border-radius: 100px; font-size: 11px; font-weight: 700;
-          background: rgba(255, 255, 255, 0.08); color: var(--text-muted);
+          background: rgba(255, 255, 255, 0.15); color: #f1f5f9; border: 1px solid rgba(255, 255, 255, 0.2);
         }
         .ah-full-name {
           font-size: 22px; font-weight: 900; color: #ffffff; line-height: 1.2;
         }
         .ah-email {
-          font-size: 12.5px; color: var(--text-secondary);
+          font-size: 12.5px; color: #e0e7ff; text-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
         }
         .ah-joined {
-          font-size: 11px; color: var(--text-muted);
+          font-size: 11px; color: #cbd5e1;
         }
 
         /* AI ACCOUNT CARD */

@@ -987,12 +987,13 @@ export function SessionList() {
           box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2); backdrop-filter: blur(20px);
         }
         .pt-hero-top { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
-        .pt-greeting { font-size: 12px; font-weight: 700; color: #818cf8; text-transform: uppercase; letter-spacing: 0.5px; }
+        .pt-greeting { font-size: 12px; font-weight: 800; color: #a5b4fc; text-transform: uppercase; letter-spacing: 0.5px; }
         .pt-name { font-size: 20px; font-weight: 900; color: #ffffff; line-height: 1.2; }
-        .pt-date-str { font-size: 12.5px; color: var(--text-secondary); }
+        .pt-date-str { font-size: 12.5px; color: #cbd5e1; }
         .pt-session-badge {
-          background: rgba(99, 102, 241, 0.16); border: 1px solid rgba(99, 102, 241, 0.35);
-          color: var(--brand-primary); padding: 6px 12px; border-radius: 100px; font-size: 12px; font-weight: 800;
+          background: rgba(99, 102, 241, 0.28); border: 1px solid rgba(165, 180, 252, 0.4);
+          color: #e0e7ff; padding: 6px 12px; border-radius: 100px; font-size: 12px; font-weight: 800;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
         }
 
         /* AI SCHEDULE INSIGHT CARD */
