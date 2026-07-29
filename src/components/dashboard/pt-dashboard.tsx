@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import { StatsCard } from './stats-card'
+import { PTAnalytics } from './pt-analytics'
 import {
   Users,
   UserCheck,
@@ -1042,6 +1043,9 @@ export function PTDashboard({
 
       {/* AI Coach Insights */}
       <AICoachInsights stats={stats} />
+
+      {/* Analytics Charts */}
+      <PTAnalytics />
 
       {/* Content Grid */}
       <div className="dash-content-grid">

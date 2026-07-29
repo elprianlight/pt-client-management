@@ -1,0 +1,678 @@
+# MASTER PROJECT AUDIT PROMPT
+## Enterprise Full Project Audit
+### PT Client Management / StrengthLab
+
+Anda adalah Senior Software Architect, Senior Full Stack Engineer, Senior UI/UX Designer, Senior QA Engineer, Senior Performance Engineer, Senior Security Engineer, Database Architect, dan Product Manager.
+
+Lakukan audit MENYELURUH terhadap seluruh project yang sedang terbuka.
+
+Jangan hanya melihat file yang sedang aktif.
+
+Audit seluruh project mulai dari root folder hingga seluruh subfolder.
+
+==================================================
+TUJUAN
+==================================================
+
+Pastikan project ini:
+
+✔ Tidak memiliki bug
+✔ Tidak memiliki error
+✔ Tidak memiliki warning
+✔ Tidak memiliki duplicate function
+✔ Tidak memiliki duplicate component
+✔ Tidak memiliki duplicate page
+✔ Tidak memiliki duplicate styling
+✔ Tidak memiliki duplicate assets
+✔ Tidak memiliki dead code
+✔ Tidak memiliki unused import
+✔ Tidak memiliki unused variable
+✔ Tidak memiliki file yang tidak digunakan
+✔ Tidak memiliki routing yang tidak digunakan
+✔ Tidak memiliki API yang tidak digunakan
+✔ Tidak memiliki icon yang tidak digunakan
+✔ Tidak memiliki image yang tidak digunakan
+✔ Tidak memiliki CSS yang tidak digunakan
+✔ Tidak memiliki script yang tidak digunakan
+✔ Tidak memiliki dependency yang tidak digunakan
+✔ Tidak memiliki memory leak
+✔ Tidak memiliki console error
+✔ Tidak memiliki React Warning
+✔ Tidak memiliki TypeScript Error
+✔ Tidak memiliki Build Error
+✔ Tidak memiliki Runtime Error
+
+Project harus berada dalam kondisi production-ready.
+
+==================================================
+PHASE 1
+PROJECT STRUCTURE AUDIT
+==================================================
+
+Analisa seluruh folder.
+
+Periksa:
+
+- Folder Structure
+- File Organization
+- Naming Convention
+- Modular Architecture
+- Folder yang tidak digunakan
+- File kosong
+- File duplicate
+- File obsolete
+- File sementara
+- Backup file
+- Experimental file
+
+Berikan rekomendasi penghapusan jika tidak digunakan.
+
+==================================================
+PHASE 2
+COMPONENT AUDIT
+==================================================
+
+Analisa seluruh komponen.
+
+Cari:
+
+Duplicate Component
+
+Component tidak digunakan
+
+Component yang bisa digabung
+
+Component terlalu besar
+
+Component terlalu kompleks
+
+Component yang memiliki logic sama
+
+Component yang memiliki UI sama
+
+Component yang dapat dijadikan reusable
+
+Pastikan seluruh component reusable.
+
+==================================================
+PHASE 3
+PAGE AUDIT
+==================================================
+
+Analisa seluruh halaman.
+
+Cari:
+
+Duplicate Page
+
+Unused Page
+
+Old Page
+
+Hidden Page
+
+Broken Navigation
+
+Broken Route
+
+Missing Route
+
+Unused Route
+
+Deprecated Route
+
+==================================================
+PHASE 4
+FUNCTION AUDIT
+==================================================
+
+Cari seluruh:
+
+Duplicate Function
+
+Unused Function
+
+Deprecated Function
+
+Long Function
+
+Function yang terlalu kompleks
+
+Nested Function
+
+Repeated Logic
+
+Repeated Validation
+
+Repeated Fetch
+
+Repeated API Call
+
+Repeated Utility
+
+Jika ada logic yang sama lebih dari sekali:
+
+Gabungkan menjadi Shared Utility.
+
+==================================================
+PHASE 5
+HOOK AUDIT
+==================================================
+
+Periksa seluruh:
+
+useEffect
+
+useMemo
+
+useCallback
+
+useRef
+
+Custom Hook
+
+Cari:
+
+Infinite Loop
+
+Dependency Error
+
+Unused Hook
+
+Duplicate Hook
+
+Heavy Rendering
+
+Memory Leak
+
+==================================================
+PHASE 6
+STATE MANAGEMENT AUDIT
+==================================================
+
+Periksa:
+
+React State
+
+Context
+
+Store
+
+Props
+
+Cari:
+
+Duplicate State
+
+Unused State
+
+Prop Drilling
+
+Over Rendering
+
+Incorrect Memoization
+
+==================================================
+PHASE 7
+API AUDIT
+==================================================
+
+Analisa seluruh API.
+
+Cari:
+
+Unused API
+
+Duplicate Fetch
+
+Duplicate Endpoint
+
+Missing Error Handling
+
+No Loading State
+
+No Retry
+
+No Timeout
+
+Missing Validation
+
+==================================================
+PHASE 8
+DATABASE AUDIT
+==================================================
+
+Periksa:
+
+Schema
+
+Relation
+
+Index
+
+Foreign Key
+
+Primary Key
+
+Supabase Query
+
+Duplicate Query
+
+Slow Query
+
+Repeated Query
+
+N+1 Query
+
+==================================================
+PHASE 9
+UI AUDIT
+==================================================
+
+Audit seluruh UI.
+
+Pastikan:
+
+Consistent Layout
+
+Consistent Card
+
+Consistent Button
+
+Consistent Modal
+
+Consistent Dialog
+
+Consistent Toast
+
+Consistent Bottom Sheet
+
+Consistent Typography
+
+Consistent Color
+
+Consistent Radius
+
+Consistent Icon
+
+Consistent Shadow
+
+Consistent Spacing
+
+Cari:
+
+Duplicate Modal
+
+Duplicate Card
+
+Duplicate Dialog
+
+Duplicate Loading
+
+Duplicate Empty State
+
+Duplicate Button
+
+Duplicate Style
+
+Duplicate Animation
+
+==================================================
+PHASE 10
+RESPONSIVE AUDIT
+==================================================
+
+Uji seluruh halaman.
+
+320px
+
+375px
+
+390px
+
+414px
+
+768px
+
+1024px
+
+1440px
+
+Cari:
+
+Overflow
+
+Horizontal Scroll
+
+Broken Layout
+
+Cut Content
+
+Wrong Padding
+
+Wrong Margin
+
+Hidden Button
+
+Bottom Navigation Conflict
+
+FAB Conflict
+
+==================================================
+PHASE 11
+PERFORMANCE AUDIT
+==================================================
+
+Cari:
+
+Heavy Component
+
+Heavy Render
+
+Large Bundle
+
+Unused Dependency
+
+Duplicate Dependency
+
+Unused Package
+
+Slow Rendering
+
+Memory Leak
+
+Repeated Rendering
+
+Lazy Loading Opportunity
+
+==================================================
+PHASE 12
+SECURITY AUDIT
+==================================================
+
+Periksa:
+
+Authentication
+
+Authorization
+
+Session
+
+Storage
+
+Token
+
+Supabase Policy
+
+SQL Injection
+
+XSS
+
+CSRF
+
+Sensitive Data Exposure
+
+==================================================
+PHASE 13
+DESIGN SYSTEM AUDIT
+==================================================
+
+Pastikan seluruh project menggunakan:
+
+Satu Color System
+
+Satu Typography
+
+Satu Radius
+
+Satu Shadow
+
+Satu Animation System
+
+Satu Icon Style
+
+Satu Button Style
+
+Satu Modal Style
+
+Satu Input Style
+
+Tidak boleh ada style yang berbeda tanpa alasan.
+
+==================================================
+PHASE 14
+CLEAN CODE AUDIT
+==================================================
+
+Cari:
+
+Magic Number
+
+Magic String
+
+Long Function
+
+Nested Condition
+
+Duplicate Logic
+
+Comment tidak dipakai
+
+TODO lama
+
+FIXME
+
+Dead Code
+
+Console.log
+
+Debug Code
+
+==================================================
+PHASE 15
+FINAL CLEANUP
+==================================================
+
+Lakukan cleanup otomatis apabila aman dilakukan.
+
+Hapus:
+
+Unused Import
+
+Unused Variable
+
+Unused CSS
+
+Unused Component
+
+Unused Page
+
+Unused Hook
+
+Unused Function
+
+Unused Image
+
+Unused Icon
+
+Unused Asset
+
+Unused Dependency
+
+Unused Route
+
+Unused Context
+
+Unused Store
+
+==================================================
+PHASE 16
+PROJECT OPTIMIZATION
+==================================================
+
+Optimalkan:
+
+Folder Structure
+
+Reusable Component
+
+Shared Component
+
+Utility Function
+
+Hooks
+
+Services
+
+API Layer
+
+Database Query
+
+Caching
+
+Loading
+
+Error Handling
+
+Animation
+
+Rendering
+
+Bundle Size
+
+==================================================
+PHASE 17
+BUG DETECTION
+==================================================
+
+Cari seluruh:
+
+Potential Bug
+
+Runtime Bug
+
+Compile Bug
+
+Build Bug
+
+UI Bug
+
+UX Bug
+
+Navigation Bug
+
+Data Bug
+
+State Bug
+
+API Bug
+
+Database Bug
+
+Animation Bug
+
+==================================================
+PHASE 18
+FINAL REPORT
+==================================================
+
+Berikan laporan lengkap.
+
+Format:
+
+## Audit Score
+
+Architecture
+
+UI
+
+UX
+
+Performance
+
+Security
+
+Accessibility
+
+Database
+
+Code Quality
+
+Maintainability
+
+Scalability
+
+==================================================
+BUG REPORT
+==================================================
+
+Critical
+
+High
+
+Medium
+
+Low
+
+==================================================
+DUPLICATE REPORT
+==================================================
+
+Duplicate Component
+
+Duplicate Function
+
+Duplicate API
+
+Duplicate Page
+
+Duplicate Styling
+
+Duplicate Asset
+
+Duplicate Hook
+
+Duplicate Query
+
+==================================================
+CLEANUP REPORT
+==================================================
+
+File yang dihapus
+
+Code yang dirapikan
+
+Component yang digabung
+
+Function yang dipindahkan
+
+Dependency yang dihapus
+
+==================================================
+OPTIMIZATION REPORT
+==================================================
+
+Yang sudah diperbaiki
+
+Yang direkomendasikan
+
+Yang perlu refactor
+
+Yang perlu redesign
+
+Yang perlu dihapus
+
+==================================================
+RULES
+==================================================
+
+- Jangan mengubah business logic.
+- Jangan mengubah database schema tanpa alasan kuat.
+- Jangan menghapus fitur yang masih digunakan.
+- Jangan mengubah API contract.
+- Jangan mengubah UI jika tidak diperlukan.
+- Pastikan seluruh perubahan backward compatible.
+- Prioritaskan stabilitas aplikasi.
+- Semua refactor harus meningkatkan maintainability, readability, scalability, performance, dan consistency.
+- Jika ada keraguan apakah suatu file atau fungsi masih digunakan, lakukan verifikasi melalui pencarian referensi sebelum menghapus atau menggabungkannya.
+- Setelah seluruh audit selesai, pastikan project dapat di-build tanpa error, bebas warning, dan seluruh fitur utama (Dashboard, Client, Smart Check-In, Jadwal, Laporan, Settings, Authentication, serta navigasi) tetap berjalan normal.

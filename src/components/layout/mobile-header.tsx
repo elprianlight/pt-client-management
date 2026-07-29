@@ -60,7 +60,7 @@ export function MobileHeader() {
       {/* Left: Logo + Page Title */}
       <div className="mh-left">
         <Link href="/dashboard" className="mh-logo-link" aria-label="Home">
-          <img src="/logo.png" alt="Logo" className="mh-logo" />
+          <img src="/logo_transparent.png" alt="PT Client Management Logo" className="mh-logo" />
         </Link>
         <div className="mh-title-wrap">
           <span className="mh-page-title">{pageTitle}</span>

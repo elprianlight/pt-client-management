@@ -1,0 +1,10 @@
+Berikut adalah beberapa ide fitur baru yang potensial dan bernilai tinggi untuk ditambahkan ke dalam aplikasi, dibagi berdasarkan fungsinya:
+
+📊 1. Fitur Analitik & Visualisasi (Untuk PT & Klien)
+Grafik Progres Klien (Progress Charts): Menambahkan visualisasi grafik (menggunakan Recharts atau Chart.js) untuk memantau perubahan berat badan, massa otot, atau ukuran tubuh (measurements) klien dari waktu ke waktu.
+Dashboard Analitik PT: Halaman khusus untuk PT melihat statistik bisnis mereka. Misalnya: total pendapatan bulan ini dari paket yang terjual, tingkat retensi klien, dan persentase kehadiran sesi klien.
+Galeri Foto Progres (Before/After): Fitur bagi klien atau PT untuk mengunggah dan membandingkan foto bentuk tubuh dari bulan ke bulan.
+🏋️‍♂️ 2. Manajemen Program Latihan & Nutrisi Canggih
+Workout Plan Builder: Alih-alih hanya "Catatan Sesi", PT dapat membuat template program latihan (misalnya: Push, Pull, Legs) lengkap dengan set, repetisi, dan beban. Klien kemudian dapat melihat program ini di HP mereka saat sedang latihan.
+Nutrition & Macro Tracker: Klien dapat memasukkan jurnal makanan harian mereka, dan PT dapat memantau apakah klien mencapai target kalori dan makro (Protein, Karbo, Lemak) yang ditetapkan.
+AI Smart Suggestions: Menggunakan AI (seperti integrasi Gemini) untuk membantu PT membuat draft jadwal makan atau saran rutinitas latihan berdasarkan berat badan dan target (fitness goal) klien secara otomatis.

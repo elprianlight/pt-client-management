@@ -87,24 +87,23 @@ export async function listClients(search?: string) {
     })
     .from(clients)
     .leftJoin(users, eq(clients.userId, users.id))
-    .orderBy(desc(clients.createdAt))
 
-  const result = await query
+  if (profile.role === 'personal_trainer') {
+    const ptRecord = await getPTRecordByUserId(profile.id)
+    if (ptRecord) {
+      query = query.where(eq(clients.trainerId, ptRecord.id)) as any
+    } else {
+      return []
+    }
+  }
 
-  // Filter by trainer if role is PT
-  const filtered = profile.role === 'personal_trainer'
-    ? await (async () => {
-        const ptRecord = await getPTRecordByUserId(profile.id)
-        if (!ptRecord) return []
-        return result.filter(c => c.trainerId === ptRecord.id)
-      })()
-    : result
+  const result = await query.orderBy(desc(clients.createdAt)).limit(50)
 
-  const searched = search ? filtered.filter(c =>
+  const searched = search ? result.filter(c =>
       c.user?.fullName?.toLowerCase().includes(search.toLowerCase()) ||
       c.user?.username?.toLowerCase().includes(search.toLowerCase()) ||
       c.user?.phone?.toLowerCase().includes(search.toLowerCase())
-    ) : filtered
+    ) : result
 
   const clientIds = searched.map(c => c.id)
   let packageMap: Record<string, { total: number, used: number, lastPackageName: string | null, lastBought: number }> = {}

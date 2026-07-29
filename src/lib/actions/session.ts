@@ -173,7 +173,7 @@ export async function listSessions() {
       query = query.where(eq(workoutSessions.clientId, clientData.id)) as any
     }
 
-    const data = await query.orderBy(desc(workoutSessions.scheduledAt))
+    const data = await query.orderBy(desc(workoutSessions.scheduledAt)).limit(50)
     return data
   } catch (err) {
     console.error('List sessions error:', err)

@@ -142,14 +142,14 @@ export function Sidebar({ className }: SidebarProps) {
       {/* Logo */}
       <div className="sidebar-logo" style={{ justifyContent: collapsed ? 'center' : 'flex-start', padding: collapsed ? '20px 0 16px' : '20px 18px 16px' }}>
         <img 
-          src="/logo.png" 
-          alt="Strength Lab Logo" 
+          src={collapsed ? "/icon_square.png" : "/logo_transparent.png"} 
+          alt="PT Client Management System" 
           style={{ 
-            width: collapsed ? 36 : 120, 
+            width: collapsed ? 36 : 140, 
             height: 'auto', 
+            maxHeight: 44,
             objectFit: 'contain', 
-            borderRadius: 8,
-            transition: 'width var(--transition-fast)' 
+            transition: 'all var(--transition-fast)' 
           }} 
         />
       </div>

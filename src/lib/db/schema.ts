@@ -16,6 +16,7 @@ import {
   pgEnum,
   jsonb,
   real,
+  index,
 } from 'drizzle-orm/pg-core'
 import { relations, sql } from 'drizzle-orm'
 
@@ -184,7 +185,9 @@ export const personalTrainers = pgTable('personal_trainers', {
   isActive: boolean('is_active').default(true).notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
-})
+}, (table) => ({
+  userIdIdx: index('pt_user_id_idx').on(table.userId),
+}))
 
 // Clients
 export const clients = pgTable('clients', {
@@ -205,7 +208,10 @@ export const clients = pgTable('clients', {
   isActive: boolean('is_active').default(true).notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
-})
+}, (table) => ({
+  userIdIdx: index('client_user_id_idx').on(table.userId),
+  trainerIdIdx: index('client_trainer_id_idx').on(table.trainerId),
+}))
 
 // =============================================================================
 // PACKAGES & TRANSACTIONS
@@ -230,7 +236,10 @@ export const ptPackages = pgTable('pt_packages', {
   notes: text('notes'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
-})
+}, (table) => ({
+  trainerIdIdx: index('pkg_trainer_id_idx').on(table.trainerId),
+  clientIdIdx: index('pkg_client_id_idx').on(table.clientId),
+}))
 
 // PT Transactions (payment records)
 export const ptTransactions = pgTable('pt_transactions', {
@@ -245,7 +254,11 @@ export const ptTransactions = pgTable('pt_transactions', {
   receiptNumber: varchar('receipt_number', { length: 100 }),
   notes: text('notes'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-})
+}, (table) => ({
+  packageIdIdx: index('trx_package_id_idx').on(table.packageId),
+  trainerIdIdx: index('trx_trainer_id_idx').on(table.trainerId),
+  clientIdIdx: index('trx_client_id_idx').on(table.clientId),
+}))
 
 // =============================================================================
 // WORKOUT SYSTEM
@@ -282,7 +295,10 @@ export const workoutPrograms = pgTable('workout_programs', {
   isActive: boolean('is_active').default(true).notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
-})
+}, (table) => ({
+  trainerIdIdx: index('prog_trainer_id_idx').on(table.trainerId),
+  clientIdIdx: index('prog_client_id_idx').on(table.clientId),
+}))
 
 // Workout Sessions (sesi latihan)
 export const workoutSessions = pgTable('workout_sessions', {
@@ -302,9 +318,14 @@ export const workoutSessions = pgTable('workout_sessions', {
   ptNotes: text('pt_notes'), // private PT notes
   rating: integer('rating'), // 1-5 client rating
   feedback: text('feedback'),
+  pdfAttachmentUrl: text('pdf_attachment_url'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
-})
+}, (table) => ({
+  packageIdIdx: index('sess_package_id_idx').on(table.packageId),
+  trainerIdIdx: index('sess_trainer_id_idx').on(table.trainerId),
+  clientIdIdx: index('sess_client_id_idx').on(table.clientId),
+}))
 
 // Session Exercises (detail latihan per sesi)
 export const sessionExercises = pgTable('session_exercises', {
@@ -322,7 +343,10 @@ export const sessionExercises = pgTable('session_exercises', {
   actualWeight: real('actual_weight'),
   notes: text('notes'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-})
+}, (table) => ({
+  sessionIdIdx: index('sess_ex_session_id_idx').on(table.sessionId),
+  exerciseIdIdx: index('sess_ex_exercise_id_idx').on(table.exerciseId),
+}))
 
 // =============================================================================
 // PROGRESS & MEASUREMENTS
@@ -351,7 +375,9 @@ export const measurements = pgTable('measurements', {
   photoAfterUrl: text('photo_after_url'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
-})
+}, (table) => ({
+  clientIdIdx: index('meas_client_id_idx').on(table.clientId),
+}))
 
 // =============================================================================
 // NUTRITION SYSTEM
@@ -389,7 +415,9 @@ export const nutritionLogs = pgTable('nutrition_logs', {
   notes: text('notes'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
-})
+}, (table) => ({
+  clientIdIdx: index('nut_log_client_id_idx').on(table.clientId),
+}))
 
 // Food Diary (meals logged)
 export const foodDiary = pgTable('food_diary', {
@@ -404,7 +432,10 @@ export const foodDiary = pgTable('food_diary', {
   fat: real('fat').default(0),
   notes: text('notes'),
   loggedAt: timestamp('logged_at', { withTimezone: true }).defaultNow().notNull(),
-})
+}, (table) => ({
+  nutritionLogIdIdx: index('diary_nut_log_id_idx').on(table.nutritionLogId),
+  foodIdIdx: index('diary_food_id_idx').on(table.foodId),
+}))
 
 // Meal Plans
 export const mealPlans = pgTable('meal_plans', {
@@ -422,7 +453,10 @@ export const mealPlans = pgTable('meal_plans', {
   isActive: boolean('is_active').default(true).notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
-})
+}, (table) => ({
+  trainerIdIdx: index('meal_plan_trainer_id_idx').on(table.trainerId),
+  clientIdIdx: index('meal_plan_client_id_idx').on(table.clientId),
+}))
 
 // =============================================================================
 // NOTIFICATIONS & AUDIT

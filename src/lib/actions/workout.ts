@@ -1,7 +1,7 @@
 'use server'
 
 import { db } from '@/lib/db'
-import { exercises, workoutPrograms, users, clients, personalTrainers } from '@/lib/db/schema'
+import { exercises, workoutPrograms, workoutSessions, users, clients, personalTrainers } from '@/lib/db/schema'
 import { eq, desc } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
@@ -144,5 +144,47 @@ export async function createProgram(input: z.infer<typeof createProgramSchema>) 
   } catch (err: any) {
     console.error('Create program error:', err)
     return { success: false, error: err.message || 'Gagal membuat program' }
+  }
+}
+
+export async function saveSessionExercises(sessionId: string, exercisesList: any[]) {
+  try {
+    const supabase = await createClient()
+    const { data: { user: authUser } } = await supabase.auth.getUser()
+    if (!authUser) return { success: false, error: 'Unauthorized' }
+
+    if (!sessionId) return { success: false, error: 'Session ID tidak valid' }
+
+    await db.update(workoutSessions)
+      .set({
+        sessionNotes: JSON.stringify(exercisesList),
+        updatedAt: new Date(),
+      })
+      .where(eq(workoutSessions.id, sessionId))
+
+    revalidatePath('/session')
+    return { success: true }
+  } catch (err: any) {
+    console.error('Save session exercises error:', err)
+    return { success: false, error: err.message || 'Gagal menyimpan program latihan' }
+  }
+}
+
+export async function getSessionExercises(sessionId: string) {
+  try {
+    if (!sessionId) return []
+    const [session] = await db.select().from(workoutSessions).where(eq(workoutSessions.id, sessionId))
+    if (!session || !session.sessionNotes) return []
+
+    try {
+      const parsed = JSON.parse(session.sessionNotes)
+      if (Array.isArray(parsed)) return parsed
+    } catch {
+      return []
+    }
+    return []
+  } catch (err) {
+    console.error('Get session exercises error:', err)
+    return []
   }
 }

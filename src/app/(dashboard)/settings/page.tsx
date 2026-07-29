@@ -1047,11 +1047,17 @@ export default function SettingsPage() {
         .pwd-strength-fill { height: 100%; transition: width 0.3s; }
         .pwd-strength-text { font-size: 10.5px; color: var(--text-muted); }
 
-        .mc-actions { display: flex; gap: 8px; margin-top: 8px; }
+        .mc-actions { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 10px; width: 100%; }
         .mc-btn-cancel {
-          flex: 1; height: 40px; border-radius: 12px;
-          background: var(--bg-surface); border: 1px solid var(--border-default);
-          color: var(--text-secondary); font-size: 13px; font-weight: 700; cursor: pointer;
+          flex: 1; height: 42px; border-radius: 12px;
+          background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.3);
+          color: #ef4444; font-size: 13.5px; font-weight: 700; cursor: pointer;
+          display: flex; align-items: center; justify-content: center; text-align: center;
+          transition: all 0.2s ease-in-out;
+        }
+        .mc-btn-cancel:hover {
+          background: #ef4444; color: #ffffff;
+          box-shadow: 0 4px 14px rgba(239, 68, 68, 0.35); transform: translateY(-1px);
         }
         .mc-btn-save {
           flex: 1; height: 40px; border-radius: 12px;

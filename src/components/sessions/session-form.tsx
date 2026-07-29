@@ -107,7 +107,7 @@ export function SessionForm({
       programType: initialData?.programType || 'Total Body',
       rpe: initialData?.rpe || 8,
       sessionNotes: initialData?.sessionNotes || '',
-      location: initialData?.location || 'Gym Hang Lekir',
+      location: initialData?.location || '',
     },
   })
 
@@ -358,13 +358,13 @@ export function SessionForm({
               </select>
             </div>
 
-            {/* REVISI 2: Lokasi Latihan Field Input Manual + Smart Auto-fill */}
+            {/* REVISI 2: Lokasi Latihan Field Input Manual + Smart Reminder */}
             <div className="form-group" style={{ marginTop: 14 }}>
               <label className="form-label">Lokasi Latihan</label>
               <div className="input-with-icon">
                 <input
                   type="text"
-                  placeholder="Ketik lokasi (misal: Gym Hang Lekir)..."
+                  placeholder="Ketik lokasi (misal: Hang Lekir, Essence)..."
                   className="sc-input-field"
                   {...register('location')}
                   id="input-session-location"
@@ -372,14 +372,14 @@ export function SessionForm({
                 <MapPin size={16} className="sc-input-icon" />
               </div>
 
-              {/* Smart Reminder suggestion badge if typing 'hang' */}
-              {currentLocation && currentLocation.toLowerCase().includes('hang') && currentLocation.toLowerCase() !== 'gym hang lekir' && (
+              {/* Smart Reminder suggestion badge if typing 'han' or 'hang' */}
+              {currentLocation && (currentLocation.toLowerCase().includes('han') || currentLocation.toLowerCase().includes('hang')) && currentLocation.toLowerCase() !== 'hang lekir' && (
                 <button
                   type="button"
-                  onClick={() => setValue('location', 'Gym Hang Lekir')}
+                  onClick={() => setValue('location', 'Hang Lekir')}
                   className="sc-hang-suggest-btn animate-fade-in"
                 >
-                  💡 Pengingat Smart: Auto-fill <strong>Gym Hang Lekir</strong>
+                  💡 Smart Reminder: Set <strong>Hang Lekir</strong>
                 </button>
               )}
             </div>

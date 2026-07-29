@@ -25,6 +25,7 @@ import {
 import Link from 'next/link'
 import { deleteSession } from '@/lib/actions/session'
 import { toggleClientStatus, deleteClient } from '@/lib/actions/client'
+import { CustomModal, ModalType } from '@/components/ui/custom-modal'
 
 type SubTab = 'overview' | 'packages' | 'sessions' | 'workout' | 'nutrition' | 'progress' | 'reports'
 
@@ -56,6 +57,26 @@ export function ClientDetail({
   // In-App Modal confirmation states
   const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false)
   const [confirmDeleteSessionId, setConfirmDeleteSessionId] = useState<string | null>(null)
+
+  const [modalConfig, setModalConfig] = useState<{
+    isOpen: boolean
+    type: ModalType
+    title?: string
+    message: string
+  }>({
+    isOpen: false,
+    type: 'info',
+    message: '',
+  })
+
+  const showAlert = (message: string, type: ModalType = 'error', title?: string) => {
+    setModalConfig({
+      isOpen: true,
+      type,
+      title,
+      message,
+    })
+  }
 
   // Session states
   const [sessionList, setSessionList] = useState<any[]>(sessions)
@@ -120,12 +141,13 @@ export function ClientDetail({
       if (res.success) {
         setSessionList(prev => prev.filter(s => s.id !== sessionId))
         setConfirmDeleteSessionId(null)
+        showAlert('Sesi latihan berhasil dihapus!', 'success', 'Berhasil')
         router.refresh()
       } else {
-        alert(res.error || 'Gagal menghapus sesi.')
+        showAlert(res.error || 'Gagal menghapus sesi.', 'error')
       }
     } catch {
-      alert('Terjadi kesalahan.')
+      showAlert('Terjadi kesalahan saat menghapus sesi.', 'error')
     } finally {
       setDeletingId(null)
     }
@@ -184,12 +206,13 @@ export function ClientDetail({
       const res = await toggleClientStatus(clientData.id, newStatus)
       if (res.success) {
         setIsClientActive(newStatus)
+        showAlert(`Status client berhasil diubah ke ${newStatus ? 'Aktif' : 'Non-Aktif'}.`, 'success', 'Status Diperbarui')
         router.refresh()
       } else {
-        alert(res.error || 'Gagal mengubah status client.')
+        showAlert(res.error || 'Gagal mengubah status client.', 'error')
       }
     } catch {
-      alert('Terjadi kesalahan.')
+      showAlert('Terjadi kesalahan.', 'error')
     } finally {
       setIsTogglingStatus(false)
     }
@@ -205,17 +228,24 @@ export function ClientDetail({
         router.push('/clients')
         router.refresh()
       } else {
-        alert(res.error || 'Gagal menghapus client.')
+        showAlert(res.error || 'Gagal menghapus client.', 'error')
         setIsDeletingClient(false)
       }
     } catch {
-      alert('Terjadi kesalahan.')
+      showAlert('Terjadi kesalahan saat menghapus client.', 'error')
       setIsDeletingClient(false)
     }
   }
 
   return (
     <div className="client-hub">
+      <CustomModal
+        isOpen={modalConfig.isOpen}
+        onClose={() => setModalConfig({ ...modalConfig, isOpen: false })}
+        type={modalConfig.type}
+        title={modalConfig.title}
+        message={modalConfig.message}
+      />
       {/* Client Quick Card Header */}
       <div className="client-hub-header glass-card">
         <div className="client-avatar-row">

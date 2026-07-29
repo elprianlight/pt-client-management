@@ -26,6 +26,7 @@ import {
 import { listPackages, deletePackage } from '@/lib/actions/package'
 import { listSessions } from '@/lib/actions/session'
 import { useAuthStore } from '@/store/auth-store'
+import { CustomModal, ModalType } from '@/components/ui/custom-modal'
 import { DataTable } from '@/components/ui/data-table'
 import { format } from 'date-fns'
 import { id } from 'date-fns/locale'
@@ -87,20 +88,68 @@ export function PackageList() {
     fetchData()
   }, [])
 
-  const handleDelete = async (pkgId: string, packageName: string) => {
+  const [modalConfig, setModalConfig] = useState<{
+    isOpen: boolean
+    type: ModalType
+    title?: string
+    message: string
+  }>({
+    isOpen: false,
+    type: 'info',
+    message: '',
+  })
+
+  const [confirmDelete, setConfirmDelete] = useState<{
+    isOpen: boolean
+    pkgId: string
+    packageName: string
+  }>({
+    isOpen: false,
+    pkgId: '',
+    packageName: '',
+  })
+
+  const handleDelete = (pkgId: string, packageName: string) => {
     if (isClient) return
-    if (!confirm(`Yakin ingin menghapus paket "${packageName}"? Semua sesi yang terhubung dengan paket ini juga akan ikut terhapus.`)) return
+    setConfirmDelete({
+      isOpen: true,
+      pkgId,
+      packageName,
+    })
+  }
+
+  const executeDeletePackage = async () => {
+    const { pkgId } = confirmDelete
+    if (!pkgId) return
 
     setDeletingId(pkgId)
+    setConfirmDelete({ isOpen: false, pkgId: '', packageName: '' })
+
     try {
       const res = await deletePackage(pkgId)
       if (res.success) {
         fetchData()
+        setModalConfig({
+          isOpen: true,
+          type: 'success',
+          title: 'Paket Dihapus',
+          message: 'Paket berhasil dihapus dari sistem.',
+        })
       } else {
-        alert(res.error || 'Gagal menghapus paket')
+        setModalConfig({
+          isOpen: true,
+          type: 'error',
+          title: 'Gagal Menghapus',
+          message: res.error || 'Gagal menghapus paket',
+        })
       }
     } catch (err: any) {
-      alert(err.message)
+      setModalConfig({
+        isOpen: true,
+        type: 'error',
+        title: 'Terjadi Kesalahan',
+        message: err.message || 'Gagal menghapus paket',
+      })
     } finally {
       setDeletingId(null)
     }
@@ -644,8 +693,29 @@ export function PackageList() {
         .mc-modal-action-btn { width: 100%; height: 42px; border-radius: 12px; border: 1px solid var(--border-default); background: var(--bg-surface); color: var(--text-primary); font-size: 13px; font-weight: 700; cursor: pointer; }
         .mc-contact-btns { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
         .mc-wa-btn { height: 42px; background: #10b981; color: white; border-radius: 12px; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 13.5px; font-weight: 700; text-decoration: none; }
-        @media (max-width: 640px) { .package-grid { grid-template-columns: 1fr; } }
       `}</style>
+
+      {/* ==================== DELETE CONFIRMATION MODAL ==================== */}
+      <CustomModal
+        isOpen={confirmDelete.isOpen}
+        onClose={() => setConfirmDelete({ isOpen: false, pkgId: '', packageName: '' })}
+        onConfirm={executeDeletePackage}
+        type="confirm"
+        title="Konfirmasi Hapus Paket"
+        message={`Yakin ingin menghapus paket "${confirmDelete.packageName}"? Semua sesi yang terhubung dengan paket ini juga akan ikut terhapus.`}
+        confirmText="Hapus Paket"
+        cancelText="Batal"
+        isSubmitting={Boolean(deletingId)}
+      />
+
+      {/* ==================== GLOBAL ALERT MODAL ==================== */}
+      <CustomModal
+        isOpen={modalConfig.isOpen}
+        onClose={() => setModalConfig({ ...modalConfig, isOpen: false })}
+        type={modalConfig.type}
+        title={modalConfig.title}
+        message={modalConfig.message}
+      />
     </div>
   )
 }

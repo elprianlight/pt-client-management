@@ -10,7 +10,10 @@ import {
   Cake,
   Copy,
   Check,
+  MessageSquare,
+  Sparkles,
 } from 'lucide-react'
+import { CustomModal } from '@/components/ui/custom-modal'
 import { WhatsAppIcon } from '@/components/ui/whatsapp-icon'
 import {
   getScheduleReminderMessage,
@@ -82,9 +85,11 @@ export function WhatsAppModal({
 
   const waUrl = buildWhatsAppUrl(clientData.phone, message)
 
+  const [showAlert, setShowAlert] = useState(false)
+
   const handleSendWA = () => {
     if (!waUrl) {
-      alert('Nomor HP client belum diisi atau tidak valid.')
+      setShowAlert(true)
       return
     }
     window.open(waUrl, '_blank')
@@ -391,6 +396,14 @@ export function WhatsAppModal({
           cursor: not-allowed;
         }
       `}</style>
+
+      <CustomModal
+        isOpen={showAlert}
+        onClose={() => setShowAlert(false)}
+        type="error"
+        title="Nomor HP Tidak Valid"
+        message="Nomor HP client belum diisi atau tidak valid. Silakan lengkapi nomor telepon pada data profil client."
+      />
     </div>
   )
 }

@@ -13,6 +13,17 @@ export const metadata: Metadata = {
     'Platform manajemen Personal Trainer terpadu — kelola client, sesi, workout, nutrisi, dan progress dalam satu ekosistem digital.',
   keywords: ['personal trainer', 'manajemen client', 'fitness', 'workout', 'nutrisi'],
   authors: [{ name: 'PT Management System' }],
+  icons: {
+    icon: [
+      { url: '/favicon.ico' },
+      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/icon_square.png', sizes: '192x192', type: 'image/png' },
+    ],
+    apple: [
+      { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+    ],
+  },
+  manifest: '/site.webmanifest',
 }
 
 export const viewport: Viewport = {

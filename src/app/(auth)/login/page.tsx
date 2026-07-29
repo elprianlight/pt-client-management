@@ -83,11 +83,11 @@ export default function LoginPage() {
       {/* Card */}
       <div className="login-card animate-fade-in-up">
         {/* Logo */}
-        <div className="login-logo" style={{ justifyContent: 'center', marginBottom: '32px' }}>
+        <div className="login-logo" style={{ justifyContent: 'center', marginBottom: '24px' }}>
           <img 
-            src="/logo.png" 
-            alt="Strength Lab Logo" 
-            style={{ width: '140px', height: 'auto', objectFit: 'contain', borderRadius: '24px' }} 
+            src="/logo_full_transparent.png" 
+            alt="PT Client Management System" 
+            style={{ width: '180px', height: 'auto', objectFit: 'contain' }} 
           />
         </div>
 

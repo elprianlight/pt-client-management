@@ -2,6 +2,9 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
+import { ProgressChart } from './progress-chart'
+import { NutritionTracker } from './nutrition-tracker'
+import { CustomModal } from '@/components/ui/custom-modal'
 import {
   Calendar,
   CheckCircle,
@@ -56,8 +59,9 @@ export function ClientDashboard({
   const [dayStr, setDayStr] = useState<string>('')
   const [dateStr, setDateStr] = useState<string>('')
 
-  // Contact PT Modal
+  // Contact PT Modal State
   const [isContactModalOpen, setIsContactModalOpen] = useState(false)
+  const [isPhoneModalOpen, setIsPhoneModalOpen] = useState(false)
 
   useEffect(() => {
     const updateClock = () => {
@@ -386,7 +390,10 @@ export function ClientDashboard({
         </div>
       </div>
 
-      {/* ==================== 8 & 9. RECOVERY & NUTRITION RECOMMENDATION ==================== */}
+      {/* ==================== 8. PROGRESS CHART (NEW FEATURE) ==================== */}
+      <ProgressChart />
+
+      {/* ==================== 9 & 10. RECOVERY & NUTRITION RECOMMENDATION ==================== */}
       <div className="rec-grid">
         {/* Recovery Recommendation */}
         <div className="rec-card">
@@ -402,27 +409,8 @@ export function ClientDashboard({
           </ul>
         </div>
 
-        {/* Nutrition Reminder */}
-        <div className="rec-card">
-          <div className="rec-header">
-            <Droplets size={16} style={{ color: '#06b6d4' }} />
-            <h4>Pengingat Nutrisi & Hidrasi</h4>
-          </div>
-          <div className="nut-metrics">
-            <div className="nut-box">
-              <span>Kalori</span>
-              <strong>1,850 kcal</strong>
-            </div>
-            <div className="nut-box">
-              <span>Protein</span>
-              <strong>130 gram</strong>
-            </div>
-            <div className="nut-box">
-              <span>Air Minum</span>
-              <strong>2.5 Liter</strong>
-            </div>
-          </div>
-        </div>
+        {/* Nutrition Tracker */}
+        <NutritionTracker />
       </div>
 
       {/* ==================== MODAL CONTACT PT ==================== */}
@@ -458,7 +446,7 @@ export function ClientDashboard({
                 <button
                   type="button"
                   onClick={() => {
-                    alert('Nomor kontak PT: +62 812-3456-7890')
+                    setIsPhoneModalOpen(true)
                     setIsContactModalOpen(false)
                   }}
                   className="mc-call-btn"
@@ -1124,8 +1112,15 @@ export function ClientDashboard({
           .c-time-val {
             font-size: 15px;
           }
-        }
       `}</style>
+
+      <CustomModal
+        isOpen={isPhoneModalOpen}
+        onClose={() => setIsPhoneModalOpen(false)}
+        type="info"
+        title="Kontak Telepon PT"
+        message="Nomor telepon resmi Personal Trainer Anda: +62 812-3456-7890"
+      />
     </div>
   )
 }
