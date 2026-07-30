@@ -49,6 +49,13 @@ function getNowForInput() {
   return d.toISOString().slice(0, 16)
 }
 
+function formatForInput(dateStr: string | Date | undefined) {
+  if (!dateStr) return getNowForInput()
+  const d = new Date(dateStr)
+  d.setMinutes(d.getMinutes() - d.getTimezoneOffset())
+  return d.toISOString().slice(0, 16)
+}
+
 export interface PackageOption {
   id: string
   clientId?: string
@@ -103,7 +110,7 @@ export function SessionForm({
     resolver: zodResolver(formSchema) as any,
     defaultValues: {
       packageId: preSelectedPkgId,
-      scheduledAt: initialData?.scheduledAt || getNowForInput(),
+      scheduledAt: formatForInput(initialData?.scheduledAt),
       status: initialData?.status || 'completed',
       programType: initialData?.programType || 'Total Body',
       rpe: initialData?.rpe || 8,
@@ -125,8 +132,11 @@ export function SessionForm({
     setError(null)
     setSubmitState('loading')
 
+    const absoluteScheduledAt = new Date(data.scheduledAt).toISOString()
+
     const payload = {
       ...data,
+      scheduledAt: absoluteScheduledAt,
       rpe: data.rpe ? Number(data.rpe) : null,
       ptNotes: data.sessionNotes || '',
     }
