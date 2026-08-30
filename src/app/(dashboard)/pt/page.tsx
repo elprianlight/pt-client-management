@@ -11,16 +11,19 @@ export const metadata: Metadata = { title: 'Personal Trainer' }
 
 export default async function PTPage() {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+
+  // Fetch auth and PT data concurrently in 1 roundtrip
+  const [authRes, ptList, totalCount] = await Promise.all([
+    supabase.auth.getUser(),
+    listPTs(),
+    getPTCount(),
+  ])
+
+  const user = authRes.data?.user
   if (!user) redirect('/login')
 
   const [profile] = await db.select().from(users).where(eq(users.id, user.id))
   if (!profile || profile.role !== 'super_admin') redirect('/dashboard')
-
-  const [ptList, totalCount] = await Promise.all([
-    listPTs(),
-    getPTCount(),
-  ])
 
   return (
     <div className="page-container">

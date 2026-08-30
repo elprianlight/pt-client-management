@@ -126,9 +126,11 @@ export async function listPackages() {
 
     if (currentUser.role === 'personal_trainer') {
       const [ptData] = await db.select().from(personalTrainers).where(eq(personalTrainers.userId, currentUser.id))
+      if (!ptData) return []
       query = query.where(eq(ptPackages.trainerId, ptData.id)) as any
     } else if (currentUser.role === 'client') {
       const [clientData] = await db.select().from(clients).where(eq(clients.userId, currentUser.id))
+      if (!clientData) return []
       query = query.where(eq(ptPackages.clientId, clientData.id)) as any
     }
 

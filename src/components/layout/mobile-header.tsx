@@ -5,13 +5,15 @@ import { useState, useRef, useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { useAuthStore } from '@/store/auth-store'
 import { useThemeStore } from '@/store/theme-store'
+import { useLayoutStore } from '@/store/layout-store'
 import { createClient } from '@/lib/supabase/client'
-import { User, Settings, LogOut, Sun, Moon } from 'lucide-react'
+import { User, Settings, LogOut, Sun, Moon, Menu } from 'lucide-react'
 
 const PAGE_TITLES: Record<string, string> = {
   '/dashboard': 'Dashboard',
   '/pt': 'Personal Trainer',
   '/clients': 'Client',
+  '/jadwal': 'Jadwal',
   '/packages': 'Paket Sesi',
   '/session': 'Sesi Latihan',
   '/workout': 'Workout',
@@ -28,6 +30,7 @@ export function MobileHeader() {
   const pathname = usePathname()
   const { user, clearAuth } = useAuthStore()
   const { theme, toggleTheme } = useThemeStore()
+  const { toggleSidebar } = useLayoutStore()
   const [isLoggingOut, setIsLoggingOut] = useState(false)
 
   const userInitial = user?.fullName?.charAt(0).toUpperCase() || 'U'
@@ -56,12 +59,23 @@ export function MobileHeader() {
   }
 
   return (
-    <div className="mobile-header">
-      {/* Left: Logo + Page Title */}
+    <header className="mobile-header">
+      {/* Left: Hamburger menu toggle + Logo + Page Title */}
       <div className="mh-left">
+        <button
+          type="button"
+          className="mh-hamburger-btn"
+          onClick={toggleSidebar}
+          aria-label="Buka Menu Navigasi"
+          id="btn-hamburger-menu"
+        >
+          <Menu size={20} />
+        </button>
+
         <Link href="/dashboard" className="mh-logo-link" aria-label="Home">
           <img src="/logo_transparent.png" alt="PT Client Management Logo" className="mh-logo" />
         </Link>
+
         <div className="mh-title-wrap">
           <span className="mh-page-title">{pageTitle}</span>
         </div>
@@ -146,27 +160,58 @@ export function MobileHeader() {
       </div>
 
       <style jsx>{`
-        /* Mobile header is shown via globals.css at max-width: 768px */
         .mh-left {
           display: flex;
           align-items: center;
           gap: 10px;
           min-width: 0;
         }
+
+        .mh-hamburger-btn {
+          width: 36px;
+          height: 36px;
+          border-radius: 10px;
+          background: var(--bg-elevated);
+          border: 1px solid var(--border-default);
+          color: var(--text-primary);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          transition: all var(--transition-fast);
+          flex-shrink: 0;
+        }
+
+        .mh-hamburger-btn:hover {
+          background: var(--bg-overlay);
+          border-color: var(--border-brand);
+          color: var(--brand-primary);
+        }
+
+        /* Hide hamburger on laptop/desktop since sidebar is fixed */
+        @media (min-width: 1025px) {
+          .mh-hamburger-btn {
+            display: none;
+          }
+        }
+
         .mh-logo-link {
           display: flex;
           align-items: center;
           flex-shrink: 0;
           min-height: 44px;
         }
+
         .mh-logo {
-          height: 46px;
+          height: 44px;
           width: auto;
           object-fit: contain;
         }
+
         .mh-title-wrap {
           min-width: 0;
         }
+
         .mh-page-title {
           font-size: 16px;
           font-weight: 700;
@@ -183,12 +228,10 @@ export function MobileHeader() {
           flex-shrink: 0;
         }
 
-        /* Theme toggle override min-height from global */
         :global(.theme-toggle-btn) {
           min-height: unset !important;
         }
 
-        /* Theme icon animations */
         .theme-icon {
           transition: transform 0.3s ease, opacity 0.2s ease;
         }
@@ -199,133 +242,131 @@ export function MobileHeader() {
           color: #818cf8;
         }
 
-        /* Profile */
         .mh-profile {
           position: relative;
         }
+
         .mh-avatar-btn {
-          width: 38px;
-          height: 38px;
-          border-radius: 50%;
-          background: var(--gradient-brand);
-          color: white;
-          border: 2px solid rgba(99,102,241,0.3);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-weight: 700;
-          font-size: 15px;
-          cursor: pointer;
-          transition: transform var(--transition-fast), box-shadow var(--transition-fast);
-          box-shadow: 0 0 12px rgba(99,102,241,0.3);
-          min-height: unset;
-        }
-        .mh-avatar-btn:active {
-          transform: scale(0.93);
-        }
-
-        /* Dropdown Backdrop */
-        .mh-dropdown-backdrop {
-          position: fixed;
-          inset: 0;
-          z-index: 48;
-        }
-
-        /* Dropdown */
-        .mh-dropdown {
-          position: absolute;
-          top: calc(100% + 10px);
-          right: 0;
-          width: 220px;
-          background: var(--bg-overlay);
-          border: 1px solid var(--border-default);
-          border-radius: var(--radius-lg);
-          box-shadow: var(--shadow-lg);
-          backdrop-filter: blur(20px);
-          -webkit-backdrop-filter: blur(20px);
-          overflow: hidden;
-          z-index: 60;
-        }
-        .mh-dropdown-header {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          padding: 14px 14px 12px;
-          background: var(--bg-elevated);
-        }
-        .mh-dropdown-avatar {
           width: 36px;
           height: 36px;
           border-radius: 50%;
           background: var(--gradient-brand);
+          color: white;
+          font-size: 14px;
+          font-weight: 700;
+          border: 2px solid var(--border-brand);
+          cursor: pointer;
           display: flex;
           align-items: center;
           justify-content: center;
+          transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+          box-shadow: 0 0 12px rgba(99, 102, 241, 0.3);
+        }
+
+        .mh-avatar-btn:hover {
+          transform: scale(1.05);
+          box-shadow: 0 0 16px rgba(99, 102, 241, 0.45);
+        }
+
+        .mh-dropdown-backdrop {
+          position: fixed;
+          inset: 0;
+          z-index: 150;
+        }
+
+        .mh-dropdown {
+          position: absolute;
+          top: calc(100% + 8px);
+          right: 0;
+          width: 220px;
+          background: var(--bg-overlay);
+          backdrop-filter: blur(20px);
+          -webkit-backdrop-filter: blur(20px);
+          border: 1px solid var(--border-default);
+          border-radius: var(--radius-lg);
+          box-shadow: var(--shadow-lg);
+          padding: 8px;
+          z-index: 151;
+        }
+
+        .mh-dropdown-header {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 8px;
+        }
+
+        .mh-dropdown-avatar {
+          width: 34px;
+          height: 34px;
+          border-radius: 50%;
+          background: var(--gradient-brand);
           color: white;
+          font-size: 13px;
           font-weight: 700;
-          font-size: 14px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
           flex-shrink: 0;
         }
+
         .mh-dropdown-name {
-          font-weight: 600;
           font-size: 13px;
+          font-weight: 600;
           color: var(--text-primary);
-          margin: 0;
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
           max-width: 140px;
         }
+
         .mh-dropdown-email {
           font-size: 11px;
           color: var(--text-muted);
-          margin: 1px 0 0;
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
           max-width: 140px;
         }
+
         .mh-dropdown-divider {
           height: 1px;
           background: var(--border-default);
-          width: 100%;
+          margin: 6px 0;
         }
+
         .mh-dropdown-item {
           display: flex;
-          flex-direction: row;
           align-items: center;
           gap: 10px;
-          padding: 12px 14px;
-          color: var(--text-secondary);
-          font-size: 14px;
-          font-weight: 500;
-          text-decoration: none;
-          background: none;
-          border: none;
           width: 100%;
-          text-align: left;
+          padding: 9px 12px;
+          font-size: 13px;
+          font-weight: 500;
+          color: var(--text-secondary);
+          background: transparent;
+          border: none;
+          border-radius: var(--radius-md);
           cursor: pointer;
-          transition: background var(--transition-fast), color var(--transition-fast);
-          min-height: 48px;
+          text-decoration: none;
+          transition: background-color var(--transition-fast), color var(--transition-fast);
+          text-align: left;
         }
-        .mh-dropdown-item:active,
+
         .mh-dropdown-item:hover {
           background: var(--bg-elevated);
           color: var(--text-primary);
         }
+
         .mh-logout-btn {
           color: var(--error);
         }
-        .mh-logout-btn:active,
+
         .mh-logout-btn:hover {
-          background: var(--error-bg);
+          background: rgba(239, 68, 68, 0.1);
           color: var(--error);
         }
-        .mh-logout-btn:disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
-        }
       `}</style>
-    </div>
+    </header>
   )
 }

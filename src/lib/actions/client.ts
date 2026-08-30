@@ -399,3 +399,23 @@ export async function deleteClient(clientId: string) {
     return { success: false, error: msg }
   }
 }
+
+export async function updateUserProfile(fullName: string, phone?: string) {
+  try {
+    const profile = await getAuthProfile()
+    await db.update(users)
+      .set({
+        fullName,
+        phone: phone || null,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, profile.id))
+
+    revalidatePath('/settings')
+    return { success: true }
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : 'Gagal memperbarui profil.'
+    return { success: false, error: msg }
+  }
+}
+

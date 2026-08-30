@@ -1,8 +1,9 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { useAuthStore } from '@/store/auth-store'
+import { useLayoutStore } from '@/store/layout-store'
 import { cn } from '@/lib/utils'
 import {
   LayoutDashboard,
@@ -15,7 +16,6 @@ import {
   BarChart3,
   MoreHorizontal,
   CheckCircle2,
-  Zap,
 } from 'lucide-react'
 import type { UserRole } from '@/types'
 import { useState } from 'react'
@@ -67,14 +67,14 @@ const PRIMARY_NAV: NavItem[] = [
   },
   {
     title: 'Check-In',
-    href: '/session/new',
+    href: '/jadwal',
     icon: CheckCircle2,
     roles: ['super_admin', 'personal_trainer'],
     isCenter: true,
   },
   {
     title: 'Jadwal',
-    href: '/session',
+    href: '/jadwal',
     icon: Calendar,
     roles: ['super_admin', 'personal_trainer'],
   },
@@ -90,7 +90,9 @@ const MORE_NAV: NavItem[] = []
 
 export function BottomNav() {
   const pathname = usePathname()
+  const router = useRouter()
   const { role } = useAuthStore()
+  const { isSessionModalOpen, openSessionModal } = useLayoutStore()
   const [showMore, setShowMore] = useState(false)
 
   const filteredPrimary = PRIMARY_NAV.filter(
@@ -149,18 +151,27 @@ export function BottomNav() {
 
           if (item.isCenter) {
             return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn('bottom-nav-item bottom-nav-center-item', isActive && 'active')}
-                aria-current={isActive ? 'page' : undefined}
-                title="Smart Check-In Latihan"
+              <button
+                key={item.title}
+                type="button"
+                onClick={() => {
+                  openSessionModal()
+                  if (pathname !== '/jadwal') {
+                    router.push('/jadwal')
+                  }
+                }}
+                className={cn(
+                  'bottom-nav-item bottom-nav-center-item',
+                  pathname === '/jadwal' && isSessionModalOpen && 'active'
+                )}
+                title="Input / Check-In Sesi Latihan"
+                id="btn-bottom-checkin"
               >
                 <div className="bottom-nav-center-btn">
                   <CheckCircle2 size={24} strokeWidth={2.4} />
                 </div>
                 <span className="bottom-nav-label bottom-nav-center-label">{item.title}</span>
-              </Link>
+              </button>
             )
           }
 
@@ -199,89 +210,90 @@ export function BottomNav() {
       </nav>
 
       <style jsx>{`
+        :global(.bottom-nav-center-item) {
+          position: relative;
+          background: transparent;
+          border: none;
+          cursor: pointer;
+        }
+
+        .bottom-nav-center-btn {
+          width: 52px;
+          height: 52px;
+          border-radius: 50%;
+          background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: white;
+          margin-top: -24px;
+          box-shadow: 0 4px 18px rgba(99, 102, 241, 0.45);
+          border: 3px solid var(--bottom-nav-bg, #09090b);
+          transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease;
+        }
+
+        :global(.bottom-nav-center-item:active) .bottom-nav-center-btn {
+          transform: scale(0.92);
+        }
+
+        :global(.bottom-nav-center-item:hover) .bottom-nav-center-btn {
+          transform: translateY(-2px) scale(1.04);
+          box-shadow: 0 6px 24px rgba(99, 102, 241, 0.6);
+        }
+
+        .bottom-nav-center-label {
+          color: var(--brand-primary);
+          font-weight: 800 !important;
+          margin-top: 2px;
+        }
+
         .bottom-nav-backdrop {
           position: fixed;
           inset: 0;
+          background: rgba(0, 0, 0, 0.6);
+          backdrop-filter: blur(4px);
           z-index: 98;
-          background: rgba(0,0,0,0.3);
-          backdrop-filter: blur(2px);
         }
+
         .bottom-nav-more-menu {
           position: fixed;
-          bottom: calc(var(--bottom-nav-height) + 8px);
-          right: 12px;
+          bottom: calc(var(--bottom-nav-height) + 12px);
+          right: 16px;
           background: var(--bg-overlay);
           border: 1px solid var(--border-default);
           border-radius: var(--radius-lg);
-          box-shadow: var(--shadow-lg);
-          backdrop-filter: blur(20px);
-          -webkit-backdrop-filter: blur(20px);
-          overflow: hidden;
+          padding: 8px;
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
           z-index: 99;
-          min-width: 160px;
+          min-width: 180px;
+          box-shadow: var(--shadow-xl);
+          backdrop-filter: blur(20px);
         }
-        .bottom-nav-more-item {
+
+        :global(.bottom-nav-more-item) {
           display: flex;
           align-items: center;
-          gap: 12px;
-          padding: 14px 16px;
+          gap: 10px;
+          padding: 10px 14px;
           color: var(--text-secondary);
           text-decoration: none;
-          font-size: 14px;
+          font-size: 13.5px;
           font-weight: 500;
-          transition: all var(--transition-fast);
-          border-bottom: 1px solid var(--border-default);
-          min-height: 48px;
+          border-radius: var(--radius-md);
+          transition: background-color 0.15s ease, color 0.15s ease;
         }
-        .bottom-nav-more-item:last-child {
-          border-bottom: none;
-        }
-        .bottom-nav-more-item:active,
-        .bottom-nav-more-item:hover {
+
+        :global(.bottom-nav-more-item:hover) {
           background: var(--bg-elevated);
           color: var(--text-primary);
         }
-        .bottom-nav-more-item.active {
+
+        :global(.bottom-nav-more-item.active) {
+          background: rgba(99, 102, 241, 0.12);
           color: var(--brand-primary);
-          background: rgba(99,102,241,0.08);
-        }
-
-        /* Override global min-height for bottom nav button */
-        :global(.bottom-nav-item) {
-          min-height: unset !important;
-        }
-
-        /* 🚀 ENLARGED FLOATING CENTER BUTTON FOR BOTTOM NAV */
-        :global(.bottom-nav-center-item) {
-          position: relative;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          margin-top: -16px;
-        }
-        :global(.bottom-nav-center-btn) {
-          width: 50px;
-          height: 50px;
-          border-radius: 50%;
-          background: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
-          color: #ffffff;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          box-shadow: 0 8px 22px rgba(99, 102, 241, 0.6), 0 0 0 4px var(--bg-surface);
-          transition: all var(--transition-fast);
-        }
-        :global(.bottom-nav-center-item:hover .bottom-nav-center-btn),
-        :global(.bottom-nav-center-item.active .bottom-nav-center-btn) {
-          transform: scale(1.08) translateY(-2px);
-          box-shadow: 0 12px 28px rgba(99, 102, 241, 0.8), 0 0 0 4px var(--bg-surface);
-        }
-        :global(.bottom-nav-center-label) {
-          font-weight: 700 !important;
-          color: var(--brand-primary) !important;
-          font-size: 10px !important;
-          margin-top: 2px;
+          font-weight: 700;
         }
       `}</style>
     </>

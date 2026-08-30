@@ -623,9 +623,32 @@ button, a, [role="button"] {
 }
 
 /* ─── Responsive Layout ──────────────────────────────────────────────────────── */
+
+/* Tablet & Mobile: Header sticky, sidebar drawer mode */
 @media (max-width: 1024px) {
+  .mobile-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: var(--header-height);
+    padding: 0 16px;
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    background: var(--bg-surface);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border-default);
+    box-shadow: 0 1px 12px rgba(0,0,0,0.08);
+  }
   .sidebar {
     transform: translateX(-100%);
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 1000;
+    box-shadow: var(--shadow-xl);
   }
   .sidebar.open {
     transform: translateX(0);
@@ -633,41 +656,37 @@ button, a, [role="button"] {
   .dashboard-main {
     margin-left: 0;
   }
+  .sidebar-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    z-index: 999;
+  }
+  .sidebar-backdrop.visible {
+    display: block;
+  }
 }
 
-/* Mobile: sidebar hidden, use bottom nav */
+/* Mobile HP Specific (< 768px): Show Bottom Nav & safe padding */
 @media (max-width: 768px) {
-  .sidebar {
-    display: none;
-  }
   .dashboard-layout {
     /* Space for bottom nav + safe area */
-    padding-bottom: calc(var(--bottom-nav-height) + var(--safe-area-bottom));
+    padding-bottom: calc(var(--bottom-nav-height) + var(--safe-area-bottom) + 8px);
   }
   .page-container {
-    padding: 14px 14px 24px;
+    padding: 12px 14px 20px;
   }
   .hide-on-mobile {
     display: none !important;
   }
 }
 
-/* ─── Sidebar overlay backdrop (for mobile if needed) ────────────────────────── */
-.sidebar-backdrop {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.5);
-  backdrop-filter: blur(4px);
-  z-index: 49;
-}
-.sidebar-backdrop.visible {
-  display: block;
-}
-
 /* ─── Bottom Navigation ──────────────────────────────────────────────────────── */
 .bottom-nav {
-  display: none; /* Hidden on desktop */
+  display: none; /* Hidden on tablet and desktop */
 }
 @media (max-width: 768px) {
   .bottom-nav {
@@ -684,9 +703,9 @@ button, a, [role="button"] {
     z-index: 100;
     justify-content: space-around;
     align-items: flex-start;
-    padding-top: 10px;
+    padding-top: 8px;
     padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 4px);
-    box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.2);
   }
 }
 .bottom-nav-item {
@@ -699,7 +718,7 @@ button, a, [role="button"] {
   text-decoration: none;
   flex: 1;
   min-height: 44px;
-  padding: 4px 4px 0;
+  padding: 2px 4px 0;
   transition: all var(--transition-fast);
   position: relative;
 }
@@ -715,34 +734,31 @@ button, a, [role="button"] {
   align-items: center;
   justify-content: center;
   width: 40px;
-  height: 32px;
+  height: 30px;
   border-radius: 12px;
   transition: all var(--transition-base);
 }
 .bottom-nav-item.active .bottom-nav-icon-wrapper {
-  background: rgba(99,102,241,0.12);
+  background: rgba(99, 102, 241, 0.14);
 }
 [data-theme="light"] .bottom-nav-item.active .bottom-nav-icon-wrapper {
-  background: rgba(79,70,229,0.1);
+  background: rgba(79, 70, 229, 0.1);
 }
 .bottom-nav-label {
-  font-size: 10px;
-  font-weight: 600;
+  font-size: 10.5px;
+  font-weight: 700;
   letter-spacing: 0.01em;
   line-height: 1;
 }
 
-/* ─── Mobile Header ──────────────────────────────────────────────────────────── */
-.mobile-header {
-  display: none;
-}
-@media (max-width: 768px) {
+/* Desktop & Laptop Specific (> 1024px) */
+@media (min-width: 1025px) {
   .mobile-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
     height: var(--header-height);
-    padding: 0 16px;
+    padding: 0 24px;
     position: sticky;
     top: 0;
     z-index: 40;
@@ -750,7 +766,13 @@ button, a, [role="button"] {
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border-bottom: 1px solid var(--border-default);
-    box-shadow: 0 1px 12px rgba(0,0,0,0.08);
+  }
+  .bottom-nav {
+    display: none !important;
+  }
+  .sidebar {
+    transform: translateX(0);
+    display: flex;
   }
 }
 

@@ -7,6 +7,27 @@ const PROTECTED_BASE = ['/dashboard', '/pt', '/clients', '/packages', '/workout'
 export async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
 
+  const pathname = request.nextUrl.pathname
+  const isAuthRoute = AUTH_ROUTES.some((r) => pathname.startsWith(r))
+  const isProtectedRoute = PROTECTED_BASE.some((r) => pathname.startsWith(r))
+  const isRscRequest = request.headers.get('rsc') === '1' || request.headers.has('next-router-prefetch')
+
+  const allCookies = request.cookies.getAll()
+  const hasAuthCookie = allCookies.some((c) => c.name.includes('auth-token') || c.name.startsWith('sb-'))
+
+  // 1. Fast path: Not logged in & requesting protected route -> direct redirect to login (0ms network)
+  if (!hasAuthCookie && isProtectedRoute) {
+    const loginUrl = request.nextUrl.clone()
+    loginUrl.pathname = '/login'
+    loginUrl.searchParams.set('redirectTo', pathname)
+    return NextResponse.redirect(loginUrl)
+  }
+
+  // 2. Fast path: Inside dashboard with auth cookies during client-side RSC navigation -> passthrough immediately
+  if (hasAuthCookie && isRscRequest && isProtectedRoute) {
+    return supabaseResponse
+  }
+
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -29,24 +50,16 @@ export async function proxy(request: NextRequest) {
     }
   )
 
-  const allCookies = request.cookies.getAll()
-  const hasAuthCookie = allCookies.some((c) => c.name.includes('auth-token') || c.name.startsWith('sb-'))
-
   let user = null
   if (hasAuthCookie) {
     try {
-      const timeoutPromise = new Promise<null>((resolve) => setTimeout(() => resolve(null), 1500))
+      const timeoutPromise = new Promise<null>((resolve) => setTimeout(() => resolve(null), 1200))
       const userPromise = supabase.auth.getUser().then((res) => res.data?.user ?? null)
       user = await Promise.race([userPromise, timeoutPromise])
     } catch {
       user = null
     }
   }
-
-  const pathname = request.nextUrl.pathname
-
-  const isAuthRoute = AUTH_ROUTES.some((r) => pathname.startsWith(r))
-  const isProtectedRoute = PROTECTED_BASE.some((r) => pathname.startsWith(r))
 
   // Not logged in → redirect to login
   if (!user && isProtectedRoute) {

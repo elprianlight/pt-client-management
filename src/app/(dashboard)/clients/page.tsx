@@ -11,16 +11,19 @@ export const metadata: Metadata = { title: 'Client' }
 
 export default async function ClientsPage() {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+
+  // Fetch auth and client data concurrently in 1 roundtrip
+  const [authRes, clientList, totalCount] = await Promise.all([
+    supabase.auth.getUser(),
+    listClients(),
+    getClientCount(),
+  ])
+
+  const user = authRes.data?.user
   if (!user) redirect('/login')
 
   const [profile] = await db.select().from(users).where(eq(users.id, user.id))
   if (!profile || profile.role === 'client') redirect('/dashboard')
-
-  const [clientList, totalCount] = await Promise.all([
-    listClients(),
-    getClientCount(),
-  ])
 
   return (
     <div className="page-container">

@@ -163,6 +163,9 @@ export async function listSessions() {
       packageName: ptPackages.packageName,
       totalSessions: ptPackages.totalSessions,
       usedSessions: ptPackages.usedSessions,
+      packageId: workoutSessions.packageId,
+      trainerId: workoutSessions.trainerId,
+      clientId: workoutSessions.clientId,
     })
     .from(workoutSessions)
     .innerJoin(clients, eq(workoutSessions.clientId, clients.id))
@@ -171,13 +174,15 @@ export async function listSessions() {
 
     if (currentUser.role === 'personal_trainer') {
       const [ptData] = await db.select().from(personalTrainers).where(eq(personalTrainers.userId, currentUser.id))
+      if (!ptData) return []
       query = query.where(eq(workoutSessions.trainerId, ptData.id)) as any
     } else if (currentUser.role === 'client') {
       const [clientData] = await db.select().from(clients).where(eq(clients.userId, currentUser.id))
+      if (!clientData) return []
       query = query.where(eq(workoutSessions.clientId, clientData.id)) as any
     }
 
-    const data = await query.orderBy(desc(workoutSessions.scheduledAt)).limit(50)
+    const data = await query.orderBy(desc(workoutSessions.scheduledAt)).limit(300)
     return data
   } catch (err) {
     console.error('List sessions error:', err)

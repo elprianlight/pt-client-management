@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { createPortal } from 'react-dom'
 import { useAuthStore } from '@/store/auth-store'
 import { createClient } from '@/lib/supabase/client'
+import { updateUserProfile } from '@/lib/actions/client'
 import {
   User,
   Lock,
@@ -122,14 +123,12 @@ export default function SettingsPage() {
     setLoadingText('Memperbarui Profil...')
 
     try {
-      const { error } = await supabase
-        .from('users')
-        .update({ full_name: fullName })
-        .eq('id', user.id)
+      const result = await updateUserProfile(fullName, phone)
+      if (!result.success) {
+        throw new Error(result.error)
+      }
 
-      if (error) throw error
-
-      setUser({ ...user, fullName })
+      setUser({ ...user, fullName, phone })
       setIsEditProfileModalOpen(false)
       setFeedbackModal({
         isOpen: true,
