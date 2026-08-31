@@ -94,8 +94,128 @@ export function JadwalView({ initialOpenNew, defaultPackageId, defaultClientId }
   const [newSessionNotes, setNewSessionNotes] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  // Quick Locations
-  const recentLocations = ['Essence', 'Hang Lekir', '1 Park', 'FTL Pasar Minggu', 'Studio Fit']
+  // Presets for 1-tap quick selection
+  const PROGRAM_PRESETS = [
+    'Total Body',
+    'Chest & Tri',
+    'Back & Bi',
+    'Legs & Core',
+    'Upper Body',
+    'Cardio & HIIT',
+    'Mobility',
+  ]
+  const TIME_PRESETS = ['07:00', '08:30', '10:00', '14:00', '16:00', '18:00', '19:30', '20:00']
+  const LOCATION_PRESETS = ['Essence', 'Hang Lekir', '1 Park', 'FTL Pasar Minggu', 'Studio Fit', 'Home Gym']
+
+  // Lock body scroll when any modal is open to ensure 100% viewport stability on Mobile HP
+  useEffect(() => {
+    const isAnyModalOpen =
+      isFormModalOpen ||
+      Boolean(selectedDetailSession) ||
+      Boolean(deleteConfirmId) ||
+      Boolean(selectedWASession)
+    if (isAnyModalOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [isFormModalOpen, selectedDetailSession, deleteConfirmId, selectedWASession])
+
+  // Horizontal Day Wheel 7-day strip (Concept 8)
+  const dayWheelDays = useMemo(() => {
+    const today = new Date()
+    return Array.from({ length: 7 }, (_, i) => {
+      const d = addDays(today, i)
+      const dateStr = format(d, 'yyyy-MM-dd')
+      const isToday = i === 0
+      const isTomorrow = i === 1
+      const dayName = isToday ? 'TODAY' : isTomorrow ? 'BESOK' : format(d, 'EEE', { locale: idLocale }).toUpperCase()
+      const dayNum = format(d, 'dd')
+      const monthName = format(d, 'MMM', { locale: idLocale }).toUpperCase()
+      return {
+        date: d,
+        dateStr,
+        dayName,
+        dayNum,
+        monthName,
+      }
+    })
+  }, [])
+
+  const setQuickDate = (type: 'today' | 'tomorrow' | 'dayAfter') => {
+    const today = new Date()
+    if (type === 'today') {
+      setNewSessionDate(format(today, 'yyyy-MM-dd'))
+    } else if (type === 'tomorrow') {
+      setNewSessionDate(format(addDays(today, 1), 'yyyy-MM-dd'))
+    } else {
+      setNewSessionDate(format(addDays(today, 2), 'yyyy-MM-dd'))
+    }
+  }
+
+  const isDateToday = useMemo(() => {
+    try {
+      return isSameDay(new Date(newSessionDate), new Date())
+    } catch {
+      return false
+    }
+  }, [newSessionDate])
+
+  const isDateTomorrow = useMemo(() => {
+    try {
+      return isSameDay(new Date(newSessionDate), addDays(new Date(), 1))
+    } catch {
+      return false
+    }
+  }, [newSessionDate])
+
+  const isDateDayAfter = useMemo(() => {
+    try {
+      return isSameDay(new Date(newSessionDate), addDays(new Date(), 2))
+    } catch {
+      return false
+    }
+  }, [newSessionDate])
+
+  const getRpeDetails = (score: number) => {
+    if (score <= 4) {
+      return {
+        label: 'Ringan',
+        desc: 'Warmup / Recovery',
+        color: '#10b981',
+        bg: 'rgba(16, 185, 129, 0.18)',
+        border: 'rgba(16, 185, 129, 0.35)',
+      }
+    }
+    if (score <= 7) {
+      return {
+        label: 'Sedang',
+        desc: 'Hypertrophy / Moderate',
+        color: '#38bdf8',
+        bg: 'rgba(56, 189, 248, 0.18)',
+        border: 'rgba(56, 189, 248, 0.35)',
+      }
+    }
+    if (score <= 9) {
+      return {
+        label: 'Berat',
+        desc: 'High Intensity / Near Limit',
+        color: '#f59e0b',
+        bg: 'rgba(245, 158, 11, 0.18)',
+        border: 'rgba(245, 158, 11, 0.35)',
+      }
+    }
+    return {
+      label: 'Maksimal',
+      desc: 'Max Effort / PR Attempt 🔥',
+      color: '#ef4444',
+      bg: 'rgba(239, 68, 68, 0.18)',
+      border: 'rgba(239, 68, 68, 0.35)',
+    }
+  }
 
   useEffect(() => {
     if (initialOpenNew) {
@@ -881,7 +1001,7 @@ export function JadwalView({ initialOpenNew, defaultPackageId, defaultClientId }
       )}
 
       {/* ─── 4. SESSION DETAIL & WORKOUT BUILDER MODAL ─── */}
-      {selectedDetailSession && (
+      {mounted && selectedDetailSession && createPortal(
         <div
           className="modal-backdrop animate-fade-in"
           onClick={() => setSelectedDetailSession(null)}
@@ -893,8 +1013,8 @@ export function JadwalView({ initialOpenNew, defaultPackageId, defaultClientId }
           >
             <div className="mc-header">
               <div className="mc-title-group">
-                <div className="mc-icon-badge">
-                  <ClipboardList size={18} />
+                <div className="mc-icon-badge jd-badge-sched">
+                  <ClipboardList size={20} />
                 </div>
                 <div>
                   <h3 className="mc-title">Detail Sesi Latihan</h3>
@@ -907,12 +1027,13 @@ export function JadwalView({ initialOpenNew, defaultPackageId, defaultClientId }
                 type="button"
                 onClick={() => setSelectedDetailSession(null)}
                 className="mc-close-btn"
+                aria-label="Tutup"
               >
                 <X size={18} />
               </button>
             </div>
 
-            <div className="mc-modal-body" style={{ maxHeight: '78vh', overflowY: 'auto' }}>
+            <div className="mc-modal-body" style={{ maxHeight: '76vh', overflowY: 'auto' }}>
               {/* Status Selector */}
               {!isClient && (
                 <div className="jd-modal-section">
@@ -978,7 +1099,6 @@ export function JadwalView({ initialOpenNew, defaultPackageId, defaultClientId }
               <div style={{ marginTop: 14 }}>
                 <WorkoutBuilder
                   sessionId={selectedDetailSession.id}
-                  isReadOnly={isClient}
                 />
               </div>
 
@@ -997,7 +1117,8 @@ export function JadwalView({ initialOpenNew, defaultPackageId, defaultClientId }
               )}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* ─── 5. WHATSAPP QUICK ACTION MODAL ─── */}
@@ -1016,226 +1137,366 @@ export function JadwalView({ initialOpenNew, defaultPackageId, defaultClientId }
         />
       )}
 
-      {/* ─── 6. UNIFIED CREATE / CHECK-IN SESSION MODAL ─── */}
-      {isFormModalOpen && (
+      {/* ─── 6. UNIFIED CREATE / CHECK-IN SESSION CUSTOM MODAL (HYBRID DEV & EDITORIAL MINIMAL) ─── */}
+      {mounted && isFormModalOpen && createPortal(
         <div
           className="modal-backdrop animate-fade-in"
           onClick={closeFormModal}
         >
           <div
-            className="modal-card animate-slide-up"
+            className="modal-card dev-modal-card animate-slide-up"
             onClick={(e) => e.stopPropagation()}
-            style={{ maxWidth: 520 }}
+            style={{ maxWidth: 540 }}
           >
-            <div className="mc-header">
-              <div className="mc-title-group">
-                <div className="mc-icon-badge">
-                  <CalendarCheck size={18} />
+            {/* Header: Editorial Minimal with Dev Micro-Label */}
+            <div className="dev-modal-header">
+              <div>
+                <div className="dev-mono-tag font-mono">
+                  {newSessionStatus === 'completed' ? '// QUICK_CHECKIN_DISPATCH' : '// SCHEDULE_NEW_SESSION'}
                 </div>
-                <div>
-                  <h3 className="mc-title">
-                    {newSessionStatus === 'completed' ? 'Check-In Sesi Latihan' : 'Jadwalkan Sesi Baru'}
-                  </h3>
-                  <p className="mc-sub">
-                    {newSessionStatus === 'completed'
-                      ? 'Catat sesi selesai dan potong kuota paket langsung'
-                      : 'Atur jadwal latihan mendatang untuk klien'}
-                  </p>
-                </div>
+                <h3 className="dev-modal-title">
+                  {newSessionStatus === 'completed' ? 'Check-In Sesi Latihan' : 'Jadwalkan Sesi Baru'}
+                </h3>
+                <p className="dev-modal-subtitle">
+                  {newSessionStatus === 'completed'
+                    ? 'Catat sesi selesai & kurangi kuota paket 1 sesi otomatis'
+                    : 'Atur jadwal latihan mendatang untuk klien'}
+                </p>
               </div>
               <button
                 type="button"
                 onClick={closeFormModal}
-                className="mc-close-btn"
+                className="dev-close-btn"
+                aria-label="Tutup Dialog"
               >
-                <X size={18} />
+                <X size={17} />
               </button>
             </div>
 
-            <form onSubmit={handleCreateSession} className="mc-modal-body">
-              {/* Mode Toggle: Jadwalkan vs Check-In */}
-              <div className="jd-form-mode-switch">
-                <button
-                  type="button"
-                  className={`jd-mode-pill ${newSessionStatus === 'scheduled' ? 'active-sched' : ''}`}
-                  onClick={() => setNewSessionStatus('scheduled')}
-                >
-                  <CalendarCheck size={13} />
-                  <span>Jadwalkan Saja</span>
-                </button>
-                <button
-                  type="button"
-                  className={`jd-mode-pill ${newSessionStatus === 'completed' ? 'active-comp' : ''}`}
-                  onClick={() => setNewSessionStatus('completed')}
-                >
-                  <Zap size={13} />
-                  <span>Langsung Check-In (Selesai)</span>
-                </button>
-              </div>
+            {/* Mode Switcher: Underline Tabs (Konsep 1 Layout + Linear Vibe) */}
+            <div className="dev-underline-tabs">
+              <button
+                type="button"
+                className={`dev-tab-btn ${newSessionStatus === 'scheduled' ? 'active-sched' : ''}`}
+                onClick={() => setNewSessionStatus('scheduled')}
+              >
+                <CalendarCheck size={14} />
+                <span>Jadwalkan Sesi</span>
+              </button>
+              <button
+                type="button"
+                className={`dev-tab-btn ${newSessionStatus === 'completed' ? 'active-checkin' : ''}`}
+                onClick={() => setNewSessionStatus('completed')}
+              >
+                <Zap size={14} />
+                <span>Check-In Sekarang</span>
+              </button>
+            </div>
 
-              {/* Package / Client Select */}
-              <div className="form-group">
-                <label className="form-label">
-                  Pilih Klien & Paket Sesi <span style={{ color: '#ef4444' }}>*</span>
-                </label>
-                <select
-                  className="form-input"
-                  value={newSessionPkgId}
-                  onChange={(e) => setNewSessionPkgId(e.target.value)}
-                  required
-                >
-                  <option value="">-- Pilih Klien / Paket Aktif --</option>
-                  {activePackages.map((pkg) => {
-                    const remaining = (pkg.totalSessions || 0) - (pkg.usedSessions || 0)
+            <form onSubmit={handleCreateSession} className="dev-modal-body">
+              {/* SECTION 1: Client & Package Selection */}
+              <div className="dev-field-group">
+                <div className="dev-field-label font-mono">
+                  <span className="dev-label-txt">01 // CLIENT & PACKAGE</span>
+                  {(() => {
+                    const sel = activePackages.find((p) => p.id === newSessionPkgId)
+                    if (!sel) return <span className="dev-req-star">* Required</span>
+                    const rem = (sel.totalSessions || 0) - (sel.usedSessions || 0)
                     return (
-                      <option key={pkg.id} value={pkg.id}>
-                        {pkg.clientName || 'Client'} — {pkg.packageName} (Sisa: {remaining} Sesi)
-                      </option>
+                      <span className="dev-quota-pill font-mono">
+                        {rem} SESI TERSISA
+                      </span>
                     )
-                  })}
-                </select>
+                  })()}
+                </div>
+
+                <div className="dev-select-wrapper">
+                  <select
+                    className="dev-select-input"
+                    value={newSessionPkgId}
+                    onChange={(e) => setNewSessionPkgId(e.target.value)}
+                    required
+                  >
+                    <option value="">-- PILIH KLIEN / PAKET AKTIF --</option>
+                    {activePackages.map((pkg) => {
+                      const remaining = (pkg.totalSessions || 0) - (pkg.usedSessions || 0)
+                      return (
+                        <option key={pkg.id} value={pkg.id}>
+                          {pkg.clientName || 'Client'} — {pkg.packageName} ({remaining} Sesi Tersisa)
+                        </option>
+                      )
+                    })}
+                  </select>
+                </div>
+
+                {activePackages.length === 0 ? (
+                  <div className="dev-alert-box font-mono">
+                    ⚠️ TIDAK ADA PAKET AKTIF. Tambahkan paket baru untuk klien terlebih dahulu.
+                  </div>
+                ) : (() => {
+                  const sel = activePackages.find((p) => p.id === newSessionPkgId)
+                  if (!sel) return null
+                  const rem = (sel.totalSessions || 0) - (sel.usedSessions || 0)
+                  return (
+                    <div className="dev-package-card animate-fade-in">
+                      <div className="dev-pkg-avatar">
+                        {(sel.clientName || 'C').slice(0, 2).toUpperCase()}
+                      </div>
+                      <div className="dev-pkg-info">
+                        <div className="dev-pkg-name">{sel.clientName || 'Client'}</div>
+                        <div className="dev-pkg-detail font-mono">
+                          {sel.packageName} • {sel.usedSessions || 0}/{sel.totalSessions} Sesi Terpakai
+                        </div>
+                      </div>
+                      <div className="dev-pkg-badge font-mono">
+                        {rem} SESI
+                      </div>
+                    </div>
+                  )
+                })()}
               </div>
 
-              {/* Date & Time */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                <div className="form-group">
-                  <label className="form-label">Tanggal Latihan</label>
-                  <input
-                    type="date"
-                    className="form-input"
-                    value={newSessionDate}
-                    onChange={(e) => setNewSessionDate(e.target.value)}
-                    required
-                  />
+              {/* SECTION 2: Date & Time Selection (CONCEPT 8: HORIZONTAL DAY WHEEL + TIME PRESETS) */}
+              <div className="dev-field-group">
+                <div className="dev-field-label font-mono">
+                  <span className="dev-label-txt">02 // HORIZONTAL DAY WHEEL</span>
+                  <span className="dev-val-indicator font-mono">
+                    {format(new Date(newSessionDate), 'd MMM yyyy', { locale: idLocale })} @ {newSessionTime}
+                  </span>
                 </div>
-                <div className="form-group">
-                  <label className="form-label">Jam Latihan</label>
-                  <input
-                    type="time"
-                    className="form-input"
-                    value={newSessionTime}
-                    onChange={(e) => setNewSessionTime(e.target.value)}
-                    required
-                  />
+
+                {/* Concept 8: Horizontal Day Wheel (Swipeable 7-Day Strip) */}
+                <div className="dev-day-wheel-container">
+                  <div className="dev-day-wheel-strip">
+                    {dayWheelDays.map((item) => {
+                      const isSelected = newSessionDate === item.dateStr
+                      return (
+                        <button
+                          key={item.dateStr}
+                          type="button"
+                          className={`dev-day-wheel-card ${isSelected ? 'active' : ''}`}
+                          onClick={() => setNewSessionDate(item.dateStr)}
+                        >
+                          <span className="dev-wheel-day">{item.dayName}</span>
+                          <span className="dev-wheel-num font-mono">{item.dayNum}</span>
+                          <span className="dev-wheel-mon">{item.monthName}</span>
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+
+                {/* Native Date & Time Custom Pickers */}
+                <div className="dev-custom-datetime-row">
+                  <div className="dev-dt-input-box">
+                    <Calendar size={13} className="dev-dt-icon" />
+                    <input
+                      type="date"
+                      className="dev-clean-input font-mono"
+                      value={newSessionDate}
+                      onChange={(e) => setNewSessionDate(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="dev-dt-input-box">
+                    <Clock size={13} className="dev-dt-icon" />
+                    <input
+                      type="time"
+                      className="dev-clean-input font-mono"
+                      value={newSessionTime}
+                      onChange={(e) => setNewSessionTime(e.target.value)}
+                      required
+                    />
+                  </div>
+                </div>
+
+                {/* Time Quick Chips (Single Horizontal Row) */}
+                <div className="dev-time-chips-bar">
+                  {TIME_PRESETS.map((time) => (
+                    <button
+                      key={time}
+                      type="button"
+                      className={`dev-time-chip font-mono ${newSessionTime === time ? 'active' : ''}`}
+                      onClick={() => setNewSessionTime(time)}
+                    >
+                      {time}
+                    </button>
+                  ))}
                 </div>
               </div>
 
-              {/* Program & Location */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                <div className="form-group">
-                  <label className="form-label">Fokus Program</label>
+              {/* SECTION 3: Program & Location */}
+              <div className="dev-grid-2col">
+                {/* Program Focus */}
+                <div className="dev-field-group">
+                  <div className="dev-field-label font-mono">
+                    <span className="dev-label-txt">03 // PROGRAM</span>
+                  </div>
                   <input
                     type="text"
-                    className="form-input"
-                    placeholder="Total Body, Chest, Leg..."
+                    className="dev-clean-input"
+                    placeholder="Total Body, Chest..."
                     value={newSessionProgram}
                     onChange={(e) => setNewSessionProgram(e.target.value)}
                   />
+                  <div className="dev-mini-chips">
+                    {PROGRAM_PRESETS.slice(0, 4).map((prog) => (
+                      <button
+                        key={prog}
+                        type="button"
+                        className={`dev-mini-chip ${newSessionProgram === prog ? 'active' : ''}`}
+                        onClick={() => setNewSessionProgram(prog)}
+                      >
+                        {prog}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-                <div className="form-group">
-                  <label className="form-label">Lokasi Latihan</label>
+
+                {/* Location */}
+                <div className="dev-field-group">
+                  <div className="dev-field-label font-mono">
+                    <span className="dev-label-txt">04 // LOCATION</span>
+                  </div>
                   <input
                     type="text"
-                    className="form-input"
+                    className="dev-clean-input"
                     placeholder="Essence, Hang Lekir..."
                     value={newSessionLocation}
                     onChange={(e) => setNewSessionLocation(e.target.value)}
                   />
+                  <div className="dev-mini-chips">
+                    {LOCATION_PRESETS.slice(0, 3).map((loc) => (
+                      <button
+                        key={loc}
+                        type="button"
+                        className={`dev-mini-chip ${newSessionLocation === loc ? 'active' : ''}`}
+                        onClick={() => setNewSessionLocation(loc)}
+                      >
+                        {loc}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
 
-              {/* RPE & Intensity */}
-              <div className="form-group">
-                <label className="form-label">
-                  Target Intensitas (RPE: {newSessionRpe} / 10)
-                </label>
-                <input
-                  type="range"
-                  min="1"
-                  max="10"
-                  value={newSessionRpe}
-                  onChange={(e) => setNewSessionRpe(e.target.value)}
-                  className="jd-rpe-slider"
-                />
+              {/* SECTION 4: RPE Target Intensity (KONSEP 4: 10-ZONE TAP BOXES) */}
+              <div className="dev-field-group">
+                {(() => {
+                  const currentRpeNum = Number(newSessionRpe) || 8
+                  const rpeInfo = getRpeDetails(currentRpeNum)
+                  return (
+                    <>
+                      <div className="dev-field-label font-mono">
+                        <span className="dev-label-txt">05 // INTENSITY (RPE)</span>
+                        <span
+                          className="dev-rpe-status-badge font-mono"
+                          style={{
+                            color: rpeInfo.color,
+                            borderColor: rpeInfo.border,
+                            background: rpeInfo.bg,
+                          }}
+                        >
+                          RPE {currentRpeNum}/10 • {rpeInfo.label.toUpperCase()}
+                        </span>
+                      </div>
+
+                      {/* 10-Box Tap Zones (Konsep 4) */}
+                      <div className="dev-rpe-grid">
+                        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => {
+                          const isSelected = currentRpeNum === num
+                          let zoneColorClass = 'dev-rpe-light'
+                          if (num >= 5 && num <= 7) zoneColorClass = 'dev-rpe-mod'
+                          if (num >= 8 && num <= 9) zoneColorClass = 'dev-rpe-heavy'
+                          if (num === 10) zoneColorClass = 'dev-rpe-max'
+
+                          return (
+                            <button
+                              key={num}
+                              type="button"
+                              className={`dev-rpe-box font-mono ${zoneColorClass} ${isSelected ? 'active' : ''}`}
+                              onClick={() => setNewSessionRpe(String(num))}
+                              aria-label={`RPE ${num}`}
+                            >
+                              <span className="dev-rpe-num">{num}</span>
+                            </button>
+                          )
+                        })}
+                      </div>
+
+                      <div className="dev-rpe-scale-legend font-mono">
+                        <span style={{ color: '#10b981' }}>1-4 Light</span>
+                        <span style={{ color: '#38bdf8' }}>5-7 Moderate</span>
+                        <span style={{ color: '#f59e0b' }}>8-9 Heavy</span>
+                        <span style={{ color: '#ef4444' }}>10 Max Effort 🔥</span>
+                      </div>
+                    </>
+                  )
+                })()}
               </div>
 
-              {/* Session Notes */}
-              <div className="form-group">
-                <label className="form-label">Catatan Latihan / Pesan untuk Klien</label>
+              {/* SECTION 5: Session Notes */}
+              <div className="dev-field-group">
+                <div className="dev-field-label font-mono">
+                  <span className="dev-label-txt">06 // SESSION NOTES (OPTIONAL)</span>
+                </div>
                 <textarea
-                  className="form-input"
+                  className="dev-clean-textarea font-mono"
                   rows={2}
-                  placeholder="Contoh: Fokus progressive overload leg press hari ini..."
+                  placeholder="Fokus progressive overload, koreksi postur squat, target RPE..."
                   value={newSessionNotes}
                   onChange={(e) => setNewSessionNotes(e.target.value)}
                 />
               </div>
 
-              {/* Submit Buttons */}
-              <div className="modal-actions">
+              {/* Footer Actions (CONCEPT 8: 1-THUMB ERGONOMIC PRIMARY BUTTON) */}
+              <div className="dev-modal-actions dev-speed-actions">
                 <button
                   type="button"
-                  className="btn-secondary"
+                  className="dev-btn-cancel font-mono"
                   onClick={closeFormModal}
                   disabled={isSubmitting}
                 >
-                  Batal
+                  [ ESC ] BATAL
                 </button>
                 <button
                   type="submit"
-                  className="btn-primary"
+                  className={`dev-btn-speed-submit font-mono ${newSessionStatus === 'completed' ? 'dev-speed-checkin' : 'dev-speed-sched'}`}
                   disabled={isSubmitting || !newSessionPkgId}
                 >
-                  {isSubmitting
-                    ? 'Menyimpan...'
-                    : newSessionStatus === 'completed'
-                    ? 'Check-In Sekarang ⚡'
-                    : 'Simpan Jadwal 📅'}
+                  {isSubmitting ? (
+                    <span>PROCESSING...</span>
+                  ) : newSessionStatus === 'completed' ? (
+                    <>
+                      <Zap size={16} strokeWidth={2.5} className="dev-speed-icon" />
+                      <span>⚡ CONFIRM CHECK-IN (1-TAP)</span>
+                    </>
+                  ) : (
+                    <>
+                      <CalendarCheck size={16} strokeWidth={2.5} className="dev-speed-icon" />
+                      <span>SIMPAN JADWAL SESI →</span>
+                    </>
+                  )}
                 </button>
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* ─── 7. DELETE CONFIRMATION MODAL ─── */}
-      {deleteConfirmId && (
-        <div
-          className="modal-backdrop animate-fade-in"
-          onClick={() => setDeleteConfirmId(null)}
-        >
-          <div
-            className="modal-card animate-slide-up"
-            onClick={(e) => e.stopPropagation()}
-            style={{ maxWidth: 400, textAlign: 'center' }}
-          >
-            <div style={{ fontSize: 36, marginBottom: 8 }}>⚠️</div>
-            <h3 style={{ fontSize: 16, fontWeight: 800, color: '#ffffff', margin: '0 0 6px 0' }}>
-              Hapus Sesi Latihan?
-            </h3>
-            <p style={{ fontSize: 13, color: '#94a3b8', margin: '0 0 16px 0' }}>
-              Apakah Anda yakin ingin menghapus sesi ini? Tindakan ini tidak dapat dibatalkan.
-            </p>
-            <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
-              <button
-                type="button"
-                className="btn-secondary"
-                onClick={() => setDeleteConfirmId(null)}
-              >
-                Batal
-              </button>
-              <button
-                type="button"
-                className="btn-danger"
-                onClick={handleConfirmDelete}
-                disabled={Boolean(processingId)}
-              >
-                {processingId ? 'Menghapus...' : 'Ya, Hapus Sesi'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <CustomModal
+        isOpen={Boolean(deleteConfirmId)}
+        onClose={() => setDeleteConfirmId(null)}
+        onConfirm={handleConfirmDelete}
+        type="confirm"
+        title="Hapus Sesi Latihan?"
+        message="Apakah Anda yakin ingin menghapus sesi latihan ini? Tindakan ini tidak dapat dibatalkan."
+        confirmText="Ya, Hapus Sesi"
+        cancelText="Batal"
+        isSubmitting={Boolean(processingId)}
+      />
 
       {/* ─── 8. CUSTOM ALERT MODAL ─── */}
       <CustomModal

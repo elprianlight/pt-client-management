@@ -7,20 +7,20 @@ import { useAuthStore } from '@/store/auth-store'
 import { useThemeStore } from '@/store/theme-store'
 import { useLayoutStore } from '@/store/layout-store'
 import { createClient } from '@/lib/supabase/client'
-import { User, Settings, LogOut, Sun, Moon, Menu } from 'lucide-react'
+import { User, Settings, LogOut, Sun, Moon, Menu, Terminal, Activity, ShieldCheck } from 'lucide-react'
 
-const PAGE_TITLES: Record<string, string> = {
-  '/dashboard': 'Dashboard',
-  '/pt': 'Personal Trainer',
-  '/clients': 'Client',
-  '/jadwal': 'Jadwal',
-  '/packages': 'Paket Sesi',
-  '/session': 'Sesi Latihan',
-  '/workout': 'Workout',
-  '/nutrition': 'Nutrisi',
-  '/progress': 'Progress',
-  '/reports': 'Laporan',
-  '/settings': 'Pengaturan',
+const PAGE_CONFIG: Record<string, { title: string; slug: string; tag: string }> = {
+  '/dashboard': { title: 'Dashboard', slug: 'dashboard', tag: 'OVERVIEW' },
+  '/pt': { title: 'Personal Trainer', slug: 'pt-hub', tag: 'TRAINERS' },
+  '/clients': { title: 'Client', slug: 'clients', tag: 'DATABASE' },
+  '/jadwal': { title: 'Jadwal', slug: 'jadwal', tag: 'DISPATCH' },
+  '/packages': { title: 'Paket Sesi', slug: 'packages', tag: 'QUOTA' },
+  '/session': { title: 'Sesi Latihan', slug: 'session', tag: 'LOGS' },
+  '/workout': { title: 'Workout', slug: 'workout', tag: 'BUILDER' },
+  '/nutrition': { title: 'Nutrisi', slug: 'nutrition', tag: 'MEALS' },
+  '/progress': { title: 'Progress', slug: 'progress', tag: 'ANALYTICS' },
+  '/reports': { title: 'Laporan', slug: 'reports', tag: 'INSIGHTS' },
+  '/settings': { title: 'Pengaturan', slug: 'settings', tag: 'CONFIG' },
 }
 
 export function MobileHeader() {
@@ -28,16 +28,19 @@ export function MobileHeader() {
   const dropdownRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
   const pathname = usePathname()
-  const { user, clearAuth } = useAuthStore()
+  const { user, role, clearAuth } = useAuthStore()
   const { theme, toggleTheme } = useThemeStore()
   const { toggleSidebar } = useLayoutStore()
   const [isLoggingOut, setIsLoggingOut] = useState(false)
 
   const userInitial = user?.fullName?.charAt(0).toUpperCase() || 'U'
 
-  const pageTitle = Object.entries(PAGE_TITLES).find(([key]) =>
+  const activePage = Object.entries(PAGE_CONFIG).find(([key]) =>
     pathname.startsWith(key)
-  )?.[1] ?? 'Dashboard'
+  )?.[1] ?? { title: 'Dashboard', slug: 'dashboard', tag: 'OVERVIEW' }
+
+  // Format role badge
+  const roleBadge = role === 'personal_trainer' ? 'PT' : role === 'super_admin' ? 'ROOT' : 'CLIENT'
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -59,98 +62,117 @@ export function MobileHeader() {
   }
 
   return (
-    <header className="mobile-header">
-      {/* Left: Hamburger menu toggle + Logo + Page Title */}
-      <div className="mh-left">
+    <header className="dev-header">
+      {/* ─── LEFT: Keycap Menu + Logo + Breadcrumb (Konsep 1) ─── */}
+      <div className="dev-hdr-left">
         <button
           type="button"
-          className="mh-hamburger-btn"
+          className="dev-hdr-keycap-btn"
           onClick={toggleSidebar}
           aria-label="Buka Menu Navigasi"
           id="btn-hamburger-menu"
         >
-          <Menu size={20} />
+          <Menu size={16} strokeWidth={2.2} />
         </button>
 
-        <Link href="/dashboard" className="mh-logo-link" aria-label="Home">
-          <img src="/logo_transparent.png" alt="PT Client Management Logo" className="mh-logo" />
+        <Link href="/dashboard" className="dev-hdr-logo-link" aria-label="Home">
+          <img src="/logo_transparent.png" alt="Strength Lab Logo" className="dev-hdr-logo" />
         </Link>
 
-        <div className="mh-title-wrap">
-          <span className="mh-page-title">{pageTitle}</span>
+        {/* Breadcrumb Developer (Konsep 1) */}
+        <div className="dev-hdr-breadcrumb font-mono">
+          <span className="dev-hdr-org">strength-lab</span>
+          <span className="dev-hdr-slash">/</span>
+          <span className="dev-hdr-page">{activePage.slug}</span>
+          <span className="dev-hdr-live-pill" title="Database Live Synchronized">
+            <span className="dev-pulse-dot" />
+            <span className="dev-live-text">live</span>
+          </span>
         </div>
       </div>
 
-      {/* Right: Theme Toggle + Avatar */}
-      <div className="mh-right">
-        {/* Theme Toggle */}
+      {/* ─── RIGHT: Status Telemetry + Theme Toggle + Squircle Avatar ─── */}
+      <div className="dev-hdr-right">
+        {/* Status Telemetry (Konsep 2) */}
+        <div className="dev-hdr-telemetry font-mono" title="System Operational">
+          <span className="dev-tele-dot">●</span>
+          <span className="dev-tele-label">SYS: 200 OK</span>
+        </div>
+
+        {/* Theme Toggle Keycap */}
         <button
-          className="theme-toggle-btn"
+          className="dev-hdr-keycap-btn theme-toggle-btn"
           onClick={toggleTheme}
           aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
           id="btn-theme-toggle"
         >
           {theme === 'dark' ? (
-            <Sun size={18} className="theme-icon theme-icon-sun" />
+            <Sun size={15} className="theme-icon-sun" />
           ) : (
-            <Moon size={18} className="theme-icon theme-icon-moon" />
+            <Moon size={15} className="theme-icon-moon" />
           )}
         </button>
 
-        {/* Profile Avatar + Dropdown */}
+        {/* Profile Squircle Avatar (Konsep 1 & 8) + Dropdown */}
         {user && (
-          <div className="mh-profile" ref={dropdownRef}>
+          <div className="dev-hdr-profile" ref={dropdownRef}>
             <button
-              className="mh-avatar-btn"
+              className="dev-squircle-avatar-btn font-mono"
               onClick={() => setShowDropdown(!showDropdown)}
               aria-label="Toggle profile menu"
               aria-expanded={showDropdown}
               id="btn-mobile-profile"
             >
-              {userInitial}
+              <span className="dev-avatar-letter">{userInitial}</span>
+              <span className="dev-avatar-role">{roleBadge}</span>
             </button>
 
             {showDropdown && (
               <>
                 {/* Backdrop */}
                 <div
-                  className="mh-dropdown-backdrop"
+                  className="dev-dropdown-backdrop"
                   onClick={() => setShowDropdown(false)}
                   aria-hidden="true"
                 />
 
-                {/* Dropdown */}
-                <div className="mh-dropdown animate-slide-down">
-                  <div className="mh-dropdown-header">
-                    <div className="mh-dropdown-avatar">{userInitial}</div>
-                    <div>
-                      <p className="mh-dropdown-name">{user.fullName}</p>
-                      <p className="mh-dropdown-email">{user.email}</p>
+                {/* Developer Dropdown */}
+                <div className="dev-dropdown animate-slide-down font-mono">
+                  <div className="dev-dropdown-header">
+                    <div className="dev-dropdown-avatar-box">
+                      {userInitial}
+                    </div>
+                    <div className="dev-dropdown-user-meta">
+                      <p className="dev-dropdown-name">{user.fullName}</p>
+                      <p className="dev-dropdown-email">{user.email}</p>
+                      <div className="dev-dropdown-role-tag">
+                        ROLE: {role?.toUpperCase() || 'USER'} // ACTIVE
+                      </div>
                     </div>
                   </div>
 
-                  <div className="mh-dropdown-divider" />
+                  <div className="dev-dropdown-divider" />
 
                   <Link
                     href="/settings"
-                    className="mh-dropdown-item"
+                    className="dev-dropdown-item"
                     onClick={() => setShowDropdown(false)}
                     id="btn-mobile-settings"
                   >
-                    <Settings size={15} />
-                    <span>Pengaturan</span>
+                    <Settings size={14} className="text-indigo-400" />
+                    <span>[ CONFIG ] Pengaturan</span>
                   </Link>
 
-                  <div className="mh-dropdown-divider" />
+                  <div className="dev-dropdown-divider" />
 
                   <button
-                    className="mh-dropdown-item mh-logout-btn"
+                    className="dev-dropdown-item dev-logout-btn"
                     onClick={handleLogout}
                     disabled={isLoggingOut}
                     id="btn-mobile-logout"
                   >
-                    <LogOut size={15} />
-                    <span>{isLoggingOut ? 'Keluar...' : 'Keluar'}</span>
+                    <LogOut size={14} />
+                    <span>{isLoggingOut ? 'TERMINATING...' : '[ LOGOUT ] Keluar'}</span>
                   </button>
                 </div>
               </>
@@ -160,81 +182,195 @@ export function MobileHeader() {
       </div>
 
       <style jsx>{`
-        .mh-left {
+        .dev-header {
+          height: var(--header-height, 56px);
+          background: #080c14;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 0 16px;
+          position: sticky;
+          top: 0;
+          z-index: 50;
+          backdrop-filter: blur(16px);
+          -webkit-backdrop-filter: blur(16px);
+          transition: background-color 0.2s ease, border-color 0.2s ease;
+        }
+
+        :global([data-theme="light"]) .dev-header {
+          background: #ffffff;
+          border-bottom-color: #e2e8f0;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+        }
+
+        /* ─── LEFT ─── */
+        .dev-hdr-left {
           display: flex;
           align-items: center;
           gap: 10px;
           min-width: 0;
         }
 
-        .mh-hamburger-btn {
-          width: 36px;
-          height: 36px;
-          border-radius: 10px;
-          background: var(--bg-elevated);
-          border: 1px solid var(--border-default);
-          color: var(--text-primary);
+        .dev-hdr-keycap-btn {
+          width: 34px;
+          height: 34px;
+          border-radius: 8px;
+          background: rgba(255, 255, 255, 0.04);
+          border: 1px solid rgba(255, 255, 255, 0.09);
+          color: #94a3b8;
           display: flex;
           align-items: center;
           justify-content: center;
           cursor: pointer;
-          transition: all var(--transition-fast);
+          transition: all 0.15s ease;
           flex-shrink: 0;
         }
 
-        .mh-hamburger-btn:hover {
-          background: var(--bg-overlay);
-          border-color: var(--border-brand);
-          color: var(--brand-primary);
+        :global([data-theme="light"]) .dev-hdr-keycap-btn {
+          background: #f1f5f9;
+          border-color: #cbd5e1;
+          color: #475569;
         }
 
-        /* Hide hamburger on laptop/desktop since sidebar is fixed */
+        .dev-hdr-keycap-btn:hover {
+          background: rgba(99, 102, 241, 0.15);
+          border-color: rgba(99, 102, 241, 0.4);
+          color: #818cf8;
+        }
+
         @media (min-width: 1025px) {
-          .mh-hamburger-btn {
+          .dev-hdr-keycap-btn:not(.theme-toggle-btn) {
             display: none;
           }
         }
 
-        .mh-logo-link {
+        .dev-hdr-logo-link {
           display: flex;
           align-items: center;
           flex-shrink: 0;
-          min-height: 44px;
         }
 
-        .mh-logo {
-          height: 44px;
+        .dev-hdr-logo {
+          height: 36px;
           width: auto;
           object-fit: contain;
         }
 
-        .mh-title-wrap {
-          min-width: 0;
-        }
-
-        .mh-page-title {
-          font-size: 16px;
-          font-weight: 700;
-          color: var(--text-primary);
+        /* Breadcrumb (Konsep 1) */
+        .dev-hdr-breadcrumb {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          font-size: 13px;
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
         }
 
-        .mh-right {
+        .dev-hdr-org {
+          color: #64748b;
+          font-weight: 600;
+        }
+
+        :global([data-theme="light"]) .dev-hdr-org {
+          color: #94a3b8;
+        }
+
+        .dev-hdr-slash {
+          color: #475569;
+          font-weight: 400;
+        }
+
+        .dev-hdr-page {
+          color: #f1f5f9;
+          font-weight: 800;
+          letter-spacing: -0.01em;
+        }
+
+        :global([data-theme="light"]) .dev-hdr-page {
+          color: #0f172a;
+        }
+
+        .dev-hdr-live-pill {
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          background: rgba(16, 185, 129, 0.1);
+          border: 1px solid rgba(16, 185, 129, 0.25);
+          padding: 1px 6px;
+          border-radius: 4px;
+          margin-left: 2px;
+        }
+
+        .dev-pulse-dot {
+          width: 5px;
+          height: 5px;
+          border-radius: 50%;
+          background: #10b981;
+          box-shadow: 0 0 6px #10b981;
+          animation: dev-pulse 1.8s infinite;
+        }
+
+        @keyframes dev-pulse {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.4; transform: scale(0.8); }
+        }
+
+        .dev-live-text {
+          font-size: 9.5px;
+          font-weight: 800;
+          color: #34d399;
+          letter-spacing: 0.05em;
+          text-transform: uppercase;
+        }
+
+        /* ─── RIGHT ─── */
+        .dev-hdr-right {
           display: flex;
           align-items: center;
           gap: 8px;
           flex-shrink: 0;
         }
 
-        :global(.theme-toggle-btn) {
-          min-height: unset !important;
+        /* Status Telemetry (Konsep 2) */
+        .dev-hdr-telemetry {
+          display: flex;
+          align-items: center;
+          gap: 5px;
+          padding: 4px 8px;
+          border-radius: 6px;
+          background: rgba(6, 182, 212, 0.08);
+          border: 1px solid rgba(6, 182, 212, 0.22);
+          font-size: 10.5px;
+          font-weight: 700;
+          color: #22d3ee;
         }
 
-        .theme-icon {
-          transition: transform 0.3s ease, opacity 0.2s ease;
+        :global([data-theme="light"]) .dev-hdr-telemetry {
+          background: #f0fdfa;
+          border-color: #99f6e4;
+          color: #0d9488;
         }
+
+        .dev-tele-dot {
+          font-size: 7px;
+          color: #10b981;
+          animation: dev-pulse 2s infinite;
+        }
+
+        @media (max-width: 480px) {
+          .dev-hdr-telemetry {
+            display: none;
+          }
+          .dev-hdr-org {
+            display: none;
+          }
+          .dev-hdr-slash {
+            display: none;
+          }
+        }
+
         .theme-icon-sun {
           color: #f59e0b;
         }
@@ -242,129 +378,198 @@ export function MobileHeader() {
           color: #818cf8;
         }
 
-        .mh-profile {
+        /* Squircle Avatar & Role Pill */
+        .dev-hdr-profile {
           position: relative;
         }
 
-        .mh-avatar-btn {
-          width: 36px;
-          height: 36px;
-          border-radius: 50%;
-          background: var(--gradient-brand);
-          color: white;
-          font-size: 14px;
-          font-weight: 700;
-          border: 2px solid var(--border-brand);
-          cursor: pointer;
+        .dev-squircle-avatar-btn {
           display: flex;
           align-items: center;
-          justify-content: center;
-          transition: transform var(--transition-fast), box-shadow var(--transition-fast);
-          box-shadow: 0 0 12px rgba(99, 102, 241, 0.3);
-        }
-
-        .mh-avatar-btn:hover {
-          transform: scale(1.05);
-          box-shadow: 0 0 16px rgba(99, 102, 241, 0.45);
-        }
-
-        .mh-dropdown-backdrop {
-          position: fixed;
-          inset: 0;
-          z-index: 150;
-        }
-
-        .mh-dropdown {
-          position: absolute;
-          top: calc(100% + 8px);
-          right: 0;
-          width: 220px;
-          background: var(--bg-overlay);
-          backdrop-filter: blur(20px);
-          -webkit-backdrop-filter: blur(20px);
-          border: 1px solid var(--border-default);
-          border-radius: var(--radius-lg);
-          box-shadow: var(--shadow-lg);
-          padding: 8px;
-          z-index: 151;
-        }
-
-        .mh-dropdown-header {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          padding: 8px;
-        }
-
-        .mh-dropdown-avatar {
-          width: 34px;
+          gap: 5px;
+          padding: 3px 7px 3px 4px;
           height: 34px;
-          border-radius: 50%;
-          background: var(--gradient-brand);
-          color: white;
-          font-size: 13px;
-          font-weight: 700;
+          border-radius: 9px;
+          background: #0d1322;
+          border: 1px solid rgba(99, 102, 241, 0.3);
+          color: #f1f5f9;
+          cursor: pointer;
+          transition: all 0.15s ease;
+          box-shadow: 0 0 10px rgba(99, 102, 241, 0.15);
+        }
+
+        :global([data-theme="light"]) .dev-squircle-avatar-btn {
+          background: #f8fafc;
+          border-color: #c7d2fe;
+          box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .dev-squircle-avatar-btn:hover {
+          border-color: #818cf8;
+          background: rgba(99, 102, 241, 0.15);
+          box-shadow: 0 0 14px rgba(99, 102, 241, 0.35);
+          transform: translateY(-1px);
+        }
+
+        .dev-avatar-letter {
+          width: 24px;
+          height: 24px;
+          border-radius: 6px;
+          background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+          color: #ffffff;
+          font-size: 12px;
+          font-weight: 900;
           display: flex;
           align-items: center;
           justify-content: center;
           flex-shrink: 0;
         }
 
-        .mh-dropdown-name {
-          font-size: 13px;
-          font-weight: 600;
-          color: var(--text-primary);
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          max-width: 140px;
+        .dev-avatar-role {
+          font-size: 10px;
+          font-weight: 800;
+          color: #818cf8;
+          letter-spacing: 0.05em;
         }
 
-        .mh-dropdown-email {
-          font-size: 11px;
-          color: var(--text-muted);
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          max-width: 140px;
+        :global([data-theme="light"]) .dev-avatar-role {
+          color: #4f46e5;
         }
 
-        .mh-dropdown-divider {
-          height: 1px;
-          background: var(--border-default);
-          margin: 6px 0;
+        /* ─── DEVELOPER DROPDOWN ─── */
+        .dev-dropdown-backdrop {
+          position: fixed;
+          inset: 0;
+          z-index: 150;
         }
 
-        .mh-dropdown-item {
+        .dev-dropdown {
+          position: absolute;
+          top: calc(100% + 8px);
+          right: 0;
+          width: 240px;
+          background: #090d16;
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 12px;
+          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8), 0 0 20px rgba(99, 102, 241, 0.1);
+          padding: 8px;
+          z-index: 151;
+          backdrop-filter: blur(20px);
+        }
+
+        :global([data-theme="light"]) .dev-dropdown {
+          background: #ffffff;
+          border-color: #e2e8f0;
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+        }
+
+        .dev-dropdown-header {
           display: flex;
           align-items: center;
           gap: 10px;
-          width: 100%;
-          padding: 9px 12px;
+          padding: 8px;
+        }
+
+        .dev-dropdown-avatar-box {
+          width: 32px;
+          height: 32px;
+          border-radius: 8px;
+          background: rgba(99, 102, 241, 0.2);
+          border: 1px solid rgba(99, 102, 241, 0.4);
+          color: #818cf8;
           font-size: 13px;
-          font-weight: 500;
-          color: var(--text-secondary);
+          font-weight: 900;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+        }
+
+        .dev-dropdown-user-meta {
+          min-width: 0;
+          flex: 1;
+        }
+
+        .dev-dropdown-name {
+          font-size: 12px;
+          font-weight: 800;
+          color: #ffffff;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          margin: 0;
+        }
+
+        :global([data-theme="light"]) .dev-dropdown-name {
+          color: #0f172a;
+        }
+
+        .dev-dropdown-email {
+          font-size: 10px;
+          color: #94a3b8;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          margin: 1px 0 0 0;
+        }
+
+        .dev-dropdown-role-tag {
+          font-size: 9px;
+          color: #34d399;
+          margin-top: 3px;
+          letter-spacing: 0.04em;
+        }
+
+        .dev-dropdown-divider {
+          height: 1px;
+          background: rgba(255, 255, 255, 0.08);
+          margin: 6px 0;
+        }
+
+        :global([data-theme="light"]) .dev-dropdown-divider {
+          background: #e2e8f0;
+        }
+
+        .dev-dropdown-item {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          width: 100%;
+          padding: 8px 10px;
+          font-size: 11.5px;
+          font-weight: 700;
+          color: #cbd5e1;
           background: transparent;
           border: none;
-          border-radius: var(--radius-md);
+          border-radius: 8px;
           cursor: pointer;
           text-decoration: none;
-          transition: background-color var(--transition-fast), color var(--transition-fast);
+          transition: all 0.12s ease;
           text-align: left;
+          box-sizing: border-box;
         }
 
-        .mh-dropdown-item:hover {
-          background: var(--bg-elevated);
-          color: var(--text-primary);
+        :global([data-theme="light"]) .dev-dropdown-item {
+          color: #475569;
         }
 
-        .mh-logout-btn {
-          color: var(--error);
+        .dev-dropdown-item:hover {
+          background: rgba(255, 255, 255, 0.06);
+          color: #ffffff;
         }
 
-        .mh-logout-btn:hover {
-          background: rgba(239, 68, 68, 0.1);
-          color: var(--error);
+        :global([data-theme="light"]) .dev-dropdown-item:hover {
+          background: #f1f5f9;
+          color: #0f172a;
+        }
+
+        .dev-logout-btn {
+          color: #f87171;
+        }
+
+        .dev-logout-btn:hover {
+          background: rgba(239, 68, 68, 0.12);
+          color: #ef4444;
         }
       `}</style>
     </header>

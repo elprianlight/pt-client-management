@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import {
   X,
   Send,
@@ -47,7 +48,12 @@ export function WhatsAppModal({
   clientData,
   defaultTemplate = 'schedule',
 }: WhatsAppModalProps) {
+  const [mounted, setMounted] = useState(false)
   const [selectedTemplate, setSelectedTemplate] = useState<'schedule' | 'renewal' | 'inactive' | 'birthday'>(defaultTemplate)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const templateInputData: WATemplateData = {
     clientName: clientData.fullName,
@@ -70,7 +76,7 @@ export function WhatsAppModal({
   const [message, setMessage] = useState<string>(getMessageText(defaultTemplate))
   const [isCopied, setIsCopied] = useState(false)
 
-  if (!isOpen) return null
+  if (!mounted || !isOpen) return null
 
   const handleSelectTemplate = (type: 'schedule' | 'renewal' | 'inactive' | 'birthday') => {
     setSelectedTemplate(type)
@@ -96,7 +102,7 @@ export function WhatsAppModal({
     onClose()
   }
 
-  return (
+  return createPortal(
     <div className="wa-modal-backdrop animate-fade-in" onClick={onClose}>
       <div className="wa-modal-card animate-slide-up" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
@@ -404,6 +410,7 @@ export function WhatsAppModal({
         title="Nomor HP Tidak Valid"
         message="Nomor HP client belum diisi atau tidak valid. Silakan lengkapi nomor telepon pada data profil client."
       />
-    </div>
+    </div>,
+    document.body
   )
 }
