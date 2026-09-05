@@ -91,14 +91,8 @@ export function MobileHeader() {
         </div>
       </div>
 
-      {/* ─── RIGHT: Status Telemetry + Theme Toggle + Squircle Avatar ─── */}
+      {/* ─── RIGHT: Theme Toggle + Squircle Avatar ─── */}
       <div className="dev-hdr-right">
-        {/* Status Telemetry (Konsep 2) */}
-        <div className="dev-hdr-telemetry font-mono" title="System Operational">
-          <span className="dev-tele-dot">●</span>
-          <span className="dev-tele-label">SYS: 200 OK</span>
-        </div>
-
         {/* Theme Toggle Keycap */}
         <button
           className="dev-hdr-keycap-btn theme-toggle-btn"
@@ -333,36 +327,7 @@ export function MobileHeader() {
           flex-shrink: 0;
         }
 
-        /* Status Telemetry (Konsep 2) */
-        .dev-hdr-telemetry {
-          display: flex;
-          align-items: center;
-          gap: 5px;
-          padding: 4px 8px;
-          border-radius: 6px;
-          background: rgba(6, 182, 212, 0.08);
-          border: 1px solid rgba(6, 182, 212, 0.22);
-          font-size: 10.5px;
-          font-weight: 700;
-          color: #22d3ee;
-        }
-
-        :global([data-theme="light"]) .dev-hdr-telemetry {
-          background: #f0fdfa;
-          border-color: #99f6e4;
-          color: #0d9488;
-        }
-
-        .dev-tele-dot {
-          font-size: 7px;
-          color: #10b981;
-          animation: dev-pulse 2s infinite;
-        }
-
         @media (max-width: 480px) {
-          .dev-hdr-telemetry {
-            display: none;
-          }
           .dev-hdr-org {
             display: none;
           }

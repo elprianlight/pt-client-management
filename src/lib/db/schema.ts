@@ -230,6 +230,7 @@ export const ptPackages = pgTable('pt_packages', {
   totalPrice: decimal('total_price', { precision: 12, scale: 2 }).notNull(),
   paymentMethodId: uuid('payment_method_id').references(() => paymentMethods.id),
   paymentStatus: paymentStatusEnum('payment_status').default('pending').notNull(),
+  billingType: varchar('billing_type', { length: 20 }).default('prepaid').notNull(),
   startDate: date('start_date').notNull(),
   expiresAt: date('expires_at').notNull(),
   isActive: boolean('is_active').default(true).notNull(),

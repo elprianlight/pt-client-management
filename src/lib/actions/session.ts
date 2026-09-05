@@ -44,7 +44,12 @@ export async function scheduleSession(input: z.infer<typeof scheduleSessionSchem
     const [selectedPackage] = await db.select().from(ptPackages).where(eq(ptPackages.id, packageId))
     if (!selectedPackage) return { success: false, error: 'Paket tidak ditemukan' }
     
-    if (selectedPackage.usedSessions >= selectedPackage.totalSessions) {
+    const isPostpaid =
+      selectedPackage.billingType === 'postpaid' ||
+      (selectedPackage.packageName && selectedPackage.packageName.toLowerCase().includes('pascabayar')) ||
+      (selectedPackage.packageName && selectedPackage.packageName.toLowerCase().includes('postpaid'))
+
+    if (!isPostpaid && selectedPackage.usedSessions >= selectedPackage.totalSessions) {
       return { success: false, error: 'Kuota sesi paket ini sudah habis' }
     }
 
@@ -72,6 +77,7 @@ export async function scheduleSession(input: z.infer<typeof scheduleSessionSchem
       }
     })
 
+    revalidatePath('/jadwal')
     revalidatePath('/session')
     revalidatePath('/packages')
     return { success: true }
@@ -130,6 +136,7 @@ export async function updateSessionStatus(sessionId: string, newStatus: 'schedul
       newValues: { status: newStatus },
     })
 
+    revalidatePath('/jadwal')
     revalidatePath('/session')
     revalidatePath('/packages') // Update package list as well
     return { success: true }
@@ -260,6 +267,7 @@ export async function deleteSession(sessionId: string) {
       newValues: null
     })
 
+    revalidatePath('/jadwal')
     revalidatePath('/session')
     revalidatePath('/packages')
     return { success: true }
@@ -332,7 +340,9 @@ export async function updateSessionData(sessionId: string, input: z.infer<typeof
       .set(updateFields)
       .where(eq(workoutSessions.id, sessionId))
 
+    revalidatePath('/jadwal')
     revalidatePath('/session')
+    revalidatePath('/packages')
     return { success: true }
   } catch (err: any) {
     console.error('Update session data error:', err)

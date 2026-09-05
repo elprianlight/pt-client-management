@@ -66,9 +66,44 @@ Semoga panjang umur, sehat selalu, dan makin konsisten mencapai fitness goal kam
 Khusus hari ini, ada promo & bonus spesial untuk perpanjangan paket PT kamu. Yuk hubungi trainer kamu! 🎁💪`
 }
 
+export interface WABillingData {
+  clientName: string
+  monthLabel: string
+  totalSessions: number
+  pricePerSession: number
+  totalAmount: number
+  sessionsList: string[]
+  bankInfo?: string
+}
+
+export function getMonthlyInvoiceMessage(data: WABillingData): string {
+  const sessionsDetail = data.sessionsList.length > 0
+    ? data.sessionsList.map((s, idx) => `${idx + 1}. ${s}`).join('\n')
+    : '- Belum ada sesi tercatat -'
+
+  const bankText = data.bankInfo || 'BCA: 1234567890 a/n Elprian'
+
+  return `Halo Kak ${data.clientName}! 💪
+
+Berikut rekap dan penagihan sesi latihan Personal Training untuk periode *${data.monthLabel}*:
+
+📋 *Total Sesi Selesai:* ${data.totalSessions} Sesi
+💵 *Tarif per Sesi:* Rp ${data.pricePerSession.toLocaleString('id-ID')}
+💰 *Total Tagihan:* *Rp ${data.totalAmount.toLocaleString('id-ID')}*
+
+📅 *Rincian Tanggal Sesi Latihan:*
+${sessionsDetail}
+
+Pembayaran dapat ditransfer ke rekening:
+🏦 *${bankText}*
+
+Mohon kirimkan bukti transfer setelah pembayaran dilakukan ya. Terima kasih atas dedikasi dan semangat latihannya bulan ini! 🔥🏋️‍♂️`
+}
+
 export function buildWhatsAppUrl(phone: string | null | undefined, message: string): string | null {
   const formattedPhone = formatPhoneForWhatsApp(phone)
   if (!formattedPhone) return null
   const encodedText = encodeURIComponent(message)
   return `https://wa.me/${formattedPhone}?text=${encodedText}`
 }
+

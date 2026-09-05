@@ -2,10 +2,21 @@
 
 import { db } from '@/lib/db'
 import { ptPackages, ptTransactions, clients, personalTrainers, users, workoutSessions } from '@/lib/db/schema'
-import { eq, desc } from 'drizzle-orm'
+import { eq, desc, sql } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
+
+let isBillingTypeColumnEnsured = false
+async function ensureBillingTypeColumn() {
+  if (isBillingTypeColumnEnsured) return
+  try {
+    await db.execute(sql`ALTER TABLE pt_packages ADD COLUMN IF NOT EXISTS billing_type VARCHAR(20) DEFAULT 'prepaid';`)
+    isBillingTypeColumnEnsured = true
+  } catch (err) {
+    console.error('ensureBillingTypeColumn error:', err)
+  }
+}
 
 // Input validation schema for selling a package
 const createPackageSchema = z.object({
@@ -19,6 +30,7 @@ const createPackageSchema = z.object({
 
 export async function sellPackage(input: z.infer<typeof createPackageSchema>) {
   try {
+    await ensureBillingTypeColumn()
     const supabase = await createClient()
     const { data: { user: authUser } } = await supabase.auth.getUser()
     if (!authUser) return { success: false, error: 'Unauthorized' }
@@ -71,6 +83,7 @@ export async function sellPackage(input: z.infer<typeof createPackageSchema>) {
         pricePerSession: String(pricePerSession),
         totalPrice: String(totalPrice),
         paymentStatus: 'paid', // Default langsung paid untuk MVP
+        billingType: 'prepaid',
         startDate: startDate.toISOString().split('T')[0],
         expiresAt: expiresAt.toISOString().split('T')[0],
         notes: notes || null,
@@ -98,8 +111,71 @@ export async function sellPackage(input: z.infer<typeof createPackageSchema>) {
   }
 }
 
+export async function createPostpaidPackage(clientId: string, pricePerSession: number = 350000) {
+  try {
+    await ensureBillingTypeColumn()
+    const supabase = await createClient()
+    const { data: { user: authUser } } = await supabase.auth.getUser()
+    if (!authUser) return { success: false, error: 'Unauthorized' }
+
+    const [currentUser] = await db.select().from(users).where(eq(users.id, authUser.id))
+    if (!currentUser || currentUser.role === 'client') {
+      return { success: false, error: 'Unauthorized' }
+    }
+
+    const [clientData] = await db.select().from(clients).where(eq(clients.id, clientId))
+    if (!clientData) return { success: false, error: 'Client tidak ditemukan' }
+
+    let trainerId = clientData.trainerId
+    if (!trainerId) {
+      if (currentUser.role === 'personal_trainer') {
+        const [ptData] = await db.select().from(personalTrainers).where(eq(personalTrainers.userId, currentUser.id))
+        if (ptData) trainerId = ptData.id
+      }
+    }
+
+    if (!trainerId) return { success: false, error: 'Gagal menentukan Personal Trainer' }
+
+    const now = new Date()
+    const startDate = now.toISOString().split('T')[0]
+    const expiresAt = new Date(now)
+    expiresAt.setFullYear(expiresAt.getFullYear() + 2) // 2 years rolling
+
+    const [clientUser] = await db.select().from(users).where(eq(users.id, clientData.userId))
+    const clientName = clientUser?.fullName || 'Client'
+
+    const [newPackage] = await db.insert(ptPackages).values({
+      trainerId,
+      clientId,
+      packageName: `Pascabayar Bulanan - ${clientName}`,
+      totalSessions: 999, // Dynamic counter for postpaid
+      usedSessions: 0,
+      pricePerSession: String(pricePerSession),
+      totalPrice: '0',
+      paymentStatus: 'pending',
+      billingType: 'postpaid',
+      startDate,
+      expiresAt: expiresAt.toISOString().split('T')[0],
+      notes: 'Sistem pembayaran pascabayar: latihan dulu, penagihan dihitung setiap akhir/awal bulan.',
+      createdAt: now,
+    }).returning({ id: ptPackages.id })
+
+    revalidatePath('/packages')
+    revalidatePath('/clients')
+    revalidatePath(`/clients/${clientId}`)
+    revalidatePath('/jadwal')
+    revalidatePath('/session')
+
+    return { success: true, packageId: newPackage.id }
+  } catch (err: any) {
+    console.error('Create postpaid package error:', err)
+    return { success: false, error: err.message || 'Gagal membuat paket pascabayar' }
+  }
+}
+
 export async function listPackages() {
   try {
+    await ensureBillingTypeColumn()
     const supabase = await createClient()
     const { data: { user: authUser } } = await supabase.auth.getUser()
     if (!authUser) return []
@@ -114,9 +190,11 @@ export async function listPackages() {
       usedSessions: ptPackages.usedSessions,
       totalPrice: ptPackages.totalPrice,
       paymentStatus: ptPackages.paymentStatus,
+      billingType: ptPackages.billingType,
       startDate: ptPackages.startDate,
       expiresAt: ptPackages.expiresAt,
       isActive: ptPackages.isActive,
+      clientId: ptPackages.clientId,
       clientName: users.fullName,
     })
     .from(ptPackages)

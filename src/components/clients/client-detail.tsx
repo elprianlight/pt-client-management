@@ -27,6 +27,7 @@ import { deleteSession } from '@/lib/actions/session'
 import { toggleClientStatus, deleteClient } from '@/lib/actions/client'
 import { CustomModal, ModalType } from '@/components/ui/custom-modal'
 import { getCleanNotes } from '@/lib/utils'
+import { MonthlyBillingCard } from './monthly-billing-card'
 
 type SubTab = 'overview' | 'packages' | 'sessions' | 'workout' | 'nutrition' | 'progress' | 'reports'
 
@@ -90,28 +91,44 @@ export function ClientDetail({
     badge?: number
   }
 
-  // Filter active packages (usedSessions < totalSessions)
+  // Helper: check if package is postpaid
+  const isPostpaid = (p: any) =>
+    p?.billingType === 'postpaid' ||
+    p?.packageName?.toLowerCase().includes('pascabayar') ||
+    p?.packageName?.toLowerCase().includes('postpaid') ||
+    p?.name?.toLowerCase().includes('pascabayar') ||
+    p?.name?.toLowerCase().includes('postpaid')
+
+  const hasPostpaidPackage = useMemo(() => {
+    return packages.some(isPostpaid)
+  }, [packages])
+
+  // Filter active packages (usedSessions < totalSessions OR postpaid)
   const activePackagesList = useMemo(() => {
-    return packages.filter((p: any) => (p.usedSessions ?? 0) < (p.totalSessions ?? 0))
+    return packages.filter((p: any) => isPostpaid(p) || (p.usedSessions ?? 0) < (p.totalSessions ?? 0))
   }, [packages])
 
   const expiredPackagesList = useMemo(() => {
-    return packages.filter((p: any) => (p.usedSessions ?? 0) >= (p.totalSessions ?? 0))
+    return packages.filter((p: any) => !isPostpaid(p) && (p.usedSessions ?? 0) >= (p.totalSessions ?? 0))
   }, [packages])
 
   const totalActiveSessions = useMemo(() => {
-    return activePackagesList.reduce((acc: number, p: any) => acc + (p.totalSessions ?? 0), 0)
+    return activePackagesList
+      .filter((p: any) => !isPostpaid(p))
+      .reduce((acc: number, p: any) => acc + (p.totalSessions ?? 0), 0)
   }, [activePackagesList])
 
   const usedActiveSessions = useMemo(() => {
-    return activePackagesList.reduce((acc: number, p: any) => acc + (p.usedSessions ?? 0), 0)
+    return activePackagesList
+      .filter((p: any) => !isPostpaid(p))
+      .reduce((acc: number, p: any) => acc + (p.usedSessions ?? 0), 0)
   }, [activePackagesList])
 
   const remainingActiveSessions = Math.max(0, totalActiveSessions - usedActiveSessions)
 
   // Initialize filter with the first ACTIVE package ID if available, otherwise 'all'
   const [selectedPackageFilter, setSelectedPackageFilter] = useState<string>(
-    () => packages.find((p: any) => (p.usedSessions ?? 0) < (p.totalSessions ?? 0))?.id || 'all'
+    () => packages.find((p: any) => isPostpaid(p) || (p.usedSessions ?? 0) < (p.totalSessions ?? 0))?.id || 'all'
   )
 
   const TABS: TabItem[] = [
@@ -275,7 +292,9 @@ export function ClientDetail({
           <div className="quick-stat-divider" />
           <div className="quick-stat-item">
             <span className="qs-label">Sisa Sesi (Aktif)</span>
-            <span className="qs-value">{remainingActiveSessions} / {totalActiveSessions} Sesi</span>
+            <span className="qs-value">
+              {hasPostpaidPackage ? '⚡ Pascabayar' : `${remainingActiveSessions} / ${totalActiveSessions} Sesi`}
+            </span>
           </div>
           <div className="quick-stat-divider" />
           <div className="quick-stat-item">
@@ -434,9 +453,17 @@ export function ClientDetail({
         {/* 2. PACKAGES TAB */}
         {activeTab === 'packages' && (
           <div className="tab-pane">
-            <div className="pane-header">
+            {/* Monthly Billing In-Arrears Section */}
+            <MonthlyBillingCard
+              clientId={clientData.id}
+              clientName={clientData.user?.fullName || clientData.fullName || 'Client'}
+              clientPhone={clientData.user?.phone || clientData.phone}
+              onRefreshParent={() => router.refresh()}
+            />
+
+            <div className="pane-header" style={{ marginTop: 28 }}>
               <div>
-                <h3 className="pane-title">Paket Sesi Client</h3>
+                <h3 className="pane-title">Daftar Paket Sesi</h3>
                 <p className="pane-desc">Kelola paket sesi latihan yang dimiliki client ini</p>
               </div>
               <Link href={`/packages/new?clientId=${clientData.id}`} className="btn-primary">
@@ -456,32 +483,45 @@ export function ClientDetail({
             ) : (
               <div className="packages-grid">
                 {packages.map((pkg) => {
-                  const isExpired = (pkg.usedSessions ?? 0) >= (pkg.totalSessions ?? 0)
+                  const isPkgPostpaid = isPostpaid(pkg)
+                  const isExpired = !isPkgPostpaid && (pkg.usedSessions ?? 0) >= (pkg.totalSessions ?? 0)
                   return (
-                    <div key={pkg.id} className={`glass-card pkg-card ${isExpired ? 'pkg-card-expired' : ''}`}>
+                    <div
+                      key={pkg.id}
+                      className={`glass-card pkg-card ${isExpired ? 'pkg-card-expired' : ''} ${isPkgPostpaid ? 'pkg-card-postpaid' : ''}`}
+                    >
                       <div className="pkg-card-header">
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                           <h4 className="pkg-name">{pkg.packageName}</h4>
-                          <span className={`badge ${isExpired ? 'badge-error' : 'badge-success'}`} style={{ width: 'fit-content', fontSize: 11 }}>
-                            {isExpired ? 'Paket Habis (Tidak Aktif)' : 'Paket Aktif'}
+                          <span
+                            className={`badge ${isPkgPostpaid ? 'badge-warning' : isExpired ? 'badge-error' : 'badge-success'}`}
+                            style={{ width: 'fit-content', fontSize: 11 }}
+                          >
+                            {isPkgPostpaid ? '⚡ Pascabayar (Aktif)' : isExpired ? 'Paket Habis (Tidak Aktif)' : 'Paket Aktif'}
                           </span>
                         </div>
                         <span className="badge badge-brand">
-                          {pkg.usedSessions} / {pkg.totalSessions} Sesi
+                          {isPkgPostpaid ? `${pkg.usedSessions ?? 0} Sesi Selesai` : `${pkg.usedSessions} / ${pkg.totalSessions} Sesi`}
                         </span>
                       </div>
                       <div className="pkg-progress-bar">
                         <div
                           className="pkg-progress-fill"
                           style={{
-                            width: `${Math.min(100, (pkg.usedSessions / pkg.totalSessions) * 100)}%`,
-                            background: isExpired ? 'var(--error)' : 'var(--gradient-brand)',
+                            width: isPkgPostpaid ? '100%' : `${Math.min(100, (pkg.usedSessions / pkg.totalSessions) * 100)}%`,
+                            background: isPkgPostpaid ? 'linear-gradient(135deg, #f59e0b, #eab308)' : isExpired ? 'var(--error)' : 'var(--gradient-brand)',
                           }}
                         />
                       </div>
                       <div className="pkg-meta-row">
-                        <span>Status Sesi:</span>
-                        <strong>{isExpired ? 'Habis (100% Terpakai)' : `Sisa ${pkg.totalSessions - pkg.usedSessions} Sesi`}</strong>
+                        <span>{isPkgPostpaid ? 'Sistem Billing:' : 'Status Sesi:'}</span>
+                        <strong>
+                          {isPkgPostpaid
+                            ? 'Pay-as-you-train (Dihitung Bulanan)'
+                            : isExpired
+                            ? 'Habis (100% Terpakai)'
+                            : `Sisa ${pkg.totalSessions - pkg.usedSessions} Sesi`}
+                        </strong>
                       </div>
                     </div>
                   )
@@ -494,6 +534,18 @@ export function ClientDetail({
         {/* 3. SESSIONS TAB (REDESIGNED MATCHING SCREENSHOT) */}
         {activeTab === 'sessions' && (
           <div className="tab-pane">
+            {/* Show Monthly Billing if client is on postpaid */}
+            {hasPostpaidPackage && (
+              <div style={{ marginBottom: 24 }}>
+                <MonthlyBillingCard
+                  clientId={clientData.id}
+                  clientName={clientData.user?.fullName || clientData.fullName || 'Client'}
+                  clientPhone={clientData.user?.phone || clientData.phone}
+                  onRefreshParent={() => router.refresh()}
+                />
+              </div>
+            )}
+
             {/* Filter Sesi & Actions Bar */}
             <div className="sess-filter-bar">
               <div className="sess-filter-left">
@@ -505,7 +557,7 @@ export function ClientDetail({
                 >
                   {activePackagesList.map((p: any) => (
                     <option key={p.id} value={p.id}>
-                      {p.packageName} (Aktif - {p.usedSessions}/{p.totalSessions})
+                      {p.packageName} ({isPostpaid(p) ? `⚡ Pascabayar - ${p.usedSessions ?? 0} Sesi` : `Aktif - ${p.usedSessions}/${p.totalSessions}`})
                     </option>
                   ))}
                   {expiredPackagesList.map((p: any) => (
@@ -1150,6 +1202,16 @@ export function ClientDetail({
           height: 100%;
           background: var(--gradient-brand);
           border-radius: 100px;
+        }
+        .pkg-card-postpaid {
+          border-color: rgba(245, 158, 11, 0.35);
+          background: linear-gradient(145deg, rgba(245, 158, 11, 0.04), rgba(234, 179, 8, 0.01));
+          box-shadow: 0 4px 20px -8px rgba(245, 158, 11, 0.15);
+        }
+        .badge-warning {
+          background: rgba(245, 158, 11, 0.15);
+          color: #f59e0b;
+          border: 1px solid rgba(245, 158, 11, 0.3);
         }
         .pkg-meta-row {
           display: flex;
