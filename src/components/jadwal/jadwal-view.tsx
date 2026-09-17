@@ -81,6 +81,7 @@ export function JadwalView({ initialOpenNew, defaultPackageId, defaultClientId }
 
   // Edit Session Modal State
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [openedEditDirectly, setOpenedEditDirectly] = useState(false)
   const [editSessionDate, setEditSessionDate] = useState('')
   const [editSessionTime, setEditSessionTime] = useState('')
   const [editSessionProgram, setEditSessionProgram] = useState('Total Body')
@@ -520,7 +521,11 @@ export function JadwalView({ initialOpenNew, defaultPackageId, defaultClientId }
 
     setIsSubmitting(true)
     try {
-      const scheduledAtStr = `${newSessionDate}T${newSessionTime}:00`
+      const localDateTime = new Date(`${newSessionDate}T${newSessionTime}:00`)
+      const scheduledAtStr = !isNaN(localDateTime.getTime())
+        ? localDateTime.toISOString()
+        : `${newSessionDate}T${newSessionTime}:00+07:00`
+
       const res = await scheduleSession({
         packageId: newSessionPkgId,
         scheduledAt: scheduledAtStr,
@@ -555,8 +560,10 @@ export function JadwalView({ initialOpenNew, defaultPackageId, defaultClientId }
   }
 
   // Open Edit Session Modal
-  const handleOpenEditModal = (session: any) => {
+  const handleOpenEditModal = (session: any, isDirect: boolean = false) => {
     if (!session) return
+    setOpenedEditDirectly(isDirect)
+    setSelectedDetailSession(session)
     const sDate = new Date(session.scheduledAt)
     setEditSessionDate(format(sDate, 'yyyy-MM-dd'))
     setEditSessionTime(format(sDate, 'HH:mm'))
@@ -568,6 +575,14 @@ export function JadwalView({ initialOpenNew, defaultPackageId, defaultClientId }
     setIsEditModalOpen(true)
   }
 
+  const handleCloseEditModal = () => {
+    setIsEditModalOpen(false)
+    if (openedEditDirectly) {
+      setSelectedDetailSession(null)
+      setOpenedEditDirectly(false)
+    }
+  }
+
   // Save Edited Session
   const handleSaveEditSession = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -575,7 +590,10 @@ export function JadwalView({ initialOpenNew, defaultPackageId, defaultClientId }
 
     setIsSubmittingEdit(true)
     try {
-      const scheduledAtStr = `${editSessionDate}T${editSessionTime}:00`
+      const localDateTime = new Date(`${editSessionDate}T${editSessionTime}:00`)
+      const scheduledAtStr = !isNaN(localDateTime.getTime())
+        ? localDateTime.toISOString()
+        : `${editSessionDate}T${editSessionTime}:00+07:00`
 
       // 1. Update core session data
       const resData = await updateSessionData(selectedDetailSession.id, {
@@ -603,20 +621,25 @@ export function JadwalView({ initialOpenNew, defaultPackageId, defaultClientId }
       // 3. Refresh list and update detail view
       await loadData()
 
-      setSelectedDetailSession((prev: any) =>
-        prev
-          ? {
-              ...prev,
-              scheduledAt: new Date(scheduledAtStr).toISOString(),
-              programType: editSessionProgram,
-              location: editSessionLocation,
-              rpe: Number(editSessionRpe),
-              sessionNotes: editSessionNotes,
-              ptNotes: editSessionNotes,
-              status: editSessionStatus,
-            }
-          : null
-      )
+      if (openedEditDirectly) {
+        setSelectedDetailSession(null)
+        setOpenedEditDirectly(false)
+      } else {
+        setSelectedDetailSession((prev: any) =>
+          prev
+            ? {
+                ...prev,
+                scheduledAt: scheduledAtStr,
+                programType: editSessionProgram,
+                location: editSessionLocation,
+                rpe: Number(editSessionRpe),
+                sessionNotes: editSessionNotes,
+                ptNotes: editSessionNotes,
+                status: editSessionStatus,
+              }
+            : null
+        )
+      }
 
       setIsEditModalOpen(false)
       showAlert('Sesi latihan berhasil diperbarui!', 'success', 'Perubahan Disimpan')
@@ -959,6 +982,18 @@ export function JadwalView({ initialOpenNew, defaultPackageId, defaultClientId }
 
                 {/* Inline Quick Action Buttons (Konsep 3) */}
                 <div className="jd-inline-actions" onClick={(e) => e.stopPropagation()}>
+                  {!isClient && (
+                    <button
+                      type="button"
+                      className="jd-act-btn jd-act-edit"
+                      onClick={() => handleOpenEditModal(s, true)}
+                      title="Edit Jadwal & Sesi"
+                    >
+                      <Edit3 size={12} strokeWidth={2.2} />
+                      <span className="jd-act-txt">Edit</span>
+                    </button>
+                  )}
+
                   {isScheduled && !isClient && (
                     <>
                       <button
@@ -1074,6 +1109,18 @@ export function JadwalView({ initialOpenNew, defaultPackageId, defaultClientId }
 
                         {/* Inline Quick Action Buttons (Konsep 3) */}
                         <div className="jd-inline-actions" onClick={(e) => e.stopPropagation()}>
+                          {!isClient && (
+                            <button
+                              type="button"
+                              className="jd-act-btn jd-act-edit"
+                              onClick={() => handleOpenEditModal(s, true)}
+                              title="Edit Jadwal & Sesi"
+                            >
+                              <Edit3 size={12} strokeWidth={2.2} />
+                              <span className="jd-act-txt">Edit</span>
+                            </button>
+                          )}
+
                           {isScheduled && !isClient && (
                             <>
                               <button
@@ -1143,14 +1190,27 @@ export function JadwalView({ initialOpenNew, defaultPackageId, defaultClientId }
                   </p>
                 </div>
               </div>
-              <button
-                type="button"
-                onClick={() => setSelectedDetailSession(null)}
-                className="mc-close-btn"
-                aria-label="Tutup"
-              >
-                <X size={18} />
-              </button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                {!isClient && (
+                  <button
+                    type="button"
+                    onClick={() => handleOpenEditModal(selectedDetailSession, false)}
+                    className="jd-modal-header-edit-btn"
+                    title="Edit Sesi Latihan"
+                  >
+                    <Edit3 size={13} strokeWidth={2.2} />
+                    <span>Edit</span>
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setSelectedDetailSession(null)}
+                  className="mc-close-btn"
+                  aria-label="Tutup"
+                >
+                  <X size={18} />
+                </button>
+              </div>
             </div>
 
             <div className="mc-modal-body" style={{ maxHeight: '76vh', overflowY: 'auto' }}>
@@ -1644,7 +1704,7 @@ export function JadwalView({ initialOpenNew, defaultPackageId, defaultClientId }
       {mounted && isEditModalOpen && selectedDetailSession && createPortal(
         <div
           className="modal-backdrop animate-fade-in"
-          onClick={() => setIsEditModalOpen(false)}
+          onClick={handleCloseEditModal}
           style={{ zIndex: 100005 }}
         >
           <div
@@ -1665,7 +1725,7 @@ export function JadwalView({ initialOpenNew, defaultPackageId, defaultClientId }
               </div>
               <button
                 type="button"
-                onClick={() => setIsEditModalOpen(false)}
+                onClick={handleCloseEditModal}
                 className="dev-close-btn"
                 aria-label="Tutup Dialog"
               >
@@ -1888,7 +1948,7 @@ export function JadwalView({ initialOpenNew, defaultPackageId, defaultClientId }
                 <button
                   type="button"
                   className="dev-btn-cancel font-mono"
-                  onClick={() => setIsEditModalOpen(false)}
+                  onClick={handleCloseEditModal}
                   disabled={isSubmittingEdit}
                 >
                   [ ESC ] BATAL

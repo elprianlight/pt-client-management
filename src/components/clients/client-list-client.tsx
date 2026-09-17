@@ -12,7 +12,7 @@ import {
   AlertTriangle,
   CheckCircle2,
 } from 'lucide-react'
-import { format, subDays, startOfMonth, differenceInDays } from 'date-fns'
+import { format, subDays, differenceInDays } from 'date-fns'
 import { id as idLocale } from 'date-fns/locale'
 import type { listClients } from '@/lib/actions/client'
 import { WhatsAppModal } from '@/components/crm/whatsapp-modal'
@@ -414,25 +414,38 @@ export function ClientListClient({ initialData, totalCount }: ClientListClientPr
       )}
 
       {/* ─── 3. WHATSAPP QUICK ACTION MODAL ─── */}
-      {selectedWAClient && (
-        <WhatsAppModal
-          isOpen={Boolean(selectedWAClient)}
-          onClose={() => setSelectedWAClient(null)}
-          clientData={{
-            id: selectedWAClient.id,
-            fullName: selectedWAClient.user?.fullName ?? 'Client',
-            phone: selectedWAClient.user?.phone,
-            fitnessGoal: selectedWAClient.fitnessGoal,
-            remainingSessions:
-              (selectedWAClient.packageStats?.total ?? 0) - (selectedWAClient.packageStats?.used ?? 0),
-          }}
-          defaultTemplate={
-            ((selectedWAClient.packageStats?.total ?? 0) - (selectedWAClient.packageStats?.used ?? 0)) <= 2
-              ? 'renewal'
-              : 'schedule'
-          }
-        />
-      )}
+      {selectedWAClient && (() => {
+        const nextSess = selectedWAClient.nextSessionAt
+          ? new Date(selectedWAClient.nextSessionAt)
+          : null
+        const sessionDateStr = nextSess
+          ? format(nextSess, 'EEEE, d MMM', { locale: idLocale })
+          : undefined
+        const sessionTimeStr = nextSess
+          ? format(nextSess, 'HH:mm')
+          : undefined
+        const remaining =
+          (selectedWAClient.packageStats?.total ?? 0) -
+          (selectedWAClient.packageStats?.used ?? 0)
+
+        return (
+          <WhatsAppModal
+            isOpen={Boolean(selectedWAClient)}
+            onClose={() => setSelectedWAClient(null)}
+            clientData={{
+              id: selectedWAClient.id,
+              fullName: selectedWAClient.user?.fullName ?? 'Client',
+              phone: selectedWAClient.user?.phone,
+              fitnessGoal: selectedWAClient.fitnessGoal,
+              remainingSessions: remaining,
+              packageName: selectedWAClient.packageStats?.lastPackageName ?? undefined,
+              sessionDate: sessionDateStr,
+              sessionTime: sessionTimeStr,
+            }}
+            defaultTemplate={remaining <= 2 ? 'renewal' : 'confirmation'}
+          />
+        )
+      })()}
 
       {/* ─── 4. ADD CLIENT MODAL DIALOG ─── */}
       {isAddClientModalOpen && (

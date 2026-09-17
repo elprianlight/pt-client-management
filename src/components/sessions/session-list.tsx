@@ -343,9 +343,12 @@ export function SessionList() {
 
     setIsSubmittingNewSession(true)
     try {
-      // Build ISO date time string
+      // Build ISO date time string preserving local timezone
       const dateStr = format(currentDate, 'yyyy-MM-dd')
-      const scheduledAtStr = `${dateStr}T${newSessionTime}:00`
+      const localDateTime = new Date(`${dateStr}T${newSessionTime}:00`)
+      const scheduledAtStr = !isNaN(localDateTime.getTime())
+        ? localDateTime.toISOString()
+        : `${dateStr}T${newSessionTime}:00+07:00`
 
       const res = await scheduleSession({
         packageId: newSessionPkgId,

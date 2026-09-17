@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/server'
 import { db } from '@/lib/db'
 import { users, clients, personalTrainers, ptPackages, workoutSessions, sessionExercises, ptTransactions, measurements, nutritionLogs } from '@/lib/db/schema'
-import { eq, desc, count, and, inArray, max, sql } from 'drizzle-orm'
+import { eq, desc, count, and, inArray, max, min, gte, sql } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 
@@ -108,6 +108,7 @@ export async function listClients(search?: string) {
   const clientIds = searched.map(c => c.id)
   let packageMap: Record<string, { total: number, used: number, lastPackageName: string | null, lastBought: number }> = {}
   let lastSessionMap: Record<string, Date | null> = {}
+  let nextSessionMap: Record<string, Date | null> = {}
 
   if (clientIds.length > 0) {
     // Aggregate package stats + find most recent package name
@@ -144,12 +145,30 @@ export async function listClients(search?: string) {
     lastSessions.forEach(s => {
       lastSessionMap[s.clientId] = s.lastAt ? new Date(s.lastAt) : null
     })
+
+    // Fetch next upcoming scheduled session per client
+    const now = new Date()
+    const nextSessions = await db.select({
+      clientId: workoutSessions.clientId,
+      nextAt: min(workoutSessions.scheduledAt),
+    }).from(workoutSessions)
+      .where(and(
+        inArray(workoutSessions.clientId, clientIds),
+        gte(workoutSessions.scheduledAt, now),
+        sql`${workoutSessions.status} = 'scheduled'`
+      ))
+      .groupBy(workoutSessions.clientId)
+
+    nextSessions.forEach(s => {
+      nextSessionMap[s.clientId] = s.nextAt ? new Date(s.nextAt) : null
+    })
   }
 
   return searched.map(c => ({
     ...c,
     packageStats: packageMap[c.id] || { total: 0, used: 0, lastPackageName: null, lastBought: 0 },
     lastSessionAt: lastSessionMap[c.id] ?? null,
+    nextSessionAt: nextSessionMap[c.id] ?? null,
   }))
 }
 

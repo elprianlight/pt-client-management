@@ -20,6 +20,19 @@ const scheduleSessionSchema = z.object({
   location: z.string().optional(),
 })
 
+/**
+ * Safely parse date input ensuring that strings without timezone offsets
+ * are treated as Indonesia Western Time (WIB / UTC+07:00) rather than UTC.
+ */
+function parseScheduledAt(val: string | Date): Date {
+  if (val instanceof Date) return val
+  const trimmed = val.trim()
+  if (trimmed.endsWith('Z') || /[+-]\d{2}(:?\d{2})?$/.test(trimmed)) {
+    return new Date(trimmed)
+  }
+  return new Date(`${trimmed}+07:00`)
+}
+
 export async function scheduleSession(input: z.infer<typeof scheduleSessionSchema>) {
   try {
     const supabase = await createClient()
@@ -59,7 +72,7 @@ export async function scheduleSession(input: z.infer<typeof scheduleSessionSchem
         packageId,
         trainerId: selectedPackage.trainerId,
         clientId: selectedPackage.clientId,
-        scheduledAt: new Date(scheduledAt),
+        scheduledAt: parseScheduledAt(scheduledAt),
         completedAt: targetStatus === 'completed' ? new Date() : null,
         duration: 60, // hardcoded 60 minutes
         programType,
@@ -323,7 +336,7 @@ export async function updateSessionData(sessionId: string, input: z.infer<typeof
     }
 
     const updateFields: any = {
-      scheduledAt: new Date(scheduledAt),
+      scheduledAt: parseScheduledAt(scheduledAt),
       programType,
       rpe: rpe || null,
       ptNotes: userNotes || null,

@@ -17,6 +17,7 @@ import {
 import { CustomModal } from '@/components/ui/custom-modal'
 import { WhatsAppIcon } from '@/components/ui/whatsapp-icon'
 import {
+  getConfirmationMessage,
   getScheduleReminderMessage,
   getRenewalReminderMessage,
   getInactiveFollowUpMessage,
@@ -39,17 +40,17 @@ interface WhatsAppModalProps {
     sessionTime?: string
     daysInactive?: number
   }
-  defaultTemplate?: 'schedule' | 'renewal' | 'inactive' | 'birthday'
+  defaultTemplate?: 'confirmation' | 'schedule' | 'renewal' | 'inactive' | 'birthday'
 }
 
 export function WhatsAppModal({
   isOpen,
   onClose,
   clientData,
-  defaultTemplate = 'schedule',
+  defaultTemplate = 'confirmation',
 }: WhatsAppModalProps) {
   const [mounted, setMounted] = useState(false)
-  const [selectedTemplate, setSelectedTemplate] = useState<'schedule' | 'renewal' | 'inactive' | 'birthday'>(defaultTemplate)
+  const [selectedTemplate, setSelectedTemplate] = useState<'confirmation' | 'schedule' | 'renewal' | 'inactive' | 'birthday'>(defaultTemplate)
 
   useEffect(() => {
     setMounted(true)
@@ -64,8 +65,9 @@ export function WhatsAppModal({
     daysInactive: clientData.daysInactive || 7,
   }
 
-  const getMessageText = (type: 'schedule' | 'renewal' | 'inactive' | 'birthday') => {
+  const getMessageText = (type: 'confirmation' | 'schedule' | 'renewal' | 'inactive' | 'birthday') => {
     switch (type) {
+      case 'confirmation': return getConfirmationMessage(templateInputData)
       case 'schedule': return getScheduleReminderMessage(templateInputData)
       case 'renewal': return getRenewalReminderMessage(templateInputData)
       case 'inactive': return getInactiveFollowUpMessage(templateInputData)
@@ -73,12 +75,13 @@ export function WhatsAppModal({
     }
   }
 
-  const [message, setMessage] = useState<string>(getMessageText(defaultTemplate))
+  const [message, setMessage] = useState<string>(() => getMessageText(defaultTemplate))
   const [isCopied, setIsCopied] = useState(false)
+  const [showAlert, setShowAlert] = useState(false)
 
   if (!mounted || !isOpen) return null
 
-  const handleSelectTemplate = (type: 'schedule' | 'renewal' | 'inactive' | 'birthday') => {
+  const handleSelectTemplate = (type: 'confirmation' | 'schedule' | 'renewal' | 'inactive' | 'birthday') => {
     setSelectedTemplate(type)
     setMessage(getMessageText(type))
   }
@@ -90,8 +93,6 @@ export function WhatsAppModal({
   }
 
   const waUrl = buildWhatsAppUrl(clientData.phone, message)
-
-  const [showAlert, setShowAlert] = useState(false)
 
   const handleSendWA = () => {
     if (!waUrl) {
@@ -127,11 +128,20 @@ export function WhatsAppModal({
           <div className="wa-template-selector">
             <button
               type="button"
+              className={`wa-tpl-pill ${selectedTemplate === 'confirmation' ? 'active' : ''}`}
+              onClick={() => handleSelectTemplate('confirmation')}
+            >
+              <span>✅</span>
+              <span>Konfirmasi Besok</span>
+            </button>
+
+            <button
+              type="button"
               className={`wa-tpl-pill ${selectedTemplate === 'schedule' ? 'active' : ''}`}
               onClick={() => handleSelectTemplate('schedule')}
             >
               <Calendar size={14} />
-              <span>Jadwal Sesi</span>
+              <span>Pengingat Sesi</span>
             </button>
 
             <button

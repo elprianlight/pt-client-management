@@ -60,7 +60,7 @@ export default async function EditSessionPage({ params }: { params: Promise<{ id
     try {
       const d = new Date(sessionData.scheduledAt)
       if (!isNaN(d.getTime())) {
-        formattedScheduledAt = format(d, "yyyy-MM-dd'T'HH:mm")
+        formattedScheduledAt = d.toISOString()
       }
     } catch {
       formattedScheduledAt = ''

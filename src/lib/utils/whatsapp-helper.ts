@@ -30,6 +30,16 @@ export interface WATemplateData {
   daysInactive?: number
 }
 
+export function getConfirmationMessage(data: WATemplateData): string {
+  const timeInfo = data.sessionTime ? `jam *${data.sessionTime}*` : 'jam biasanya'
+  const dateInfo = data.sessionDate || 'Besok'
+  return `Halo ${data.clientName}! 👋
+
+Mau konfirmasi dulu nih — *${dateInfo}* masih latihan seperti biasa ${timeInfo} ya? 🏋️‍♂️
+
+Balas *YA* kalau jadi, atau kabarin kalau ada perubahan jadwal. Ditunggu kabarnya! 💪`
+}
+
 export function getScheduleReminderMessage(data: WATemplateData): string {
   const timeInfo = [data.sessionDate, data.sessionTime].filter(Boolean).join(' jam ')
   return `Halo ${data.clientName}! 👋
