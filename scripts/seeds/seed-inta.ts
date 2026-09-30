@@ -1,5 +1,5 @@
-import { db } from './src/lib/db'
-import { users, personalTrainers, clients, ptPackages, workoutSessions } from './src/lib/db/schema'
+import { db } from '@/lib/db'
+import { users, personalTrainers, clients, ptPackages, workoutSessions } from '@/lib/db/schema'
 import { eq, ilike } from 'drizzle-orm'
 
 async function main() {

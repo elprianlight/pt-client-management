@@ -99,7 +99,7 @@ export function JadwalView({ initialOpenNew, defaultPackageId, defaultClientId }
 
   // Add Session Form State
   const [newSessionPkgId, setNewSessionPkgId] = useState(defaultPackageId || '')
-  const [newSessionStatus, setNewSessionStatus] = useState<'scheduled' | 'completed'>('scheduled')
+  const newSessionStatus = 'completed'
   const [newSessionProgram, setNewSessionProgram] = useState('Total Body')
   const [newSessionDate, setNewSessionDate] = useState(format(new Date(), 'yyyy-MM-dd'))
   const [newSessionTime, setNewSessionTime] = useState('09:00')
@@ -111,12 +111,12 @@ export function JadwalView({ initialOpenNew, defaultPackageId, defaultClientId }
   // Presets for 1-tap quick selection
   const PROGRAM_PRESETS = [
     'Total Body',
-    'Chest & Tri',
-    'Back & Bi',
-    'Legs & Core',
     'Upper Body',
-    'Cardio & HIIT',
-    'Mobility',
+    'Lower Body',
+    'Circuit Training',
+    'Cardio Training',
+    'Hybrid Training',
+    'Muaythai',
   ]
   const TIME_PRESETS = ['05:30', '06:00', '07:00', '08:00', '08:30', '09:00', '09:30']
   const LOCATION_PRESETS = ['Essence', 'Hang Lekir', '1 Park', 'FTL Pasar Minggu', 'Studio Fit', 'Home Gym']
@@ -139,72 +139,7 @@ export function JadwalView({ initialOpenNew, defaultPackageId, defaultClientId }
     }
   }, [isFormModalOpen, selectedDetailSession, deleteConfirmId, selectedWASession, isEditModalOpen])
 
-  // Horizontal Day Wheel 7-day strip (3 days before, today, 3 days after)
-  const dayWheelDays = useMemo(() => {
-    const today = new Date()
-    return [-3, -2, -1, 0, 1, 2, 3].map((offset) => {
-      const d = addDays(today, offset)
-      const dateStr = format(d, 'yyyy-MM-dd')
-      const isToday = offset === 0
-      const isYesterday = offset === -1
-      const isTomorrow = offset === 1
-      const dayName = isToday
-        ? 'TODAY'
-        : isYesterday
-        ? 'KEMARIN'
-        : isTomorrow
-        ? 'BESOK'
-        : format(d, 'EEE', { locale: idLocale }).toUpperCase()
-      const dayNum = format(d, 'dd')
-      const monthName = format(d, 'MMM', { locale: idLocale }).toUpperCase()
-      return {
-        date: d,
-        dateStr,
-        dayName,
-        dayNum,
-        monthName,
-        offset,
-        isToday,
-        isPast: offset < 0,
-        isFuture: offset > 0,
-      }
-    })
-  }, [])
 
-  const setQuickDate = (type: 'today' | 'tomorrow' | 'dayAfter') => {
-    const today = new Date()
-    if (type === 'today') {
-      setNewSessionDate(format(today, 'yyyy-MM-dd'))
-    } else if (type === 'tomorrow') {
-      setNewSessionDate(format(addDays(today, 1), 'yyyy-MM-dd'))
-    } else {
-      setNewSessionDate(format(addDays(today, 2), 'yyyy-MM-dd'))
-    }
-  }
-
-  const isDateToday = useMemo(() => {
-    try {
-      return isSameDay(new Date(newSessionDate), new Date())
-    } catch {
-      return false
-    }
-  }, [newSessionDate])
-
-  const isDateTomorrow = useMemo(() => {
-    try {
-      return isSameDay(new Date(newSessionDate), addDays(new Date(), 1))
-    } catch {
-      return false
-    }
-  }, [newSessionDate])
-
-  const isDateDayAfter = useMemo(() => {
-    try {
-      return isSameDay(new Date(newSessionDate), addDays(new Date(), 2))
-    } catch {
-      return false
-    }
-  }, [newSessionDate])
 
   const getRpeDetails = (score: number) => {
     if (score <= 4) {
@@ -529,7 +464,7 @@ export function JadwalView({ initialOpenNew, defaultPackageId, defaultClientId }
       const res = await scheduleSession({
         packageId: newSessionPkgId,
         scheduledAt: scheduledAtStr,
-        status: newSessionStatus,
+        status: 'completed',
         programType: newSessionProgram,
         rpe: Number(newSessionRpe),
         location: newSessionLocation,
@@ -543,11 +478,9 @@ export function JadwalView({ initialOpenNew, defaultPackageId, defaultClientId }
         setNewSessionNotes('')
         setNewSessionLocation('')
         showAlert(
-          newSessionStatus === 'completed'
-            ? 'Sesi latihan berhasil di-Check-In dan kuota telah tercatat!'
-            : 'Sesi latihan baru berhasil dijadwalkan!',
+          'Sesi latihan berhasil di-Check-In dan kuota paket otomatis terpotong 1 sesi!',
           'success',
-          newSessionStatus === 'completed' ? 'Check-In Berhasil' : 'Jadwal Dibuat'
+          'Check-In Berhasil'
         )
       } else {
         showAlert(res.error || 'Gagal menyimpan sesi latihan', 'error')
@@ -918,8 +851,8 @@ export function JadwalView({ initialOpenNew, defaultPackageId, defaultClientId }
               }}
               className="jd-empty-schedule-btn"
             >
-              <CalendarCheck size={16} strokeWidth={2.5} />
-              <span>Jadwalkan / Check-In Sesi</span>
+              <Zap size={16} strokeWidth={2.5} />
+              <span>Check-In Sesi Latihan</span>
             </button>
           )}
         </div>
@@ -1345,15 +1278,13 @@ export function JadwalView({ initialOpenNew, defaultPackageId, defaultClientId }
             <div className="dev-modal-header">
               <div>
                 <div className="dev-mono-tag font-mono">
-                  {newSessionStatus === 'completed' ? '// QUICK_CHECKIN_DISPATCH' : '// SCHEDULE_NEW_SESSION'}
+                  // QUICK_CHECKIN_DISPATCH
                 </div>
                 <h3 className="dev-modal-title">
-                  {newSessionStatus === 'completed' ? 'Check-In Sesi Latihan' : 'Jadwalkan Sesi Baru'}
+                  Check-In Sesi Latihan
                 </h3>
                 <p className="dev-modal-subtitle">
-                  {newSessionStatus === 'completed'
-                    ? 'Catat sesi selesai & kurangi kuota paket 1 sesi otomatis'
-                    : 'Atur jadwal latihan mendatang untuk klien'}
+                  Catat sesi selesai &amp; kurangi kuota paket 1 sesi otomatis
                 </p>
               </div>
               <button
@@ -1363,26 +1294,6 @@ export function JadwalView({ initialOpenNew, defaultPackageId, defaultClientId }
                 aria-label="Tutup Dialog"
               >
                 <X size={17} />
-              </button>
-            </div>
-
-            {/* Mode Switcher: Underline Tabs (Konsep 1 Layout + Linear Vibe) */}
-            <div className="dev-underline-tabs">
-              <button
-                type="button"
-                className={`dev-tab-btn tab-sched ${newSessionStatus === 'scheduled' ? 'active-sched' : ''}`}
-                onClick={() => setNewSessionStatus('scheduled')}
-              >
-                <CalendarCheck size={14} />
-                <span>Jadwalkan Sesi</span>
-              </button>
-              <button
-                type="button"
-                className={`dev-tab-btn tab-checkin ${newSessionStatus === 'completed' ? 'active-checkin' : ''}`}
-                onClick={() => setNewSessionStatus('completed')}
-              >
-                <Zap size={14} />
-                <span>Check-In Sekarang</span>
               </button>
             </div>
 
@@ -1470,35 +1381,13 @@ export function JadwalView({ initialOpenNew, defaultPackageId, defaultClientId }
                 })()}
               </div>
 
-              {/* SECTION 2: Date & Time Selection (CONCEPT 8: HORIZONTAL DAY WHEEL + TIME PRESETS) */}
+              {/* SECTION 2: Tanggal & Waktu */}
               <div className="dev-field-group">
                 <div className="dev-field-label font-mono">
-                  <span className="dev-label-txt sec-label-time">02 // HORIZONTAL DAY WHEEL</span>
+                  <span className="dev-label-txt sec-label-time">02 // TANGGAL & WAKTU</span>
                   <span className="dev-val-indicator font-mono">
                     {format(new Date(newSessionDate), 'd MMM yyyy', { locale: idLocale })} @ {newSessionTime}
                   </span>
-                </div>
-
-                {/* Concept 8: Horizontal Day Wheel (Swipeable 7-Day Strip: -3 to +3) */}
-                <div className="dev-day-wheel-container">
-                  <div className="dev-day-wheel-strip">
-                    {dayWheelDays.map((item) => {
-                      const isSelected = newSessionDate === item.dateStr
-                      const statusClass = item.isToday ? 'is-today' : item.isPast ? 'is-past' : 'is-future'
-                      return (
-                        <button
-                          key={item.dateStr}
-                          type="button"
-                          className={`dev-day-wheel-card ${statusClass} ${isSelected ? 'active' : ''}`}
-                          onClick={() => setNewSessionDate(item.dateStr)}
-                        >
-                          <span className="dev-wheel-day">{item.dayName}</span>
-                          <span className="dev-wheel-num font-mono">{item.dayNum}</span>
-                          <span className="dev-wheel-mon">{item.monthName}</span>
-                        </button>
-                      )
-                    })}
-                  </div>
                 </div>
 
                 {/* Native Date & Time Custom Pickers */}
@@ -1547,24 +1436,19 @@ export function JadwalView({ initialOpenNew, defaultPackageId, defaultClientId }
                   <div className="dev-field-label font-mono">
                     <span className="dev-label-txt sec-label-prog">03 // PROGRAM</span>
                   </div>
-                  <input
-                    type="text"
-                    className="dev-clean-input"
-                    placeholder="Total Body, Chest..."
-                    value={newSessionProgram}
-                    onChange={(e) => setNewSessionProgram(e.target.value)}
-                  />
-                  <div className="dev-mini-chips">
-                    {PROGRAM_PRESETS.slice(0, 4).map((prog, idx) => (
-                      <button
-                        key={prog}
-                        type="button"
-                        className={`dev-mini-chip prog-chip-${idx} ${newSessionProgram === prog ? 'active' : ''}`}
-                        onClick={() => setNewSessionProgram(prog)}
-                      >
-                        {prog}
-                      </button>
-                    ))}
+                  <div className="dev-select-wrapper">
+                    <select
+                      className="dev-select-input"
+                      value={newSessionProgram}
+                      onChange={(e) => setNewSessionProgram(e.target.value)}
+                      required
+                    >
+                      {PROGRAM_PRESETS.map((prog) => (
+                        <option key={prog} value={prog}>
+                          {prog}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 </div>
 
@@ -1676,20 +1560,15 @@ export function JadwalView({ initialOpenNew, defaultPackageId, defaultClientId }
                 </button>
                 <button
                   type="submit"
-                  className={`dev-btn-speed-submit font-mono ${newSessionStatus === 'completed' ? 'dev-speed-checkin' : 'dev-speed-sched'}`}
+                  className="dev-btn-speed-submit font-mono dev-speed-checkin"
                   disabled={isSubmitting || !newSessionPkgId}
                 >
                   {isSubmitting ? (
                     <span>PROCESSING...</span>
-                  ) : newSessionStatus === 'completed' ? (
+                  ) : (
                     <>
                       <Zap size={16} strokeWidth={2.5} className="dev-speed-icon" />
                       <span>⚡ CONFIRM CHECK-IN (1-TAP)</span>
-                    </>
-                  ) : (
-                    <>
-                      <CalendarCheck size={16} strokeWidth={2.5} className="dev-speed-icon" />
-                      <span>SIMPAN JADWAL SESI →</span>
                     </>
                   )}
                 </button>
@@ -1825,25 +1704,19 @@ export function JadwalView({ initialOpenNew, defaultPackageId, defaultClientId }
                   <div className="dev-field-label font-mono">
                     <span className="dev-label-txt">03 // PROGRAM</span>
                   </div>
-                  <input
-                    type="text"
-                    className="dev-clean-input"
-                    placeholder="Total Body, Chest..."
-                    value={editSessionProgram}
-                    onChange={(e) => setEditSessionProgram(e.target.value)}
-                    required
-                  />
-                  <div className="dev-mini-chips">
-                    {PROGRAM_PRESETS.slice(0, 4).map((prog) => (
-                      <button
-                        key={prog}
-                        type="button"
-                        className={`dev-mini-chip ${editSessionProgram === prog ? 'active' : ''}`}
-                        onClick={() => setEditSessionProgram(prog)}
-                      >
-                        {prog}
-                      </button>
-                    ))}
+                  <div className="dev-select-wrapper">
+                    <select
+                      className="dev-select-input"
+                      value={editSessionProgram}
+                      onChange={(e) => setEditSessionProgram(e.target.value)}
+                      required
+                    >
+                      {PROGRAM_PRESETS.map((prog) => (
+                        <option key={prog} value={prog}>
+                          {prog}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 </div>
 
