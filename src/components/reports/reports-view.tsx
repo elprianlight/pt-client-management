@@ -221,35 +221,7 @@ export function ReportsView({
 
       {/* ── 2. ULTRA-SLIM 4-METRIC STRIP ─────────────────────────────────────── */}
       <div className="ops-compact-metric-strip">
-        {/* Metric 1: Selesai */}
-        <div className="ops-mini-metric-item">
-          <div className="ops-mini-metric-icon bg-emerald-500/15 text-emerald-400">
-            <Zap size={13} />
-          </div>
-          <div className="ops-mini-metric-info">
-            <span className="ops-mini-num text-emerald-400">
-              {activeCompletedVal < 10 ? `0${activeCompletedVal}` : activeCompletedVal}
-            </span>
-            <span className="ops-mini-lbl">Selesai</span>
-          </div>
-        </div>
-
-        <div className="ops-metric-divider" />
-
-        {/* Metric 2: Hadir */}
-        <div className="ops-mini-metric-item">
-          <div className="ops-mini-metric-icon bg-cyan-500/15 text-cyan-400">
-            <BarChart3 size={13} />
-          </div>
-          <div className="ops-mini-metric-info">
-            <span className="ops-mini-num text-cyan-400">{activeAttendanceVal}%</span>
-            <span className="ops-mini-lbl">Kehadiran</span>
-          </div>
-        </div>
-
-        <div className="ops-metric-divider" />
-
-        {/* Metric 3: Total */}
+        {/* Metric 1: Total Sesi */}
         <div className="ops-mini-metric-item">
           <div className="ops-mini-metric-icon bg-indigo-500/15 text-indigo-400">
             <Dumbbell size={13} />
@@ -259,6 +231,34 @@ export function ReportsView({
               {activeTotalVal < 10 ? `0${activeTotalVal}` : activeTotalVal}
             </span>
             <span className="ops-mini-lbl">Total Sesi</span>
+          </div>
+        </div>
+
+        <div className="ops-metric-divider" />
+
+        {/* Metric 2: Selesai */}
+        <div className="ops-mini-metric-item">
+          <div className="ops-mini-metric-icon bg-emerald-500/15 text-emerald-400">
+            <Zap size={13} />
+          </div>
+          <div className="ops-mini-metric-info">
+            <span className="ops-mini-num text-emerald-400">
+              {activeCompletedVal < 10 ? `0${activeCompletedVal}` : activeCompletedVal}
+            </span>
+            <span className="ops-mini-lbl">Sesi Selesai</span>
+          </div>
+        </div>
+
+        <div className="ops-metric-divider" />
+
+        {/* Metric 3: Kehadiran */}
+        <div className="ops-mini-metric-item">
+          <div className="ops-mini-metric-icon bg-cyan-500/15 text-cyan-400">
+            <BarChart3 size={13} />
+          </div>
+          <div className="ops-mini-metric-info">
+            <span className="ops-mini-num text-cyan-400">{activeAttendanceVal}%</span>
+            <span className="ops-mini-lbl">Kehadiran</span>
           </div>
         </div>
 

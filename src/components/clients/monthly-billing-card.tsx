@@ -69,11 +69,11 @@ export function MonthlyBillingCard({
     message: '',
   })
 
-  // Generate 5 months options: current month, 3 past months, 1 next month
+  // Generate up to 6 months options: current month and 5 past months (no future months)
   const monthOptions = useMemo(() => {
     const today = new Date()
     const list = []
-    for (let i = -3; i <= 1; i++) {
+    for (let i = -5; i <= 0; i++) {
       const d = addMonths(today, i)
       list.push({
         value: format(d, 'yyyy-MM'),
@@ -82,6 +82,10 @@ export function MonthlyBillingCard({
     }
     return list
   }, [])
+
+  const selectedMonthLabel = useMemo(() => {
+    return monthOptions.find((o) => o.value === selectedMonth)?.label || selectedMonth
+  }, [monthOptions, selectedMonth])
 
   // Load billing summary for selected month
   const loadSummary = async () => {
@@ -298,7 +302,7 @@ export function MonthlyBillingCard({
       {isLoading ? (
         <div className="mb-loading-box">
           <Loader2 size={24} className="spin" />
-          <span>Memuat data billing bulan {selectedMonth}...</span>
+          <span>Memuat data billing {selectedMonthLabel}...</span>
         </div>
       ) : !summary?.hasPostpaidPackage ? (
         /* ─── STATE: CLIENT DOES NOT HAVE POSTPAID PACKAGE YET ─── */
@@ -307,7 +311,7 @@ export function MonthlyBillingCard({
           <div className="mb-act-info">
             <h4>Aktifkan Sistem Pascabayar untuk {clientName}</h4>
             <p>
-              Dengan sistem ini, Anda dapat menjadwalkan dan mencatat sesi latihan Samantha tanpa batasan
+              Dengan sistem ini, Anda dapat menjadwalkan dan mencatat sesi latihan {clientName} tanpa batasan
               kuota di depan. Di akhir bulan, sistem otomatis menghitung total sesi yang selesai dan membuatkan
               tagihan.
             </p>

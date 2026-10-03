@@ -32,6 +32,7 @@ import {
   FileText,
   KeyRound,
   Smartphone,
+  Laptop,
 } from 'lucide-react'
 import { format } from 'date-fns'
 import Link from 'next/link'
@@ -61,6 +62,12 @@ export default function SettingsPage() {
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false)
   const [isAvatarBottomSheetOpen, setIsAvatarBottomSheetOpen] = useState(false)
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false)
+  const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState(false)
+  const [deviceInfo, setDeviceInfo] = useState({
+    title: 'Perangkat Aktif Saat Ini',
+    desc: 'Browser Session • Web Application',
+    isMobile: false,
+  })
 
   // Feedback Dialog State
   const [feedbackModal, setFeedbackModal] = useState<{
@@ -84,6 +91,28 @@ export default function SettingsPage() {
     if (user?.fullName) {
       setFullName(user.fullName)
     }
+    if (typeof window !== 'undefined' && navigator.userAgent) {
+      const ua = navigator.userAgent
+      let os = 'Desktop'
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(ua)
+      if (/Macintosh|Mac OS X/i.test(ua)) os = 'macOS'
+      else if (/Windows/i.test(ua)) os = 'Windows'
+      else if (/Android/i.test(ua)) os = 'Android'
+      else if (/iPhone|iPad|iPod/i.test(ua)) os = 'iOS'
+      else if (/Linux/i.test(ua)) os = 'Linux'
+
+      let browser = 'Browser'
+      if (/Chrome|CriOS/i.test(ua) && !/Edg/i.test(ua)) browser = 'Chrome'
+      else if (/Safari/i.test(ua) && !/Chrome/i.test(ua)) browser = 'Safari'
+      else if (/Firefox|FxiOS/i.test(ua)) browser = 'Firefox'
+      else if (/Edg/i.test(ua)) browser = 'Edge'
+
+      setDeviceInfo({
+        title: 'Perangkat Aktif Saat Ini',
+        desc: `${browser} (${os}) • Sesi Web Aktif`,
+        isMobile,
+      })
+    }
   }, [user])
 
   // Lock body scroll when any modal is open
@@ -93,6 +122,7 @@ export default function SettingsPage() {
       isPasswordModalOpen ||
       isAvatarBottomSheetOpen ||
       isLogoutModalOpen ||
+      isPrivacyModalOpen ||
       feedbackModal.isOpen
 
     if (isAnyModalOpen) {
@@ -111,6 +141,7 @@ export default function SettingsPage() {
     isPasswordModalOpen,
     isAvatarBottomSheetOpen,
     isLogoutModalOpen,
+    isPrivacyModalOpen,
     feedbackModal.isOpen,
   ])
 
@@ -261,7 +292,7 @@ export default function SettingsPage() {
               <span className="ah-verified-pill">🟢 Aktif</span>
             </div>
 
-            <h1 className="ah-full-name">{fullName || 'Dana Gading'}</h1>
+            <h1 className="ah-full-name">{fullName || user?.fullName || 'Pengguna'}</h1>
             <p className="ah-email">{user?.email || 'dana@pt.local'}</p>
             <p className="ah-joined">Member Since Juli 2026</p>
           </div>
@@ -357,7 +388,7 @@ export default function SettingsPage() {
           <div className="asc-info-grid">
             <div className="asc-info-item col-span-2">
               <span className="asc-label">Alamat Email (Read Only)</span>
-              <span className="asc-val-email">{user?.email || 'dana@pt.local'}</span>
+              <span className="asc-val-email">{user?.email || 'Tidak ada email'}</span>
             </div>
 
             <div className="asc-info-item">
@@ -370,12 +401,16 @@ export default function SettingsPage() {
               <span className="asc-val">Hari Ini • {format(new Date(), 'HH:mm')} WIB</span>
             </div>
 
-            {/* 17. SECURITY CARD DETAILS */}
+            {/* 17. SECURITY CARD DETAILS (A8 FIX: DYNAMIC DEVICE INFO) */}
             <div className="asc-info-item col-span-2 security-device-box">
-              <Smartphone size={16} className="sdb-icon" />
+              {deviceInfo.isMobile ? (
+                <Smartphone size={16} className="sdb-icon" />
+              ) : (
+                <Laptop size={16} className="sdb-icon" />
+              )}
               <div>
-                <span className="sdb-title">Perangkat Aktif Saat Ini</span>
-                <span className="sdb-desc">iPhone / Mac App Session • StrengthLab Enterprise App</span>
+                <span className="sdb-title">{deviceInfo.title}</span>
+                <span className="sdb-desc">{deviceInfo.desc}</span>
               </div>
             </div>
           </div>
@@ -455,10 +490,18 @@ export default function SettingsPage() {
               <ChevronRight size={14} />
             </a>
 
-            <div className="about-row">
-              <span>Kebijakan Privasi & Syarat Ketentuan</span>
-              <span className="about-ver">Terverifikasi</span>
-            </div>
+            <button
+              type="button"
+              onClick={() => setIsPrivacyModalOpen(true)}
+              className="about-link-row"
+              style={{ width: '100%', background: 'none', border: 'none', textAlign: 'left', cursor: 'pointer', padding: 0 }}
+            >
+              <div className="about-link-left">
+                <FileText size={16} />
+                <span>Kebijakan Privasi & Syarat Ketentuan</span>
+              </div>
+              <ChevronRight size={14} />
+            </button>
           </div>
         </div>
 
@@ -789,6 +832,55 @@ export default function SettingsPage() {
                 style={{ width: '100%' }}
               >
                 Tutup
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* ==================== KEBIJAKAN PRIVASI & SYARAT KETENTUAN MODAL ==================== */}
+      {mounted && isPrivacyModalOpen && createPortal(
+        <div className="modal-backdrop animate-fade-in" onClick={() => setIsPrivacyModalOpen(false)}>
+          <div className="modal-card animate-slide-up" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 540 }}>
+            <div className="mc-header">
+              <div className="mc-title-group">
+                <div className="mc-icon-badge" style={{ background: 'rgba(99, 102, 241, 0.15)', color: '#6366f1' }}>
+                  <Shield size={20} />
+                </div>
+                <div>
+                  <h3 className="mc-title">Kebijakan Privasi & Ketentuan</h3>
+                  <p className="mc-sub">Strength Lab PT Client Management</p>
+                </div>
+              </div>
+              <button type="button" onClick={() => setIsPrivacyModalOpen(false)} className="mc-close-btn" aria-label="Tutup">
+                <X size={18} />
+              </button>
+            </div>
+
+            <div style={{ maxHeight: '60vh', overflowY: 'auto', paddingRight: 4, display: 'flex', flexDirection: 'column', gap: 14, fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+              <div>
+                <strong style={{ color: 'var(--text-primary)' }}>1. Perlindungan Data Kesehatan & Kebugaran</strong>
+                <p style={{ margin: '4px 0 0' }}>Data pengukuran fisik, komposisi tubuh, catatan medis, dan rekam sesi latihan Anda disimpan secara terenkripsi dan hanya dapat diakses oleh Anda dan Personal Trainer yang ditugaskan secara resmi.</p>
+              </div>
+              <div>
+                <strong style={{ color: 'var(--text-primary)' }}>2. Penggunaan Informasi Kontak</strong>
+                <p style={{ margin: '4px 0 0' }}>Informasi kontak (nomor WhatsApp dan email) semata-mata digunakan untuk konfirmasi jadwal sesi, pengingat latihan, dan pembaruan kuota paket PT tanpa pembagian kepada pihak ketiga.</p>
+              </div>
+              <div>
+                <strong style={{ color: 'var(--text-primary)' }}>3. Keamanan Sesi & Akun</strong>
+                <p style={{ margin: '4px 0 0' }}>Setiap sesi login diverifikasi menggunakan enkripsi standar industri. Pastikan Anda tidak membagikan kredensial akun kepada siapapun.</p>
+              </div>
+            </div>
+
+            <div className="mc-actions" style={{ marginTop: 16 }}>
+              <button
+                type="button"
+                onClick={() => setIsPrivacyModalOpen(false)}
+                className="mc-btn-save"
+                style={{ width: '100%' }}
+              >
+                Saya Mengerti
               </button>
             </div>
           </div>

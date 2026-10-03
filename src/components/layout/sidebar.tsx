@@ -209,10 +209,7 @@ export function Sidebar({ className }: SidebarProps) {
                 {role && roleLabel[role]}
               </span>
             </div>
-            <button className="sidebar-notif-btn" aria-label="Notifikasi">
-              <Bell size={16} />
-              <span className="sidebar-notif-dot" />
-            </button>
+            {/* Bell notifikasi disembunyikan — belum ada panel notifikasi (lihat audit A5) */}
           </div>
         )}
 

@@ -35,9 +35,10 @@ import {
 
 function getGreetingInfo() {
   const hour = new Date().getHours()
-  if (hour >= 5 && hour < 12) return { text: 'Good Morning', icon: '🌅', color: '#f59e0b' }
-  if (hour >= 12 && hour < 18) return { text: 'Good Afternoon', icon: '☀️', color: '#f97316' }
-  return { text: 'Good Evening', icon: '🌙', color: '#8b5cf6' }
+  if (hour >= 5 && hour < 11) return { text: 'Selamat Pagi', icon: '🌅', color: '#f59e0b' }
+  if (hour >= 11 && hour < 15) return { text: 'Selamat Siang', icon: '☀️', color: '#f97316' }
+  if (hour >= 15 && hour < 18) return { text: 'Selamat Sore', icon: '🌤️', color: '#fb923c' }
+  return { text: 'Selamat Malam', icon: '🌙', color: '#8b5cf6' }
 }
 
 // ─── HERO HEADER COMPONENT ────────────────────────────────────────────────────
@@ -52,7 +53,7 @@ function HeroHeader({
   const [timeStr, setTimeStr] = useState<string>('')
   const [dayStr, setDayStr] = useState<string>('')
   const [dateStr, setDateStr] = useState<string>('')
-  const greeting = useMemo(() => getGreetingInfo(), [])
+  const [greeting, setGreeting] = useState(() => getGreetingInfo())
 
   useEffect(() => {
     const updateClock = () => {
@@ -76,6 +77,7 @@ function HeroHeader({
           year: 'numeric',
         })
       )
+      setGreeting(getGreetingInfo())
     }
 
     updateClock()
@@ -377,52 +379,68 @@ function AICoachInsights({
 }) {
   const insights = useMemo(() => {
     const list = []
-    const trend = stats?.sessionsTrend ?? 18
-    const rev = stats?.monthRevenue ?? 6000000
+    const trend = stats?.sessionsTrend ?? 0
+    const rev = stats?.monthRevenue ?? 0
+    const totalClients = stats?.totalClients ?? 0
+    const monthSessions = (stats as any)?.monthSessions ?? 0
 
-    list.push({
-      id: 'sessions',
-      type: 'success',
-      icon: TrendingUp,
-      iconColor: '#10b981',
-      title: 'Performa Sesi Meningkat',
-      desc: `Sesi latihan bulan ini naik +${Math.abs(trend)}% dibanding bulan lalu. Kepatuhan latihan client meningkat pesat!`,
-      actionLabel: 'Smart Check-In',
-      actionHref: '/session/new',
-    })
+    // Hanya tampilkan insight performa sesi jika ada data bulan lalu untuk dibandingkan
+    if (trend !== 0) {
+      list.push({
+        id: 'sessions',
+        type: trend > 0 ? 'success' : 'warning',
+        icon: TrendingUp,
+        iconColor: trend > 0 ? '#10b981' : '#f59e0b',
+        title: trend > 0 ? 'Performa Sesi Meningkat' : 'Performa Sesi Menurun',
+        desc: trend > 0
+          ? `Sesi latihan bulan ini naik +${Math.abs(trend)}% dibanding bulan lalu.`
+          : `Sesi latihan bulan ini turun ${Math.abs(trend)}% dibanding bulan lalu.`,
+        actionLabel: 'Lihat Laporan',
+        actionHref: '/reports',
+      })
+    }
 
-    list.push({
-      id: 'retention',
-      type: 'warning',
-      icon: Users,
-      iconColor: '#f59e0b',
-      title: 'Alert Retensi Client',
-      desc: '2 client belum melakukan latihan lebih dari 7 hari. Disarankan untuk follow up pengingat sesi via WA.',
-      actionLabel: 'Kelola Client',
-      actionHref: '/clients',
-    })
+    // Hanya tampilkan info revenue jika ada data revenue
+    if (rev > 0) {
+      list.push({
+        id: 'revenue',
+        type: 'info',
+        icon: Target,
+        iconColor: '#6366f1',
+        title: 'Revenue Bulan Ini',
+        desc: `Revenue bulan ini mencapai Rp ${rev.toLocaleString('id-ID')}.`,
+        actionLabel: 'Lihat Laporan',
+        actionHref: '/reports',
+      })
+    }
 
-    list.push({
-      id: 'revenue',
-      type: 'info',
-      icon: Target,
-      iconColor: '#6366f1',
-      title: 'Pencapaian Target Revenue',
-      desc: `Revenue bulan ini mencapai Rp ${rev.toLocaleString('id-ID')} (72% dari target bulanan Anda).`,
-      actionLabel: 'Lihat Laporan',
-      actionHref: '/reports',
-    })
+    // Hanya tampilkan insight client jika ada client
+    if (totalClients > 0) {
+      list.push({
+        id: 'clients',
+        type: 'brand',
+        icon: Users,
+        iconColor: '#a855f7',
+        title: 'Ringkasan Client',
+        desc: `Anda mengelola ${totalClients} client dengan ${monthSessions} sesi bulan ini.`,
+        actionLabel: 'Kelola Client',
+        actionHref: '/clients',
+      })
+    }
 
-    list.push({
-      id: 'projection',
-      type: 'brand',
-      icon: Award,
-      iconColor: '#a855f7',
-      title: 'Proyeksi Target Sesi',
-      desc: 'Anda membutuhkan 8 sesi lagi untuk mencapai target performa bulanan.',
-      actionLabel: 'Jadwal Sesi',
-      actionHref: '/session',
-    })
+    // Tampilkan pesan default jika tidak ada insight
+    if (list.length === 0) {
+      list.push({
+        id: 'welcome',
+        type: 'info',
+        icon: Award,
+        iconColor: '#6366f1',
+        title: 'Selamat Datang',
+        desc: 'Mulai tambahkan client dan jadwalkan sesi untuk melihat insight otomatis di sini.',
+        actionLabel: 'Tambah Client',
+        actionHref: '/clients',
+      })
+    }
 
     return list
   }, [stats])
@@ -570,33 +588,69 @@ function AICoachInsights({
 
 // ─── PREMIUM NOTIFICATION CENTER COMPONENT ────────────────────────────────────
 
-function PremiumNotificationCenter() {
-  const notifications = [
-    {
-      id: 1,
-      badge: 'Sesi Hampir Habis',
-      badgeClass: 'badge-error',
-      title: 'Chininta Satar Inta (Sisa 2 Sesi)',
-      desc: 'Paket Juli 2026 tinggal 2 sesi lagi. Kirim penawaran perpanjangan paket.',
-      time: 'Hari Ini',
-    },
-    {
-      id: 2,
-      badge: 'Sesi Terkonfirmasi',
-      badgeClass: 'badge-success',
-      title: 'Dana Gading — Upper Body RPE 8',
-      desc: 'Sesi latihan terjadwal pukul 16:00 WIB hari ini di Gym Utama.',
-      time: 'Hari Ini',
-    },
-    {
-      id: 3,
-      badge: 'Assessment Reminder',
-      badgeClass: 'badge-brand',
-      title: 'Input Pengukuran Fisik Bulanan',
-      desc: '3 client belum diukur berat & body fat bulan ini.',
-      time: 'Kemarin',
-    },
-  ]
+function PremiumNotificationCenter({ stats }: { stats?: any }) {
+  const notifications = useMemo(() => {
+    const list: Array<{
+      id: string | number
+      badge: string
+      badgeClass: string
+      title: string
+      desc: string
+      time: string
+    }> = []
+
+    // 1. Today's sessions from stats
+    if (stats?.todaySessionsList && Array.isArray(stats.todaySessionsList)) {
+      stats.todaySessionsList.forEach((s: any, idx: number) => {
+        const clientName = s.clients?.users?.full_name || 'Client'
+        const timeStr = s.scheduled_at
+          ? new Date(s.scheduled_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
+          : ''
+        list.push({
+          id: `sess-${s.id || idx}`,
+          badge: 'Sesi Hari Ini',
+          badgeClass: 'badge-success',
+          title: `${clientName} — Sesi Terjadwal`,
+          desc: timeStr ? `Sesi latihan terjadwal pukul ${timeStr} WIB hari ini.` : 'Sesi latihan terjadwal hari ini.',
+          time: 'Hari Ini',
+        })
+      })
+    }
+
+    // 2. Recent clients if available
+    if (stats?.recentClientsList && Array.isArray(stats.recentClientsList)) {
+      stats.recentClientsList.slice(0, 2).forEach((c: any, idx: number) => {
+        const name = c.users?.full_name || 'Client Baru'
+        const timeStr = c.created_at
+          ? new Date(c.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })
+          : 'Baru'
+        list.push({
+          id: `client-${c.id || idx}`,
+          badge: 'Klien Baru',
+          badgeClass: 'badge-brand',
+          title: `Klien bergabung: ${name}`,
+          desc: 'Terdaftar dalam sistem. Siapkan program latihan & asesmen.',
+          time: timeStr,
+        })
+      })
+    }
+
+    // 3. Superadmin recent activity if available
+    if (stats?.recentActivity && Array.isArray(stats.recentActivity)) {
+      stats.recentActivity.slice(0, 3).forEach((a: any, idx: number) => {
+        list.push({
+          id: `act-${idx}`,
+          badge: 'Aktivitas',
+          badgeClass: 'badge-info',
+          title: a.title,
+          desc: a.desc,
+          time: a.time,
+        })
+      })
+    }
+
+    return list
+  }, [stats])
 
   return (
     <div className="glass-card dash-panel animate-fade-in-up">
@@ -606,20 +660,32 @@ function PremiumNotificationCenter() {
         </h3>
       </div>
 
-      <div className="notif-list">
-        {notifications.map(n => (
-          <div key={n.id} className="notif-item">
-            <div className="notif-top-row">
-              <span className={`badge ${n.badgeClass}`} style={{ fontSize: 10 }}>
-                {n.badge}
-              </span>
-              <span className="notif-time">{n.time}</span>
+      {notifications.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '24px 12px', color: 'var(--text-muted)' }}>
+          <CheckCircle2 size={28} style={{ margin: '0 auto 8px', color: '#10b981', opacity: 0.8 }} />
+          <p style={{ margin: 0, fontWeight: 600, fontSize: 13, color: 'var(--text-secondary)' }}>
+            Semua Terpantau Rapi
+          </p>
+          <p style={{ margin: '4px 0 0', fontSize: 12 }}>
+            Tidak ada notifikasi mendesak saat ini.
+          </p>
+        </div>
+      ) : (
+        <div className="notif-list">
+          {notifications.map(n => (
+            <div key={n.id} className="notif-item">
+              <div className="notif-top-row">
+                <span className={`badge ${n.badgeClass}`} style={{ fontSize: 10 }}>
+                  {n.badge}
+                </span>
+                <span className="notif-time">{n.time}</span>
+              </div>
+              <h4 className="notif-item-title">{n.title}</h4>
+              <p className="notif-item-desc">{n.desc}</p>
             </div>
-            <h4 className="notif-item-title">{n.title}</h4>
-            <p className="notif-item-desc">{n.desc}</p>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       <style jsx>{`
         .notif-list {
@@ -965,7 +1031,7 @@ export function SuperAdminDashboard({
         </div>
 
         {/* Notification Center */}
-        <PremiumNotificationCenter />
+        <PremiumNotificationCenter stats={stats} />
       </div>
 
       <CustomInAppSearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
@@ -1153,7 +1219,7 @@ export function PTDashboard({
         </div>
 
         {/* Notification Center */}
-        <PremiumNotificationCenter />
+        <PremiumNotificationCenter stats={stats} />
       </div>
 
       <CustomInAppSearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />

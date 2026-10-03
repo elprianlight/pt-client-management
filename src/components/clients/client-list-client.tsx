@@ -199,7 +199,7 @@ export function ClientListClient({ initialData, totalCount }: ClientListClientPr
           >
             <span className="sr-sum-dot dot-gray" />
             <span className="sr-sum-val font-mono">{kpiStats.inactive}</span>
-            <span className="sr-sum-label">Inaktif (&gt; 7h)</span>
+            <span className="sr-sum-label">Inaktif (&gt; 7 Hari)</span>
           </button>
 
           <span className="sr-sum-divider">·</span>

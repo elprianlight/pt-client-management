@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { db } from '@/lib/db'
 import { users, clients, ptPackages, workoutSessions, ptTransactions } from '@/lib/db/schema'
 import { eq, desc, and, gte, lte, sql, inArray } from 'drizzle-orm'
-import { subDays as dateSubDays, format, startOfMonth as dateStartOfMonth } from 'date-fns'
+import { subDays as dateSubDays, subMonths, format, startOfMonth as dateStartOfMonth } from 'date-fns'
 import { id as idLocale } from 'date-fns/locale'
 
 async function getAuthProfile() {
@@ -252,53 +252,48 @@ export async function getCRMAnalytics(): Promise<CRMAnalyticsData> {
     monthlyRevenueMap[monthKey] = (monthlyRevenueMap[monthKey] || 0) + amount
   })
 
-  const monthlyRevenueTrend = Object.entries(monthlyRevenueMap)
-    .slice(0, 6)
-    .map(([month, amount]) => ({ month, amount }))
-    .reverse()
-
-  // Fallback mock trend if database has no transaction history yet
-  if (monthlyRevenueTrend.length === 0) {
-    monthlyRevenueTrend.push(
-      { month: 'Mei 2026', amount: 4500000 },
-      { month: 'Jun 2026', amount: 7200000 },
-      { month: 'Jul 2026', amount: 9800000 }
-    )
+  // Construct monthly trend chronologically for the past 4 months up to current month
+  const monthlyRevenueTrend: { month: string; amount: number }[] = []
+  for (let i = 3; i >= 0; i--) {
+    const targetDate = subMonths(now, i)
+    const monthKey = format(targetDate, 'MMM yyyy', { locale: idLocale })
+    monthlyRevenueTrend.push({
+      month: monthKey,
+      amount: monthlyRevenueMap[monthKey] || 0,
+    })
   }
 
-  // 4. Session activity
+  // 4. Session activity for current month
   const allSessions = await db.select().from(workoutSessions)
-  const weeklySessionsMap: Record<string, number> = {}
+  const weeklySessionsMap: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0 }
   allSessions.forEach(s => {
     const d = new Date(s.scheduledAt)
-    const weekKey = `Minggu ${Math.ceil(d.getDate() / 7)} (${format(d, 'MMM')})`
-    weeklySessionsMap[weekKey] = (weeklySessionsMap[weekKey] || 0) + 1
+    if (d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()) {
+      const weekNum = Math.min(4, Math.ceil(d.getDate() / 7))
+      weeklySessionsMap[weekNum] = (weeklySessionsMap[weekNum] || 0) + 1
+    }
   })
 
-  const weeklySessions = Object.entries(weeklySessionsMap)
-    .slice(0, 4)
-    .map(([week, count]) => ({ week, count }))
-
-  if (weeklySessions.length === 0) {
-    weeklySessions.push(
-      { week: 'Minggu 1', count: 12 },
-      { week: 'Minggu 2', count: 18 },
-      { week: 'Minggu 3', count: 15 },
-      { week: 'Minggu 4', count: 22 }
-    )
-  }
+  const weeklySessions = [
+    { week: 'Mgg 1', count: weeklySessionsMap[1] || 0 },
+    { week: 'Mgg 2', count: weeklySessionsMap[2] || 0 },
+    { week: 'Mgg 3', count: weeklySessionsMap[3] || 0 },
+    { week: 'Mgg 4', count: weeklySessionsMap[4] || 0 },
+  ]
 
   const alerts = await getCRMAlerts()
+  const lowFromAlerts = alerts.filter(a => a.alertType === 'low_session').length
+  const effectiveLow = Math.max(lowPkgs, lowFromAlerts)
 
   return {
     totalRevenueThisMonth,
     totalActiveClients: activeClientsCount?.value || 0,
-    lowSessionCount: alerts.filter(a => a.alertType === 'low_session').length,
+    lowSessionCount: effectiveLow,
     inactiveCount: alerts.filter(a => a.alertType === 'inactive').length,
     monthlyRevenueTrend,
     packageDistribution: {
       active: activePkgs,
-      low: lowPkgs,
+      low: effectiveLow,
       expired: expiredPkgs,
     },
     weeklySessions,
