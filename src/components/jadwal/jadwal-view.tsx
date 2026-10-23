@@ -828,72 +828,7 @@ export function JadwalView({ initialOpenNew, defaultPackageId, defaultClientId }
 
   return (
     <div className="jd-container animate-fade-in">
-      {/* ─── 1. TOP PERFORMANCE SUMMARY STRIP (Konsep 2 + 3) ─── */}
-      <div className="jd-hero">
-        <div className="jd-metrics-strip">
-          <button
-            type="button"
-            className={`jd-metric-pill pill-total ${statusFilter === 'all' ? 'active' : ''}`}
-            onClick={() => setStatusFilter('all')}
-            title="Semua Sesi Minggu Ini"
-          >
-            <span className="jd-pill-dot dot-all" />
-            <span className="jd-pill-val font-mono">{metrics.total}</span>
-            <span className="jd-pill-label">Total Sesi</span>
-          </button>
-
-          <button
-            type="button"
-            className={`jd-metric-pill pill-booked ${statusFilter === 'scheduled' ? 'active' : ''}`}
-            onClick={() => setStatusFilter(statusFilter === 'scheduled' ? 'all' : 'scheduled')}
-            title="Filter Sesi Booked / Terjadwal"
-          >
-            <span className="jd-pill-dot dot-sky" />
-            <span className="jd-pill-val font-mono text-sky">{metrics.booked}</span>
-            <span className="jd-pill-label">Booked</span>
-          </button>
-
-          <button
-            type="button"
-            className={`jd-metric-pill pill-completed ${statusFilter === 'completed' ? 'active' : ''}`}
-            onClick={() => setStatusFilter(statusFilter === 'completed' ? 'all' : 'completed')}
-            title="Filter Sesi Completed / Selesai"
-          >
-            <span className="jd-pill-dot dot-emerald" />
-            <span className="jd-pill-val font-mono text-emerald">{metrics.completed}</span>
-            <span className="jd-pill-label">Completed</span>
-          </button>
-
-          <button
-            type="button"
-            className={`jd-metric-pill pill-cancelled ${statusFilter === 'cancelled' ? 'active' : ''}`}
-            onClick={() => setStatusFilter(statusFilter === 'cancelled' ? 'all' : 'cancelled')}
-            title="Filter Sesi Cancel / No-Show"
-          >
-            <span className="jd-pill-dot dot-rose" />
-            <span className="jd-pill-val font-mono text-rose">{metrics.cancelled + metrics.noShow}</span>
-            <span className="jd-pill-label">Batal</span>
-          </button>
-        </div>
-
-        {/* Completion Progress Bar */}
-        <div className="jd-progress-wrap">
-          <div className="jd-progress-info">
-            <span>
-              Performa Minggu Ini: <strong>{metrics.completed}</strong> dari <strong>{metrics.total}</strong> sesi selesai
-            </span>
-            <span className="jd-progress-pct font-mono">{metrics.completionRate}%</span>
-          </div>
-          <div className="jd-progress-bar">
-            <div
-              className="jd-progress-fill"
-              style={{ width: `${metrics.completionRate}%` }}
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* ─── 2. MINI WEEK OVERVIEW & NAVIGATION BAR (Konsep 2) ─── */}
+      {/* ─── 1. MINI WEEK OVERVIEW & NAVIGATION BAR (Konsep 2) ─── */}
       <div className="jd-week-overview-card">
         {/* Navigation & Controls Row (Adaptive Two-Tier on Mobile) */}
         <div className="jd-nav-bar">
