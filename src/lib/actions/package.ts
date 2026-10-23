@@ -7,15 +7,9 @@ import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
 
-let isBillingTypeColumnEnsured = false
 async function ensureBillingTypeColumn() {
-  if (isBillingTypeColumnEnsured) return
-  try {
-    await db.execute(sql`ALTER TABLE pt_packages ADD COLUMN IF NOT EXISTS billing_type VARCHAR(20) DEFAULT 'prepaid';`)
-    isBillingTypeColumnEnsured = true
-  } catch (err) {
-    console.error('ensureBillingTypeColumn error:', err)
-  }
+  // Column billing_type already permanently exists in pt_packages schema
+  return
 }
 
 // Input validation schema for selling a package

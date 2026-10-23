@@ -42,7 +42,10 @@ export async function proxy(request: NextRequest) {
           })
           supabaseResponse = NextResponse.next({ request })
           cookiesToSet.forEach(({ name, value, options }) => {
-            const customOptions = { ...options, maxAge: 6 * 60 * 60 }
+            const isDeleting = options?.maxAge === 0 || value === '' || (options?.expires && new Date(options.expires).getTime() <= Date.now())
+            const customOptions = isDeleting
+              ? { ...options, maxAge: 0 }
+              : { ...options, maxAge: 6 * 60 * 60 }
             supabaseResponse.cookies.set(name, value, customOptions)
           })
         },
@@ -53,7 +56,7 @@ export async function proxy(request: NextRequest) {
   let user = null
   if (hasAuthCookie) {
     try {
-      const timeoutPromise = new Promise<null>((resolve) => setTimeout(() => resolve(null), 1200))
+      const timeoutPromise = new Promise<null>((resolve) => setTimeout(() => resolve(null), 2500))
       const userPromise = supabase.auth.getUser().then((res) => res.data?.user ?? null)
       user = await Promise.race([userPromise, timeoutPromise])
     } catch {

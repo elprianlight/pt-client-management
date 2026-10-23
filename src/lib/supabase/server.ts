@@ -15,9 +15,13 @@ export async function createClient() {
         },
         setAll(cookiesToSet) {
           try {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, { ...options, maxAge: 6 * 60 * 60 })
-            )
+            cookiesToSet.forEach(({ name, value, options }) => {
+              const isDeleting = options?.maxAge === 0 || value === '' || (options?.expires && new Date(options.expires).getTime() <= Date.now())
+              const customOptions = isDeleting
+                ? { ...options, maxAge: 0 }
+                : { ...options, maxAge: 6 * 60 * 60 }
+              cookieStore.set(name, value, customOptions)
+            })
           } catch {
             // Server Component - cookies can only be set in Server Actions / Route Handlers
           }

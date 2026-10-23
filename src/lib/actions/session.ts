@@ -12,7 +12,7 @@ import { logAudit } from './audit'
 const scheduleSessionSchema = z.object({
   packageId: z.string().uuid('Pilih paket terlebih dahulu'),
   scheduledAt: z.string().refine((val) => !isNaN(Date.parse(val)), { message: 'Tanggal dan waktu tidak valid' }),
-  status: z.enum(['scheduled', 'completed', 'cancelled', 'no_show']).optional(),
+  status: z.enum(['scheduled', 'check_in', 'completed', 'cancelled', 'no_show']).optional(),
   programType: z.string().min(1, 'Pilih program latihan'),
   rpe: z.coerce.number().min(1).max(10).optional().nullable(),
   sessionNotes: z.string().optional(),
@@ -74,6 +74,7 @@ export async function scheduleSession(input: z.infer<typeof scheduleSessionSchem
         clientId: selectedPackage.clientId,
         scheduledAt: parseScheduledAt(scheduledAt),
         completedAt: targetStatus === 'completed' ? new Date() : null,
+        checkInAt: targetStatus === 'check_in' ? new Date() : null,
         duration: 60, // hardcoded 60 minutes
         programType,
         rpe: rpe || null,
@@ -102,7 +103,7 @@ export async function scheduleSession(input: z.infer<typeof scheduleSessionSchem
 
 
 
-export async function updateSessionStatus(sessionId: string, newStatus: 'scheduled' | 'completed' | 'cancelled' | 'rescheduled' | 'no_show') {
+export async function updateSessionStatus(sessionId: string, newStatus: 'scheduled' | 'check_in' | 'completed' | 'cancelled' | 'rescheduled' | 'no_show') {
   try {
     const supabase = await createClient()
     const { data: { user: authUser } } = await supabase.auth.getUser()
@@ -114,6 +115,7 @@ export async function updateSessionStatus(sessionId: string, newStatus: 'schedul
     if (session.status === newStatus) return { success: true } // No change
 
     const oldStatus = session.status
+    const now = new Date()
 
     // Mulai transaksi DB
     await db.transaction(async (tx) => {
@@ -121,8 +123,9 @@ export async function updateSessionStatus(sessionId: string, newStatus: 'schedul
       await tx.update(workoutSessions)
         .set({
           status: newStatus,
-          completedAt: newStatus === 'completed' ? new Date() : (oldStatus === 'completed' ? null : session.completedAt),
-          updatedAt: new Date(),
+          completedAt: newStatus === 'completed' ? now : (oldStatus === 'completed' ? null : session.completedAt),
+          checkInAt: newStatus === 'check_in' ? (session.checkInAt || now) : (newStatus === 'scheduled' ? null : session.checkInAt),
+          updatedAt: now,
         })
         .where(eq(workoutSessions.id, sessionId))
 
@@ -159,6 +162,49 @@ export async function updateSessionStatus(sessionId: string, newStatus: 'schedul
   }
 }
 
+export async function checkInSession(sessionId: string) {
+  try {
+    const supabase = await createClient()
+    const { data: { user: authUser } } = await supabase.auth.getUser()
+    if (!authUser) return { success: false, error: 'Unauthorized' }
+
+    const [currentUser] = await db.select().from(users).where(eq(users.id, authUser.id))
+    if (!currentUser || currentUser.role === 'client') {
+      return { success: false, error: 'Unauthorized: Hanya trainer yang dapat melakukan check-in sesi' }
+    }
+
+    const [session] = await db.select().from(workoutSessions).where(eq(workoutSessions.id, sessionId))
+    if (!session) return { success: false, error: 'Sesi tidak ditemukan' }
+    if (session.status === 'completed') {
+      return { success: false, error: 'Sesi ini sudah berstatus Selesai (Completed)' }
+    }
+
+    const now = new Date()
+    await db.update(workoutSessions)
+      .set({
+        status: 'check_in',
+        checkInAt: now,
+        updatedAt: now,
+      })
+      .where(eq(workoutSessions.id, sessionId))
+
+    await logAudit({
+      action: 'CHECK_IN_SESSION',
+      tableName: 'workout_sessions',
+      recordId: sessionId,
+      oldValues: { status: session.status, checkInAt: session.checkInAt },
+      newValues: { status: 'check_in', checkInAt: now },
+    })
+
+    revalidatePath('/jadwal')
+    revalidatePath('/session')
+    return { success: true, checkInAt: now }
+  } catch (err: any) {
+    console.error('Check-in session error:', err)
+    return { success: false, error: err.message || 'Gagal melakukan check-in sesi' }
+  }
+}
+
 export async function listSessions() {
   try {
     const supabase = await createClient()
@@ -172,6 +218,7 @@ export async function listSessions() {
       id: workoutSessions.id,
       scheduledAt: workoutSessions.scheduledAt,
       completedAt: workoutSessions.completedAt,
+      checkInAt: workoutSessions.checkInAt,
       status: workoutSessions.status,
       duration: workoutSessions.duration,
       location: workoutSessions.location,
@@ -220,6 +267,7 @@ export async function getSessionById(sessionId: string) {
       programId: workoutSessions.programId,
       scheduledAt: workoutSessions.scheduledAt,
       completedAt: workoutSessions.completedAt,
+      checkInAt: workoutSessions.checkInAt,
       status: workoutSessions.status,
       duration: workoutSessions.duration,
       programType: workoutSessions.programType,

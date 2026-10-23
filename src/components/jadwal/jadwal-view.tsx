@@ -35,6 +35,17 @@ import {
   User,
   SlidersHorizontal,
   Edit3,
+  Sun,
+  Moon,
+  ChevronDown,
+  Building2,
+  Home,
+  Check,
+  Activity,
+  HeartPulse,
+  Layers,
+  Shield,
+  Target,
 } from 'lucide-react'
 import { listSessions, updateSessionStatus, deleteSession, scheduleSession, updateSessionData } from '@/lib/actions/session'
 import { listPackages } from '@/lib/actions/package'
@@ -91,12 +102,6 @@ export function JadwalView({ initialOpenNew, defaultPackageId, defaultClientId }
   const [editSessionStatus, setEditSessionStatus] = useState<'scheduled' | 'completed' | 'cancelled' | 'no_show'>('scheduled')
   const [isSubmittingEdit, setIsSubmittingEdit] = useState(false)
 
-  const isFormModalOpen = isAddSessionModalOpen || isSessionModalOpen
-  const closeFormModal = () => {
-    setIsAddSessionModalOpen(false)
-    closeSessionModal()
-  }
-
   // Add Session Form State
   const [newSessionPkgId, setNewSessionPkgId] = useState(defaultPackageId || '')
   const newSessionStatus = 'completed'
@@ -108,6 +113,152 @@ export function JadwalView({ initialOpenNew, defaultPackageId, defaultClientId }
   const [newSessionNotes, setNewSessionNotes] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
 
+  // Real-time clock ticker for Section 02 SEKARANG action
+  const [currentTimeStr, setCurrentTimeStr] = useState('')
+
+  useEffect(() => {
+    const updateTime = () => setCurrentTimeStr(format(new Date(), 'HH:mm'))
+    updateTime()
+    const timer = setInterval(updateTime, 10000)
+    return () => clearInterval(timer)
+  }, [])
+
+  const handleSetTimeToNow = () => {
+    const now = new Date()
+    setNewSessionDate(format(now, 'yyyy-MM-dd'))
+    setNewSessionTime(format(now, 'HH:mm'))
+  }
+
+  const todayStr = format(new Date(), 'yyyy-MM-dd')
+  const yesterdayStr = format(subDays(new Date(), 1), 'yyyy-MM-dd')
+
+  const resetSessionForm = () => {
+    setNewSessionPkgId('')
+    setNewSessionProgram('Total Body')
+    setNewSessionDate(format(new Date(), 'yyyy-MM-dd'))
+    setNewSessionTime(new Date().getHours() >= 12 ? '17:00' : '09:00')
+    setNewSessionLocation('')
+    setNewSessionRpe('8')
+    setNewSessionNotes('')
+    setIsClientDropdownOpen(false)
+    setClientSearch('')
+    setIsLocationDropdownOpen(false)
+    setCustomLocationInput('')
+    setIsProgramDropdownOpen(false)
+    setCustomProgramInput('')
+  }
+
+  // Modern Client Dropdown State
+  const [isClientDropdownOpen, setIsClientDropdownOpen] = useState(false)
+  const [clientSearch, setClientSearch] = useState('')
+  const clientDropdownRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (clientDropdownRef.current && !clientDropdownRef.current.contains(e.target as Node)) {
+        setIsClientDropdownOpen(false)
+      }
+    }
+    if (isClientDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [isClientDropdownOpen])
+
+  // Modern Program Dropdown State (4:2 Grid)
+  const [isProgramDropdownOpen, setIsProgramDropdownOpen] = useState(false)
+  const [customProgramInput, setCustomProgramInput] = useState('')
+  const programDropdownRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (programDropdownRef.current && !programDropdownRef.current.contains(e.target as Node)) {
+        setIsProgramDropdownOpen(false)
+      }
+    }
+    if (isProgramDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [isProgramDropdownOpen])
+
+  // Edit Modal Program Dropdown State (4:2 Grid)
+  const [isEditProgramDropdownOpen, setIsEditProgramDropdownOpen] = useState(false)
+  const [editCustomProgramInput, setEditCustomProgramInput] = useState('')
+  const editProgramDropdownRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (editProgramDropdownRef.current && !editProgramDropdownRef.current.contains(e.target as Node)) {
+        setIsEditProgramDropdownOpen(false)
+      }
+    }
+    if (isEditProgramDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [isEditProgramDropdownOpen])
+
+  // Modern Location Dropdown State
+  const [isLocationDropdownOpen, setIsLocationDropdownOpen] = useState(false)
+  const [customLocationInput, setCustomLocationInput] = useState('')
+  const locationDropdownRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (locationDropdownRef.current && !locationDropdownRef.current.contains(e.target as Node)) {
+        setIsLocationDropdownOpen(false)
+      }
+    }
+    if (isLocationDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [isLocationDropdownOpen])
+
+  // Edit Modal Location Dropdown State
+  const [isEditLocationDropdownOpen, setIsEditLocationDropdownOpen] = useState(false)
+  const [editCustomLocationInput, setEditCustomLocationInput] = useState('')
+  const editLocationDropdownRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (editLocationDropdownRef.current && !editLocationDropdownRef.current.contains(e.target as Node)) {
+        setIsEditLocationDropdownOpen(false)
+      }
+    }
+    if (isEditLocationDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [isEditLocationDropdownOpen])
+
+  const isFormModalOpen = isAddSessionModalOpen || isSessionModalOpen
+  const closeFormModal = () => {
+    setIsAddSessionModalOpen(false)
+    closeSessionModal()
+    resetSessionForm()
+    if (typeof window !== 'undefined' && window.location.search) {
+      const url = new URL(window.location.href)
+      if (url.searchParams.has('packageId') || url.searchParams.has('clientId') || url.searchParams.has('new')) {
+        url.searchParams.delete('packageId')
+        url.searchParams.delete('clientId')
+        url.searchParams.delete('new')
+        window.history.replaceState(null, '', url.pathname + (url.searchParams.toString() ? `?${url.searchParams.toString()}` : ''))
+      }
+    }
+  }
+
   // Presets for 1-tap quick selection
   const PROGRAM_PRESETS = [
     'Total Body',
@@ -117,9 +268,50 @@ export function JadwalView({ initialOpenNew, defaultPackageId, defaultClientId }
     'Cardio Training',
     'Hybrid Training',
     'Muaythai',
+    'Mobility & Core',
   ]
-  const TIME_PRESETS = ['05:30', '06:00', '07:00', '08:00', '08:30', '09:00', '09:30']
-  const LOCATION_PRESETS = ['Essence', 'Hang Lekir', '1 Park', 'FTL Pasar Minggu', 'Studio Fit', 'Home Gym']
+
+  // Modern 4:2 Grid Program Cards (4 rows × 2 columns = 8 cards)
+  const PROGRAM_CARDS = [
+    { name: 'Total Body', desc: 'Full Body Compound', icon: Flame, color: '#f59e0b', bg: 'rgba(245, 158, 11, 0.15)' },
+    { name: 'Upper Body', desc: 'Chest, Back & Arms', icon: Dumbbell, color: '#3b82f6', bg: 'rgba(59, 130, 246, 0.15)' },
+    { name: 'Lower Body', desc: 'Legs & Glutes Power', icon: Zap, color: '#10b981', bg: 'rgba(16, 185, 129, 0.15)' },
+    { name: 'Circuit Training', desc: 'High Intensity Flow', icon: Activity, color: '#ec4899', bg: 'rgba(236, 72, 153, 0.15)' },
+    { name: 'Cardio Training', desc: 'Endurance & Stamina', icon: HeartPulse, color: '#ef4444', bg: 'rgba(239, 68, 68, 0.15)' },
+    { name: 'Hybrid Training', desc: 'Strength + Conditioning', icon: Layers, color: '#8b5cf6', bg: 'rgba(139, 92, 246, 0.15)' },
+    { name: 'Muaythai', desc: 'Striking & Pad Work', icon: Target, color: '#f97316', bg: 'rgba(249, 115, 22, 0.15)' },
+    { name: 'Mobility & Core', desc: 'Flexibility & Abs', icon: Shield, color: '#06b6d4', bg: 'rgba(6, 182, 212, 0.15)' },
+  ]
+
+  const getProgramIcon = (programName: string) => {
+    const found = PROGRAM_CARDS.find(p => p.name.toLowerCase() === (programName || '').toLowerCase())
+    return found ? found.icon : Flame
+  }
+
+  const getProgramColor = (programName: string) => {
+    const found = PROGRAM_CARDS.find(p => p.name.toLowerCase() === (programName || '').toLowerCase())
+    return found ? found.color : '#f59e0b'
+  }
+
+  const MORNING_TIME_PRESETS = ['06:00', '07:00', '08:00', '09:00', '10:00']
+  const EVENING_TIME_PRESETS = ['16:00', '17:00', '18:00', '19:00', '20:00']
+  const TIME_PRESETS = [...MORNING_TIME_PRESETS, ...EVENING_TIME_PRESETS]
+  const LOCATION_PRESETS = ['Essence', 'Hang Lekir', '1 Park']
+  const LOCATION_CARDS = [
+    { name: 'Essence', desc: 'Dharmawangsa', icon: Building2, color: '#38bdf8', bg: 'rgba(56, 189, 248, 0.15)' },
+    { name: 'Hang Lekir', desc: 'Kebayoran Baru', icon: MapPin, color: '#34d399', bg: 'rgba(52, 211, 153, 0.15)' },
+    { name: '1 Park', desc: 'Gandaria', icon: Building2, color: '#a78bfa', bg: 'rgba(167, 139, 250, 0.15)' },
+  ]
+
+  const getLocationIcon = (locName: string) => {
+    const found = LOCATION_CARDS.find((l) => l.name.toLowerCase() === (locName || '').toLowerCase())
+    return found ? found.icon : MapPin
+  }
+
+  const getLocationColor = (locName: string) => {
+    const found = LOCATION_CARDS.find((l) => l.name.toLowerCase() === (locName || '').toLowerCase())
+    return found ? found.color : '#38bdf8'
+  }
 
   // Lock body scroll when any modal is open to ensure 100% viewport stability on Mobile HP
   useEffect(() => {
@@ -178,18 +370,26 @@ export function JadwalView({ initialOpenNew, defaultPackageId, defaultClientId }
     }
   }
 
+  const initialOpenedRef = useRef(false)
+
   useEffect(() => {
-    if (initialOpenNew) {
+    if (initialOpenNew && !initialOpenedRef.current) {
       setIsAddSessionModalOpen(true)
     }
   }, [initialOpenNew])
 
   useEffect(() => {
-    if (defaultPackageId) {
-      setNewSessionPkgId(defaultPackageId)
-    } else if (defaultClientId && packagesData.length > 0) {
-      const match = packagesData.find((p) => p.clientId === defaultClientId)
-      if (match) setNewSessionPkgId(match.id)
+    if (!initialOpenedRef.current) {
+      if (defaultPackageId) {
+        setNewSessionPkgId(defaultPackageId)
+        initialOpenedRef.current = true
+      } else if (defaultClientId && packagesData.length > 0) {
+        const match = packagesData.find((p) => p.clientId === defaultClientId)
+        if (match) {
+          setNewSessionPkgId(match.id)
+          initialOpenedRef.current = true
+        }
+      }
     }
   }, [defaultPackageId, defaultClientId, packagesData])
 
@@ -475,8 +675,6 @@ export function JadwalView({ initialOpenNew, defaultPackageId, defaultClientId }
       if (res.success) {
         await loadData()
         closeFormModal()
-        setNewSessionNotes('')
-        setNewSessionLocation('')
         showAlert(
           'Sesi latihan berhasil di-Check-In dan kuota paket otomatis terpotong 1 sesi!',
           'success',
@@ -583,9 +781,21 @@ export function JadwalView({ initialOpenNew, defaultPackageId, defaultClientId }
     }
   }
 
+  const scheduledPackageIds = useMemo(() => {
+    return new Set(
+      data
+        .filter((s) => {
+          if (!s?.scheduledAt) return false
+          const d = s.scheduledAt instanceof Date ? s.scheduledAt : new Date(s.scheduledAt)
+          return !isNaN(d.getTime()) && isSameDay(d, new Date())
+        })
+        .map((s) => s.packageId)
+    )
+  }, [data])
+
   // Active packages with quota (include postpaid packages)
   const activePackages = useMemo(() => {
-    return packagesData.filter((pkg) => {
+    const list = packagesData.filter((pkg) => {
       const isPostpaid =
         pkg.billingType === 'postpaid' ||
         (pkg.packageName && pkg.packageName.toLowerCase().includes('pascabayar')) ||
@@ -598,7 +808,23 @@ export function JadwalView({ initialOpenNew, defaultPackageId, defaultClientId }
       const remaining = (pkg.totalSessions || 0) - (pkg.usedSessions || 0)
       return remaining > 0 && pkg.status !== 'expired' && pkg.status !== 'inactive'
     })
-  }, [packagesData])
+
+    return list.sort((a, b) => {
+      const aToday = scheduledPackageIds.has(a.id) ? 1 : 0
+      const bToday = scheduledPackageIds.has(b.id) ? 1 : 0
+      if (bToday !== aToday) return bToday - aToday
+      return (a.clientName || '').localeCompare(b.clientName || '')
+    })
+  }, [packagesData, scheduledPackageIds])
+
+  const filteredPackages = useMemo(() => {
+    if (!clientSearch.trim()) return activePackages
+    const q = clientSearch.toLowerCase().trim()
+    return activePackages.filter((pkg) =>
+      (pkg.clientName || '').toLowerCase().includes(q) ||
+      (pkg.packageName || '').toLowerCase().includes(q)
+    )
+  }, [activePackages, clientSearch])
 
   return (
     <div className="jd-container animate-fade-in">
@@ -846,6 +1072,7 @@ export function JadwalView({ initialOpenNew, defaultPackageId, defaultClientId }
             <button
               type="button"
               onClick={() => {
+                resetSessionForm()
                 setNewSessionDate(format(currentDate, 'yyyy-MM-dd'))
                 openSessionModal()
               }}
@@ -1274,12 +1501,9 @@ export function JadwalView({ initialOpenNew, defaultPackageId, defaultClientId }
             onClick={(e) => e.stopPropagation()}
             style={{ maxWidth: 540 }}
           >
-            {/* Header: Editorial Minimal with Dev Micro-Label */}
+            {/* Header: Editorial Minimal */}
             <div className="dev-modal-header">
               <div>
-                <div className="dev-mono-tag font-mono">
-                  // QUICK_CHECKIN_DISPATCH
-                </div>
                 <h3 className="dev-modal-title">
                   Check-In Sesi Latihan
                 </h3>
@@ -1298,96 +1522,199 @@ export function JadwalView({ initialOpenNew, defaultPackageId, defaultClientId }
             </div>
 
             <form onSubmit={handleCreateSession} className="dev-modal-body">
-              {/* SECTION 1: Client & Package Selection */}
+              {/* SECTION 1: Client & Package Selection (OPSI 1: ULTRA-COMPACT 1-BARIS HORIZONTAL SWIPEABLE CHIPS) */}
+              {/* SECTION 1: Client & Package Selection (Modern Dropdown with Grid Cards) */}
               <div className="dev-field-group">
                 <div className="dev-field-label font-mono">
-                  <span className="dev-label-txt sec-label-client">01 // CLIENT & PACKAGE</span>
-                  {(() => {
-                    const sel = activePackages.find((p) => p.id === newSessionPkgId)
-                    if (!sel) return <span className="dev-req-star">* Required</span>
-                    const isPostpaid =
-                      sel.billingType === 'postpaid' ||
-                      (sel.packageName && sel.packageName.toLowerCase().includes('pascabayar')) ||
-                      (sel.packageName && sel.packageName.toLowerCase().includes('postpaid'))
-
-                    if (isPostpaid) {
-                      return (
-                        <span className="dev-quota-pill font-mono" style={{ background: 'rgba(56, 189, 248, 0.18)', borderColor: '#38bdf8', color: '#38bdf8' }}>
-                          ⚡ PASCABAYAR
-                        </span>
-                      )
-                    }
-
-                    const rem = (sel.totalSessions || 0) - (sel.usedSessions || 0)
-                    return (
-                      <span className="dev-quota-pill font-mono">
-                        {rem} SESI TERSISA
-                      </span>
-                    )
-                  })()}
+                  <span className="dev-label-txt sec-label-client">01 // PILIH KLIEN</span>
+                  {activePackages.length > 0 && (
+                    <span className="dev-client-count-pill font-mono">{activePackages.length} Klien Aktif</span>
+                  )}
                 </div>
 
-                <div className="dev-select-wrapper">
-                  <select
-                    className="dev-select-input"
-                    value={newSessionPkgId}
-                    onChange={(e) => setNewSessionPkgId(e.target.value)}
-                    required
+                <div className="dev-client-dropdown-container" ref={clientDropdownRef}>
+                  <button
+                    type="button"
+                    className={`dev-client-trigger-btn ${newSessionPkgId ? 'has-value' : ''} ${isClientDropdownOpen ? 'active' : ''}`}
+                    onClick={() => {
+                      setIsClientDropdownOpen(!isClientDropdownOpen)
+                      if (!isClientDropdownOpen) {
+                        setIsProgramDropdownOpen(false)
+                        setIsLocationDropdownOpen(false)
+                      }
+                    }}
                   >
-                    <option value="">-- PILIH KLIEN / PAKET AKTIF --</option>
-                    {activePackages.map((pkg) => {
+                    {(() => {
+                      const sel = activePackages.find((p) => p.id === newSessionPkgId)
+                      if (!sel) {
+                        return (
+                          <div className="dev-client-trigger-left">
+                            <User size={14} className="dev-client-user-icon" />
+                            <span className="dev-client-trigger-placeholder font-mono">
+                              Pilih Klien & Paket...
+                            </span>
+                          </div>
+                        )
+                      }
                       const isPostpaid =
-                        pkg.billingType === 'postpaid' ||
-                        (pkg.packageName && pkg.packageName.toLowerCase().includes('pascabayar')) ||
-                        (pkg.packageName && pkg.packageName.toLowerCase().includes('postpaid'))
-                      const remaining = (pkg.totalSessions || 0) - (pkg.usedSessions || 0)
+                        sel.billingType === 'postpaid' ||
+                        (sel.packageName && sel.packageName.toLowerCase().includes('pascabayar')) ||
+                        (sel.packageName && sel.packageName.toLowerCase().includes('postpaid'))
+                      const remaining = (sel.totalSessions || 0) - (sel.usedSessions || 0)
+                      const initials = (sel.clientName || 'C')
+                        .split(' ')
+                        .map((n: string) => n[0])
+                        .slice(0, 2)
+                        .join('')
+                        .toUpperCase()
+
                       return (
-                        <option key={pkg.id} value={pkg.id}>
-                          {pkg.clientName || 'Client'} — {pkg.packageName} {isPostpaid ? '(Pascabayar / Billing Bulanan)' : `(${remaining} Sesi Tersisa)`}
-                        </option>
+                        <div className="dev-client-trigger-left">
+                          <div className="dev-client-avatar-mini">{initials}</div>
+                          <span className="dev-client-trigger-text font-mono">
+                            {sel.clientName}
+                          </span>
+                          <span className={`dev-client-trigger-badge font-mono ${isPostpaid ? 'postpaid' : ''}`}>
+                            {isPostpaid ? '⚡ Pascabayar' : `${remaining} Sesi`}
+                          </span>
+                        </div>
                       )
-                    })}
-                  </select>
+                    })()}
+
+                    <div className="dev-client-trigger-right">
+                      {newSessionPkgId && (
+                        <button
+                          type="button"
+                          className="dev-client-clear-btn"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setNewSessionPkgId('')
+                          }}
+                          title="Batalkan pilihan klien"
+                        >
+                          <X size={12} />
+                        </button>
+                      )}
+                      <ChevronDown size={14} className={`dev-client-chevron ${isClientDropdownOpen ? 'open' : ''}`} />
+                    </div>
+                  </button>
+
+                  {isClientDropdownOpen && (
+                    <div className="dev-client-popover">
+                      <div className="dev-client-popover-header font-mono">
+                        <span>PILIH KLIEN & PAKET LATIHAN</span>
+                        <button
+                          type="button"
+                          className="dev-client-close-mini-btn"
+                          onClick={() => setIsClientDropdownOpen(false)}
+                        >
+                          <X size={12} />
+                        </button>
+                      </div>
+
+                      {/* Client Search Bar */}
+                      <div className="dev-client-search-wrap">
+                        <Search size={13} className="dev-client-search-icon" />
+                        <input
+                          type="text"
+                          className="dev-client-search-input font-mono"
+                          placeholder="Cari nama klien atau paket..."
+                          value={clientSearch}
+                          onChange={(e) => setClientSearch(e.target.value)}
+                          autoFocus
+                        />
+                        {clientSearch && (
+                          <button
+                            type="button"
+                            className="dev-client-clear-btn"
+                            onClick={() => setClientSearch('')}
+                          >
+                            <X size={11} />
+                          </button>
+                        )}
+                      </div>
+
+                      {filteredPackages.length === 0 ? (
+                        <div className="dev-client-empty font-mono">
+                          {clientSearch ? `Klien "${clientSearch}" tidak ditemukan.` : '⚠️ Tidak ada paket aktif.'}
+                        </div>
+                      ) : (
+                        <div className="dev-client-cards-grid">
+                          {filteredPackages.map((pkg) => {
+                            const isSelected = newSessionPkgId === pkg.id
+                            const isPostpaid =
+                              pkg.billingType === 'postpaid' ||
+                              (pkg.packageName && pkg.packageName.toLowerCase().includes('pascabayar')) ||
+                              (pkg.packageName && pkg.packageName.toLowerCase().includes('postpaid'))
+                            const remaining = (pkg.totalSessions || 0) - (pkg.usedSessions || 0)
+                            const initials = (pkg.clientName || 'C')
+                              .split(' ')
+                              .map((n: string) => n[0])
+                              .slice(0, 2)
+                              .join('')
+                              .toUpperCase()
+                            const isScheduledToday = scheduledPackageIds.has(pkg.id)
+
+                            return (
+                              <button
+                                key={pkg.id}
+                                type="button"
+                                className={`dev-client-card ${isSelected ? 'active' : ''}`}
+                                onClick={() => {
+                                  setNewSessionPkgId(pkg.id)
+                                  setIsClientDropdownOpen(false)
+                                }}
+                              >
+                                <div className="dev-client-card-avatar font-mono">{initials}</div>
+                                <div className="dev-client-card-info">
+                                  <span className="dev-client-card-name">{pkg.clientName}</span>
+                                  <span className="dev-client-card-pkg">{pkg.packageName}</span>
+                                  <div className="dev-client-card-meta">
+                                    <span className={`dev-client-card-quota font-mono ${isPostpaid ? 'postpaid' : ''}`}>
+                                      {isPostpaid ? '⚡ Pasca' : `${remaining} sesi`}
+                                    </span>
+                                    {isScheduledToday && (
+                                      <span className="dev-client-card-scheduled font-mono">⚡ Hari Ini</span>
+                                    )}
+                                  </div>
+                                </div>
+                                {isSelected && (
+                                  <Check size={12} className="dev-client-check-icon" />
+                                )}
+                              </button>
+                            )
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
 
-                {activePackages.length === 0 ? (
-                  <div className="dev-alert-box font-mono">
-                    ⚠️ TIDAK ADA PAKET AKTIF. Tambahkan paket baru untuk klien terlebih dahulu.
-                  </div>
-                ) : (() => {
-                  const sel = activePackages.find((p) => p.id === newSessionPkgId)
-                  if (!sel) return null
-                  const isPostpaid =
-                    sel.billingType === 'postpaid' ||
-                    (sel.packageName && sel.packageName.toLowerCase().includes('pascabayar')) ||
-                    (sel.packageName && sel.packageName.toLowerCase().includes('postpaid'))
-                  const rem = (sel.totalSessions || 0) - (sel.usedSessions || 0)
-                  return (
-                    <div className="dev-package-card animate-fade-in">
-                      <div className="dev-pkg-avatar">
-                        {(sel.clientName || 'C').slice(0, 2).toUpperCase()}
-                      </div>
-                      <div className="dev-pkg-info">
-                        <div className="dev-pkg-name">{sel.clientName || 'Client'}</div>
-                        <div className="dev-pkg-detail font-mono">
-                          {isPostpaid ? `${sel.packageName} • ${sel.usedSessions || 0} Sesi Selesai` : `${sel.packageName} • ${sel.usedSessions || 0}/${sel.totalSessions} Sesi Terpakai`}
-                        </div>
-                      </div>
-                      <div className="dev-pkg-badge font-mono" style={isPostpaid ? { color: '#38bdf8', borderColor: '#38bdf8' } : undefined}>
-                        {isPostpaid ? 'PASCABAYAR' : `${rem} SESI`}
-                      </div>
-                    </div>
-                  )
-                })()}
+                {/* Hidden form binding for required validation */}
+                <input
+                  type="text"
+                  value={newSessionPkgId}
+                  onChange={() => {}}
+                  required
+                  style={{ position: 'absolute', opacity: 0, pointerEvents: 'none', height: 0, width: 0 }}
+                  tabIndex={-1}
+                />
               </div>
 
-              {/* SECTION 2: Tanggal & Waktu */}
+              {/* SECTION 2: Tanggal & Waktu (Ultra-Compact 2-Baris) */}
               <div className="dev-field-group">
                 <div className="dev-field-label font-mono">
                   <span className="dev-label-txt sec-label-time">02 // TANGGAL & WAKTU</span>
-                  <span className="dev-val-indicator font-mono">
-                    {format(new Date(newSessionDate), 'd MMM yyyy', { locale: idLocale })} @ {newSessionTime}
-                  </span>
+                  <button
+                    type="button"
+                    className="dev-dt-header-now-btn"
+                    onClick={handleSetTimeToNow}
+                    title="Set ke tanggal & jam sekarang"
+                  >
+                    <Zap size={11} className="dev-zap-icon" />
+                    <span>SEKARANG</span>
+                    {currentTimeStr && <span className="dev-now-time font-mono">({currentTimeStr})</span>}
+                  </button>
                 </div>
 
                 {/* Native Date & Time Custom Pickers */}
@@ -1414,13 +1741,30 @@ export function JadwalView({ initialOpenNew, defaultPackageId, defaultClientId }
                   </div>
                 </div>
 
-                {/* Time Quick Chips (Morning Sunrise Single Horizontal Row) */}
+                {/* Single Slim Quick Strip: Date Shortcuts + Popular Time Chips */}
                 <div className="dev-time-chips-bar">
+                  <button
+                    type="button"
+                    className={`dev-dt-date-pill ${newSessionDate === todayStr ? 'active' : ''}`}
+                    onClick={() => setNewSessionDate(todayStr)}
+                  >
+                    Hari Ini
+                  </button>
+                  <button
+                    type="button"
+                    className={`dev-dt-date-pill ${newSessionDate === yesterdayStr ? 'active' : ''}`}
+                    onClick={() => setNewSessionDate(yesterdayStr)}
+                  >
+                    Kemarin
+                  </button>
+
+                  <div className="dev-time-divider" />
+
                   {TIME_PRESETS.map((time, idx) => (
                     <button
                       key={time}
                       type="button"
-                      className={`dev-time-chip font-mono time-slot-${idx} ${newSessionTime === time ? 'active' : ''}`}
+                      className={`dev-time-chip font-mono ${time >= '12:00' ? `time-slot-e-${idx - 5}` : `time-slot-${idx}`} ${newSessionTime === time ? 'active' : ''}`}
                       onClick={() => setNewSessionTime(time)}
                     >
                       {time}
@@ -1431,50 +1775,230 @@ export function JadwalView({ initialOpenNew, defaultPackageId, defaultClientId }
 
               {/* SECTION 3: Program & Location */}
               <div className="dev-grid-2col">
-                {/* Program Focus */}
+                {/* Program Focus (Modern Dropdown with 4:2 Grid Cards) */}
                 <div className="dev-field-group">
                   <div className="dev-field-label font-mono">
                     <span className="dev-label-txt sec-label-prog">03 // PROGRAM</span>
                   </div>
-                  <div className="dev-select-wrapper">
-                    <select
-                      className="dev-select-input"
-                      value={newSessionProgram}
-                      onChange={(e) => setNewSessionProgram(e.target.value)}
-                      required
+                  <div className="dev-prog-dropdown-container" ref={programDropdownRef}>
+                    <button
+                      type="button"
+                      className={`dev-prog-trigger-btn ${newSessionProgram ? 'has-value' : ''} ${isProgramDropdownOpen ? 'active' : ''}`}
+                      onClick={() => {
+                        setIsProgramDropdownOpen(!isProgramDropdownOpen)
+                        if (!isProgramDropdownOpen) {
+                          setIsClientDropdownOpen(false)
+                          setIsLocationDropdownOpen(false)
+                        }
+                      }}
                     >
-                      {PROGRAM_PRESETS.map((prog) => (
-                        <option key={prog} value={prog}>
-                          {prog}
-                        </option>
-                      ))}
-                    </select>
+                      <div className="dev-prog-trigger-left">
+                        {(() => {
+                          const ProgIcon = getProgramIcon(newSessionProgram)
+                          const progColor = getProgramColor(newSessionProgram)
+                          return <ProgIcon size={14} className="dev-prog-icon" style={{ color: progColor }} />
+                        })()}
+                        <span className="dev-prog-trigger-text font-mono">
+                          {newSessionProgram || 'Pilih Program...'}
+                        </span>
+                      </div>
+                      <ChevronDown size={14} className={`dev-prog-chevron ${isProgramDropdownOpen ? 'open' : ''}`} />
+                    </button>
+
+                    {isProgramDropdownOpen && (
+                      <div className="dev-prog-popover">
+                        <div className="dev-prog-popover-header font-mono">
+                          <span>PILIH PROGRAM LATIHAN (4:2)</span>
+                          <button
+                            type="button"
+                            className="dev-prog-close-mini-btn"
+                            onClick={() => setIsProgramDropdownOpen(false)}
+                          >
+                            <X size={12} />
+                          </button>
+                        </div>
+
+                        <div className="dev-prog-cards-grid">
+                          {PROGRAM_CARDS.map((prog) => {
+                            const isSelected = newSessionProgram === prog.name
+                            const IconComp = prog.icon
+                            return (
+                              <button
+                                key={prog.name}
+                                type="button"
+                                className={`dev-prog-card ${isSelected ? 'active' : ''}`}
+                                style={{ ['--prog-theme' as any]: prog.color }}
+                                onClick={() => {
+                                  setNewSessionProgram(prog.name)
+                                  setIsProgramDropdownOpen(false)
+                                }}
+                              >
+                                <div
+                                  className="dev-prog-card-icon-wrap"
+                                  style={{ background: prog.bg, color: prog.color }}
+                                >
+                                  <IconComp size={14} />
+                                </div>
+                                <div className="dev-prog-card-info">
+                                  <span className="dev-prog-card-title">{prog.name}</span>
+                                  <span className="dev-prog-card-desc">{prog.desc}</span>
+                                </div>
+                                {isSelected && (
+                                  <Check size={12} className="dev-prog-check-icon" style={{ color: prog.color }} />
+                                )}
+                              </button>
+                            )
+                          })}
+                        </div>
+
+                        <div className="dev-prog-custom-wrap">
+                          <input
+                            type="text"
+                            className="dev-prog-custom-input font-mono"
+                            placeholder="Ketik program custom..."
+                            value={customProgramInput}
+                            onChange={(e) => setCustomProgramInput(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault()
+                                if (customProgramInput.trim()) {
+                                  setNewSessionProgram(customProgramInput.trim())
+                                  setIsProgramDropdownOpen(false)
+                                  setCustomProgramInput('')
+                                }
+                              }
+                            }}
+                          />
+                          <button
+                            type="button"
+                            className="dev-prog-apply-btn font-mono"
+                            onClick={() => {
+                              if (customProgramInput.trim()) {
+                                setNewSessionProgram(customProgramInput.trim())
+                                setIsProgramDropdownOpen(false)
+                                setCustomProgramInput('')
+                              }
+                            }}
+                          >
+                            PAKAI
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 
-                {/* Location */}
+                {/* Location (Modern Dropdown with Grid Cards) */}
                 <div className="dev-field-group">
                   <div className="dev-field-label font-mono">
                     <span className="dev-label-txt sec-label-loc">04 // LOCATION</span>
                   </div>
-                  <input
-                    type="text"
-                    className="dev-clean-input"
-                    placeholder="Essence, Hang Lekir..."
-                    value={newSessionLocation}
-                    onChange={(e) => setNewSessionLocation(e.target.value)}
-                  />
-                  <div className="dev-mini-chips">
-                    {LOCATION_PRESETS.slice(0, 3).map((loc, idx) => (
-                      <button
-                        key={loc}
-                        type="button"
-                        className={`dev-mini-chip loc-chip-${idx} ${newSessionLocation === loc ? 'active' : ''}`}
-                        onClick={() => setNewSessionLocation(loc)}
-                      >
-                        {loc}
-                      </button>
-                    ))}
+                  <div className="dev-loc-dropdown-container" ref={locationDropdownRef}>
+                    <button
+                      type="button"
+                      className={`dev-loc-trigger-btn ${newSessionLocation ? 'has-value' : ''} ${isLocationDropdownOpen ? 'active' : ''}`}
+                      onClick={() => {
+                        setIsLocationDropdownOpen(!isLocationDropdownOpen)
+                        if (!isLocationDropdownOpen) {
+                          setIsClientDropdownOpen(false)
+                          setIsProgramDropdownOpen(false)
+                        }
+                      }}
+                    >
+                      <div className="dev-loc-trigger-left">
+                        {(() => {
+                          const LocIcon = getLocationIcon(newSessionLocation)
+                          const locColor = getLocationColor(newSessionLocation)
+                          return <LocIcon size={14} className="dev-loc-pin-icon" style={{ color: newSessionLocation ? locColor : undefined }} />
+                        })()}
+                        <span className="dev-loc-trigger-text font-mono">
+                          {newSessionLocation || 'Pilih Lokasi...'}
+                        </span>
+                      </div>
+                      <ChevronDown size={14} className={`dev-loc-chevron ${isLocationDropdownOpen ? 'open' : ''}`} />
+                    </button>
+
+                    {isLocationDropdownOpen && (
+                      <div className="dev-loc-popover">
+                        <div className="dev-loc-popover-header font-mono">
+                          <span>PILIH LOKASI LATIHAN</span>
+                          <button
+                            type="button"
+                            className="dev-loc-close-mini-btn"
+                            onClick={() => setIsLocationDropdownOpen(false)}
+                          >
+                            <X size={12} />
+                          </button>
+                        </div>
+
+                        <div className="dev-loc-cards-grid">
+                          {LOCATION_CARDS.map((loc) => {
+                            const isSelected = newSessionLocation === loc.name
+                            const IconComp = loc.icon
+                            return (
+                              <button
+                                key={loc.name}
+                                type="button"
+                                className={`dev-loc-card ${isSelected ? 'active' : ''}`}
+                                style={{ ['--loc-theme' as any]: loc.color }}
+                                onClick={() => {
+                                  setNewSessionLocation(loc.name)
+                                  setIsLocationDropdownOpen(false)
+                                }}
+                              >
+                                <div
+                                  className="dev-loc-card-icon-wrap"
+                                  style={{ background: loc.bg, color: loc.color }}
+                                >
+                                  <IconComp size={14} />
+                                </div>
+                                <div className="dev-loc-card-info">
+                                  <span className="dev-loc-card-title">{loc.name}</span>
+                                  <span className="dev-loc-card-desc">{loc.desc}</span>
+                                </div>
+                                {isSelected && (
+                                  <Check size={12} className="dev-loc-check-icon" style={{ color: loc.color }} />
+                                )}
+                              </button>
+                            )
+                          })}
+                        </div>
+
+                        {/* Custom Location Input */}
+                        <div className="dev-loc-custom-wrap">
+                          <input
+                            type="text"
+                            className="dev-loc-custom-input font-mono"
+                            placeholder="Ketik lokasi custom..."
+                            value={customLocationInput}
+                            onChange={(e) => setCustomLocationInput(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault()
+                                if (customLocationInput.trim()) {
+                                  setNewSessionLocation(customLocationInput.trim())
+                                  setIsLocationDropdownOpen(false)
+                                  setCustomLocationInput('')
+                                }
+                              }
+                            }}
+                          />
+                          <button
+                            type="button"
+                            className="dev-loc-apply-btn font-mono"
+                            onClick={() => {
+                              if (customLocationInput.trim()) {
+                                setNewSessionLocation(customLocationInput.trim())
+                                setIsLocationDropdownOpen(false)
+                                setCustomLocationInput('')
+                              }
+                            }}
+                          >
+                            PAKAI
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -1682,13 +2206,30 @@ export function JadwalView({ initialOpenNew, defaultPackageId, defaultClientId }
                   </div>
                 </div>
 
-                {/* Quick Time Chips */}
+                {/* Single Slim Quick Strip: Date Shortcuts + Popular Time Chips */}
                 <div className="dev-time-chips-bar">
-                  {TIME_PRESETS.map((time) => (
+                  <button
+                    type="button"
+                    className={`dev-dt-date-pill ${editSessionDate === todayStr ? 'active' : ''}`}
+                    onClick={() => setEditSessionDate(todayStr)}
+                  >
+                    Hari Ini
+                  </button>
+                  <button
+                    type="button"
+                    className={`dev-dt-date-pill ${editSessionDate === yesterdayStr ? 'active' : ''}`}
+                    onClick={() => setEditSessionDate(yesterdayStr)}
+                  >
+                    Kemarin
+                  </button>
+
+                  <div className="dev-time-divider" />
+
+                  {TIME_PRESETS.map((time, idx) => (
                     <button
                       key={time}
                       type="button"
-                      className={`dev-time-chip font-mono ${editSessionTime === time ? 'active' : ''}`}
+                      className={`dev-time-chip font-mono ${time >= '12:00' ? `time-slot-e-${idx - 5}` : `time-slot-${idx}`} ${editSessionTime === time ? 'active' : ''}`}
                       onClick={() => setEditSessionTime(time)}
                     >
                       {time}
@@ -1699,50 +2240,224 @@ export function JadwalView({ initialOpenNew, defaultPackageId, defaultClientId }
 
               {/* SECTION 3: Program Focus & Location */}
               <div className="dev-grid-2col">
-                {/* Program Focus */}
+                {/* Program Focus (Modern Dropdown with 4:2 Grid Cards) */}
                 <div className="dev-field-group">
                   <div className="dev-field-label font-mono">
                     <span className="dev-label-txt">03 // PROGRAM</span>
                   </div>
-                  <div className="dev-select-wrapper">
-                    <select
-                      className="dev-select-input"
-                      value={editSessionProgram}
-                      onChange={(e) => setEditSessionProgram(e.target.value)}
-                      required
+                  <div className="dev-prog-dropdown-container" ref={editProgramDropdownRef}>
+                    <button
+                      type="button"
+                      className={`dev-prog-trigger-btn ${editSessionProgram ? 'has-value' : ''} ${isEditProgramDropdownOpen ? 'active' : ''}`}
+                      onClick={() => {
+                        setIsEditProgramDropdownOpen(!isEditProgramDropdownOpen)
+                        if (!isEditProgramDropdownOpen) setIsEditLocationDropdownOpen(false)
+                      }}
                     >
-                      {PROGRAM_PRESETS.map((prog) => (
-                        <option key={prog} value={prog}>
-                          {prog}
-                        </option>
-                      ))}
-                    </select>
+                      <div className="dev-prog-trigger-left">
+                        {(() => {
+                          const ProgIcon = getProgramIcon(editSessionProgram)
+                          const progColor = getProgramColor(editSessionProgram)
+                          return <ProgIcon size={14} className="dev-prog-icon" style={{ color: progColor }} />
+                        })()}
+                        <span className="dev-prog-trigger-text font-mono">
+                          {editSessionProgram || 'Pilih Program...'}
+                        </span>
+                      </div>
+                      <ChevronDown size={14} className={`dev-prog-chevron ${isEditProgramDropdownOpen ? 'open' : ''}`} />
+                    </button>
+
+                    {isEditProgramDropdownOpen && (
+                      <div className="dev-prog-popover">
+                        <div className="dev-prog-popover-header font-mono">
+                          <span>PILIH PROGRAM LATIHAN (4:2)</span>
+                          <button
+                            type="button"
+                            className="dev-prog-close-mini-btn"
+                            onClick={() => setIsEditProgramDropdownOpen(false)}
+                          >
+                            <X size={12} />
+                          </button>
+                        </div>
+
+                        <div className="dev-prog-cards-grid">
+                          {PROGRAM_CARDS.map((prog) => {
+                            const isSelected = editSessionProgram === prog.name
+                            const IconComp = prog.icon
+                            return (
+                              <button
+                                key={prog.name}
+                                type="button"
+                                className={`dev-prog-card ${isSelected ? 'active' : ''}`}
+                                style={{ ['--prog-theme' as any]: prog.color }}
+                                onClick={() => {
+                                  setEditSessionProgram(prog.name)
+                                  setIsEditProgramDropdownOpen(false)
+                                }}
+                              >
+                                <div
+                                  className="dev-prog-card-icon-wrap"
+                                  style={{ background: prog.bg, color: prog.color }}
+                                >
+                                  <IconComp size={14} />
+                                </div>
+                                <div className="dev-prog-card-info">
+                                  <span className="dev-prog-card-title">{prog.name}</span>
+                                  <span className="dev-prog-card-desc">{prog.desc}</span>
+                                </div>
+                                {isSelected && (
+                                  <Check size={12} className="dev-prog-check-icon" style={{ color: prog.color }} />
+                                )}
+                              </button>
+                            )
+                          })}
+                        </div>
+
+                        <div className="dev-prog-custom-wrap">
+                          <input
+                            type="text"
+                            className="dev-prog-custom-input font-mono"
+                            placeholder="Ketik program custom..."
+                            value={editCustomProgramInput}
+                            onChange={(e) => setEditCustomProgramInput(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault()
+                                if (editCustomProgramInput.trim()) {
+                                  setEditSessionProgram(editCustomProgramInput.trim())
+                                  setIsEditProgramDropdownOpen(false)
+                                  setEditCustomProgramInput('')
+                                }
+                              }
+                            }}
+                          />
+                          <button
+                            type="button"
+                            className="dev-prog-apply-btn font-mono"
+                            onClick={() => {
+                              if (editCustomProgramInput.trim()) {
+                                setEditSessionProgram(editCustomProgramInput.trim())
+                                setIsEditProgramDropdownOpen(false)
+                                setEditCustomProgramInput('')
+                              }
+                            }}
+                          >
+                            PAKAI
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 
-                {/* Location */}
+                {/* Location (Modern Dropdown with Grid Cards) */}
                 <div className="dev-field-group">
                   <div className="dev-field-label font-mono">
                     <span className="dev-label-txt">04 // LOKASI</span>
                   </div>
-                  <input
-                    type="text"
-                    className="dev-clean-input"
-                    placeholder="Essence, Hang Lekir..."
-                    value={editSessionLocation}
-                    onChange={(e) => setEditSessionLocation(e.target.value)}
-                  />
-                  <div className="dev-mini-chips">
-                    {LOCATION_PRESETS.slice(0, 3).map((loc) => (
-                      <button
-                        key={loc}
-                        type="button"
-                        className={`dev-mini-chip ${editSessionLocation === loc ? 'active' : ''}`}
-                        onClick={() => setEditSessionLocation(loc)}
-                      >
-                        {loc}
-                      </button>
-                    ))}
+                  <div className="dev-loc-dropdown-container" ref={editLocationDropdownRef}>
+                    <button
+                      type="button"
+                      className={`dev-loc-trigger-btn ${editSessionLocation ? 'has-value' : ''} ${isEditLocationDropdownOpen ? 'active' : ''}`}
+                      onClick={() => {
+                        setIsEditLocationDropdownOpen(!isEditLocationDropdownOpen)
+                        if (!isEditLocationDropdownOpen) setIsEditProgramDropdownOpen(false)
+                      }}
+                    >
+                      <div className="dev-loc-trigger-left">
+                        {(() => {
+                          const LocIcon = getLocationIcon(editSessionLocation)
+                          const locColor = getLocationColor(editSessionLocation)
+                          return <LocIcon size={14} className="dev-loc-pin-icon" style={{ color: editSessionLocation ? locColor : undefined }} />
+                        })()}
+                        <span className="dev-loc-trigger-text font-mono">
+                          {editSessionLocation || 'Pilih Lokasi...'}
+                        </span>
+                      </div>
+                      <ChevronDown size={14} className={`dev-loc-chevron ${isEditLocationDropdownOpen ? 'open' : ''}`} />
+                    </button>
+
+                    {isEditLocationDropdownOpen && (
+                      <div className="dev-loc-popover">
+                        <div className="dev-loc-popover-header font-mono">
+                          <span>PILIH LOKASI LATIHAN</span>
+                          <button
+                            type="button"
+                            className="dev-loc-close-mini-btn"
+                            onClick={() => setIsEditLocationDropdownOpen(false)}
+                          >
+                            <X size={12} />
+                          </button>
+                        </div>
+
+                        <div className="dev-loc-cards-grid">
+                          {LOCATION_CARDS.map((loc) => {
+                            const isSelected = editSessionLocation === loc.name
+                            const IconComp = loc.icon
+                            return (
+                              <button
+                                key={loc.name}
+                                type="button"
+                                className={`dev-loc-card ${isSelected ? 'active' : ''}`}
+                                style={{ ['--loc-theme' as any]: loc.color }}
+                                onClick={() => {
+                                  setEditSessionLocation(loc.name)
+                                  setIsEditLocationDropdownOpen(false)
+                                }}
+                              >
+                                <div
+                                  className="dev-loc-card-icon-wrap"
+                                  style={{ background: loc.bg, color: loc.color }}
+                                >
+                                  <IconComp size={14} />
+                                </div>
+                                <div className="dev-loc-card-info">
+                                  <span className="dev-loc-card-title">{loc.name}</span>
+                                  <span className="dev-loc-card-desc">{loc.desc}</span>
+                                </div>
+                                {isSelected && (
+                                  <Check size={12} className="dev-loc-check-icon" style={{ color: loc.color }} />
+                                )}
+                              </button>
+                            )
+                          })}
+                        </div>
+
+                        {/* Custom Location Input */}
+                        <div className="dev-loc-custom-wrap">
+                          <input
+                            type="text"
+                            className="dev-loc-custom-input font-mono"
+                            placeholder="Ketik lokasi custom..."
+                            value={editCustomLocationInput}
+                            onChange={(e) => setEditCustomLocationInput(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault()
+                                if (editCustomLocationInput.trim()) {
+                                  setEditSessionLocation(editCustomLocationInput.trim())
+                                  setIsEditLocationDropdownOpen(false)
+                                  setEditCustomLocationInput('')
+                                }
+                              }
+                            }}
+                          />
+                          <button
+                            type="button"
+                            className="dev-loc-apply-btn font-mono"
+                            onClick={() => {
+                              if (editCustomLocationInput.trim()) {
+                                setEditSessionLocation(editCustomLocationInput.trim())
+                                setIsEditLocationDropdownOpen(false)
+                                setEditCustomLocationInput('')
+                              }
+                            }}
+                          >
+                            PAKAI
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

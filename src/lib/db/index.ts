@@ -15,9 +15,10 @@ function getDbInstance() {
       globalForDb.connection ??
       postgres(connectionString, {
         prepare: false, // Required for Supabase Transaction Pooler
+        ssl: 'require', // Critical: Prevents 8+ second plaintext fallback and CONNECT_TIMEOUT on Supabase Pooler
         max: 10,
         idle_timeout: 20,
-        connect_timeout: 10,
+        connect_timeout: 15,
       })
 
     if (process.env.NODE_ENV !== 'production') {

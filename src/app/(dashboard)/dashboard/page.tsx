@@ -47,18 +47,29 @@ export default async function DashboardPage() {
   let clientStats = { remainingSessions: 0, completedSessions: 0, streakDays: 0, nextSession: null as any, recentProgress: null as any }
 
   if (role === 'super_admin') {
-    const { count: clientsCount } = await supabase.from('clients').select('*', { count: 'exact', head: true })
-    const { count: ptsCount } = await supabase.from('personal_trainers').select('*', { count: 'exact', head: true })
-    saStats.totalClients = clientsCount || 0
-    saStats.totalPTs = ptsCount || 0
+    const [
+      clientsCountRes,
+      ptsCountRes,
+      monthSessionsCountRes,
+      lastMonthSessionsCountRes,
+      allPackagesRes,
+      recentUsersRes,
+    ] = await Promise.all([
+      supabase.from('clients').select('*', { count: 'exact', head: true }),
+      supabase.from('personal_trainers').select('*', { count: 'exact', head: true }),
+      supabase.from('workout_sessions').select('*', { count: 'exact', head: true }).gte('scheduled_at', startOfMonth).lte('scheduled_at', endOfMonth),
+      supabase.from('workout_sessions').select('*', { count: 'exact', head: true }).gte('scheduled_at', startOfLastMonth).lte('scheduled_at', endOfLastMonth),
+      supabase.from('pt_packages').select('total_price, created_at'),
+      supabase.from('users').select('full_name, role, created_at').order('created_at', { ascending: false }).limit(5),
+    ])
 
-    const { count: monthSessionsCount } = await supabase.from('workout_sessions').select('*', { count: 'exact', head: true }).gte('scheduled_at', startOfMonth).lte('scheduled_at', endOfMonth)
-    saStats.monthSessions = monthSessionsCount || 0
-    const { count: lastMonthSessionsCount } = await supabase.from('workout_sessions').select('*', { count: 'exact', head: true }).gte('scheduled_at', startOfLastMonth).lte('scheduled_at', endOfLastMonth)
-    saStats.sessionsTrend = lastMonthSessionsCount === 0 ? (saStats.monthSessions > 0 ? 100 : 0) : Math.round(((saStats.monthSessions - (lastMonthSessionsCount || 0)) / (lastMonthSessionsCount || 1)) * 100)
+    saStats.totalClients = clientsCountRes.count || 0
+    saStats.totalPTs = ptsCountRes.count || 0
+    saStats.monthSessions = monthSessionsCountRes.count || 0
+    const lastMonthSessionsCount = lastMonthSessionsCountRes.count || 0
+    saStats.sessionsTrend = lastMonthSessionsCount === 0 ? (saStats.monthSessions > 0 ? 100 : 0) : Math.round(((saStats.monthSessions - lastMonthSessionsCount) / (lastMonthSessionsCount || 1)) * 100)
 
-    const { data: allPackages } = await supabase.from('pt_packages').select('total_price, created_at')
-    
+    const allPackages = allPackagesRes.data
     const thisMonthPackages = allPackages?.filter(p => p.created_at >= startOfMonth && p.created_at <= endOfMonth) || []
     saStats.monthRevenue = thisMonthPackages.reduce((acc, pkg) => acc + Number(pkg.total_price), 0) || 0
     
@@ -66,7 +77,7 @@ export default async function DashboardPage() {
     const lastMonthRevenueSA = lastMonthPackagesSA.reduce((acc, pkg) => acc + Number(pkg.total_price), 0) || 0
     saStats.revenueTrend = lastMonthRevenueSA === 0 ? (saStats.monthRevenue > 0 ? 100 : 0) : Math.round(((saStats.monthRevenue - lastMonthRevenueSA) / lastMonthRevenueSA) * 100)
 
-    const { data: recentUsers } = await supabase.from('users').select('full_name, role, created_at').order('created_at', { ascending: false }).limit(5)
+    const recentUsers = recentUsersRes.data
     saStats.recentActivity = recentUsers?.map(u => ({
       title: `Pengguna baru: ${u.full_name}`,
       desc: `Role: ${u.role}`,
@@ -76,43 +87,49 @@ export default async function DashboardPage() {
   } else if (role === 'personal_trainer') {
     const { data: ptData } = await supabase.from('personal_trainers').select('id').eq('user_id', user.id).single()
     if (ptData) {
-      const { count } = await supabase.from('clients').select('*', { count: 'exact', head: true }).eq('trainer_id', ptData.id)
-      ptStats.totalClients = count || 0
+      const [
+        clientsRes,
+        todaySessionsRes,
+        monthSessionsRes,
+        lastMonthSessionsRes,
+        packagesRes,
+        recentClientsRes,
+      ] = await Promise.all([
+        supabase.from('clients').select('*', { count: 'exact', head: true }).eq('trainer_id', ptData.id),
+        supabase.from('workout_sessions')
+          .select('id, scheduled_at, status, clients(users(full_name))', { count: 'exact' })
+          .eq('trainer_id', ptData.id)
+          .gte('scheduled_at', startOfDay)
+          .lte('scheduled_at', endOfDay)
+          .order('scheduled_at', { ascending: true }),
+        supabase.from('workout_sessions')
+          .select('*', { count: 'exact', head: true })
+          .eq('trainer_id', ptData.id)
+          .gte('scheduled_at', startOfMonth)
+          .lte('scheduled_at', endOfMonth),
+        supabase.from('workout_sessions')
+          .select('*', { count: 'exact', head: true })
+          .eq('trainer_id', ptData.id)
+          .gte('scheduled_at', startOfLastMonth)
+          .lte('scheduled_at', endOfLastMonth),
+        supabase.from('pt_packages')
+          .select('package_name, total_price, created_at, clients(users(full_name))')
+          .eq('trainer_id', ptData.id),
+        supabase.from('clients')
+          .select('id, created_at, users(full_name, email)')
+          .eq('trainer_id', ptData.id)
+          .order('created_at', { ascending: false })
+          .limit(4),
+      ])
 
-      // Today sessions
-      const { data: todaySessionsData, count: todayCount } = await supabase
-        .from('workout_sessions')
-        .select('id, scheduled_at, status, clients(users(full_name))', { count: 'exact' })
-        .eq('trainer_id', ptData.id)
-        .gte('scheduled_at', startOfDay)
-        .lte('scheduled_at', endOfDay)
-        .order('scheduled_at', { ascending: true })
-      ptStats.todaySessions = todayCount || 0
-      ptStats.todaySessionsList = todaySessionsData || []
+      ptStats.totalClients = clientsRes.count || 0
+      ptStats.todaySessions = todaySessionsRes.count || 0
+      ptStats.todaySessionsList = todaySessionsRes.data || []
+      ptStats.monthSessions = monthSessionsRes.count || 0
+      const lastMonthCount = lastMonthSessionsRes.count || 0
+      ptStats.sessionsTrend = lastMonthCount === 0 ? (ptStats.monthSessions > 0 ? 100 : 0) : Math.round(((ptStats.monthSessions - lastMonthCount) / (lastMonthCount || 1)) * 100)
 
-      // Month sessions
-      const { count: monthCount } = await supabase
-        .from('workout_sessions')
-        .select('*', { count: 'exact', head: true })
-        .eq('trainer_id', ptData.id)
-        .gte('scheduled_at', startOfMonth)
-        .lte('scheduled_at', endOfMonth)
-      ptStats.monthSessions = monthCount || 0
-
-      const { count: lastMonthCount } = await supabase
-        .from('workout_sessions')
-        .select('*', { count: 'exact', head: true })
-        .eq('trainer_id', ptData.id)
-        .gte('scheduled_at', startOfLastMonth)
-        .lte('scheduled_at', endOfLastMonth)
-      ptStats.sessionsTrend = lastMonthCount === 0 ? (ptStats.monthSessions > 0 ? 100 : 0) : Math.round(((ptStats.monthSessions - (lastMonthCount || 0)) / (lastMonthCount || 1)) * 100)
-
-      // Month revenue & recent packages
-      const { data: packages } = await supabase
-        .from('pt_packages')
-        .select('package_name, total_price, created_at, clients(users(full_name))')
-        .eq('trainer_id', ptData.id)
-        
+      const packages = packagesRes.data
       const thisMonthPackages = packages?.filter(p => p.created_at >= startOfMonth && p.created_at <= endOfMonth) || []
       ptStats.monthRevenue = thisMonthPackages.reduce((acc, pkg) => acc + Number(pkg.total_price), 0) || 0
       
@@ -124,42 +141,43 @@ export default async function DashboardPage() {
         .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
         .slice(0, 4)
 
-      // Recent clients
-      const { data: recentClients } = await supabase
-        .from('clients')
-        .select('id, created_at, users(full_name, email)')
-        .eq('trainer_id', ptData.id)
-        .order('created_at', { ascending: false })
-        .limit(4)
-      ptStats.recentClientsList = recentClients || []
+      ptStats.recentClientsList = recentClientsRes.data || []
     }
   } else if (role === 'client') {
     const { data: clientData } = await supabase.from('clients').select('id').eq('user_id', user.id).single()
     if (clientData) {
-      const { data: packages } = await supabase.from('pt_packages').select('total_sessions, used_sessions').eq('client_id', clientData.id)
+      const [packagesRes, sessionsRes, completedSessionsRes, measurementsRes] = await Promise.all([
+        supabase.from('pt_packages').select('total_sessions, used_sessions').eq('client_id', clientData.id),
+        supabase.from('workout_sessions')
+          .select('scheduled_at')
+          .eq('client_id', clientData.id)
+          .eq('status', 'scheduled')
+          .gte('scheduled_at', now.toISOString())
+          .order('scheduled_at', { ascending: true })
+          .limit(1),
+        supabase.from('workout_sessions')
+          .select('scheduled_at')
+          .eq('client_id', clientData.id)
+          .eq('status', 'completed')
+          .order('scheduled_at', { ascending: false }),
+        supabase.from('measurements')
+          .select('weight, body_fat_percentage, measured_at')
+          .eq('client_id', clientData.id)
+          .order('measured_at', { ascending: false })
+          .limit(1),
+      ])
+
+      const packages = packagesRes.data
       if (packages) {
         clientStats.remainingSessions = packages.reduce((acc, p) => acc + (p.total_sessions - p.used_sessions), 0)
         clientStats.completedSessions = packages.reduce((acc, p) => acc + p.used_sessions, 0)
       }
       
-      const { data: sessions } = await supabase
-        .from('workout_sessions')
-        .select('scheduled_at')
-        .eq('client_id', clientData.id)
-        .eq('status', 'scheduled')
-        .gte('scheduled_at', now.toISOString())
-        .order('scheduled_at', { ascending: true })
-        .limit(1)
+      const sessions = sessionsRes.data
       if (sessions && sessions.length > 0) clientStats.nextSession = sessions[0].scheduled_at
 
       // Streak
-      const { data: completedSessions } = await supabase
-        .from('workout_sessions')
-        .select('scheduled_at')
-        .eq('client_id', clientData.id)
-        .eq('status', 'completed')
-        .order('scheduled_at', { ascending: false })
-      
+      const completedSessions = completedSessionsRes.data
       let streak = 0
       if (completedSessions && completedSessions.length > 0) {
         let currentDate = new Date()
@@ -180,12 +198,7 @@ export default async function DashboardPage() {
       clientStats.streakDays = streak
 
       // Recent Progress
-      const { data: measurements } = await supabase
-        .from('measurements')
-        .select('weight, body_fat_percentage, measured_at')
-        .eq('client_id', clientData.id)
-        .order('measured_at', { ascending: false })
-        .limit(1)
+      const measurements = measurementsRes.data
       if (measurements && measurements.length > 0) {
         clientStats.recentProgress = measurements[0]
       }
@@ -197,8 +210,12 @@ export default async function DashboardPage() {
 
   if (role === 'super_admin' || role === 'personal_trainer') {
     try {
-      crmTasks = await getCRMTasks()
-      crmAnalytics = await getCRMAnalytics()
+      const [tasks, analytics] = await Promise.all([
+        getCRMTasks(),
+        getCRMAnalytics(),
+      ])
+      crmTasks = tasks
+      crmAnalytics = analytics
     } catch (e) {
       console.error('Failed to fetch CRM data:', e)
     }

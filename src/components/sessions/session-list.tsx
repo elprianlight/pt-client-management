@@ -36,7 +36,7 @@ import {
   Activity,
   Award,
 } from 'lucide-react'
-import { listSessions, updateSessionStatus, deleteSession, scheduleSession } from '@/lib/actions/session'
+import { listSessions, updateSessionStatus, deleteSession, scheduleSession, checkInSession } from '@/lib/actions/session'
 import { listPackages } from '@/lib/actions/package'
 import { useAuthStore } from '@/store/auth-store'
 import { format, addDays, subDays, startOfWeek, isSameDay, parseISO } from 'date-fns'
@@ -62,7 +62,7 @@ export function SessionList() {
   const [scheduleViewMode, setScheduleViewMode] = useState<'day' | 'week'>('day')
 
   // Filter Chip selection for PT (Default: Hari Ini)
-  const [activeFilterChip, setActiveFilterChip] = useState<'all' | 'today' | 'tomorrow' | 'scheduled' | 'completed' | 'cancelled'>('today')
+  const [activeFilterChip, setActiveFilterChip] = useState<'all' | 'today' | 'tomorrow' | 'scheduled' | 'check_in' | 'completed' | 'cancelled'>('today')
   const [visibleSessionsCount, setVisibleSessionsCount] = useState<number>(5)
 
   useEffect(() => {
@@ -79,7 +79,7 @@ export function SessionList() {
   // Add / Edit Session Bottom Sheet Modal state
   const [isAddSessionModalOpen, setIsAddSessionModalOpen] = useState(false)
   const [newSessionPkgId, setNewSessionPkgId] = useState('')
-  const [newSessionStatus, setNewSessionStatus] = useState<'scheduled' | 'completed' | 'cancelled' | 'no_show'>('scheduled')
+  const [newSessionStatus, setNewSessionStatus] = useState<'scheduled' | 'check_in' | 'completed' | 'cancelled' | 'no_show'>('scheduled')
   const [newSessionProgram, setNewSessionProgram] = useState('Total Body')
   const [newSessionTime, setNewSessionTime] = useState('09:00')
   const [newSessionLocation, setNewSessionLocation] = useState('')
@@ -218,6 +218,8 @@ export function SessionList() {
       result = result.filter(item => isSameDay(new Date(item.scheduledAt), tomorrow))
     } else if (activeFilterChip === 'scheduled') {
       result = result.filter(item => item.status === 'scheduled')
+    } else if (activeFilterChip === 'check_in') {
+      result = result.filter(item => item.status === 'check_in')
     } else if (activeFilterChip === 'completed') {
       result = result.filter(item => item.status === 'completed')
     } else if (activeFilterChip === 'cancelled') {
@@ -252,6 +254,20 @@ export function SessionList() {
       availableHours,
     }
   }, [data, currentDate])
+
+  // Target session for instant 1-click QUICK_CHECKIN_DISPATCH banner
+  const nextDispatchSession = useMemo(() => {
+    if (isClient) return null
+    // Filter sessions on currentDate
+    const dateSessions = data.filter(s => isSameDay(new Date(s.scheduledAt), currentDate))
+    // 1. Prioritize active check-in (in progress)
+    const activeCheckin = dateSessions.find(s => s.status === 'check_in')
+    if (activeCheckin) return { session: activeCheckin, type: 'active' as const }
+    // 2. Otherwise next scheduled session
+    const nextScheduled = dateSessions.find(s => s.status === 'scheduled')
+    if (nextScheduled) return { session: nextScheduled, type: 'scheduled' as const }
+    return null
+  }, [data, isClient, currentDate])
 
   // Active Package Info for Client
   const activePackageInfo = useMemo(() => {
@@ -292,6 +308,34 @@ export function SessionList() {
     })
   }
 
+  // Quick Check-In 1-Click Action Handler for PT
+  const handleQuickCheckIn = async (e: React.MouseEvent, sessionId: string, clientName?: string) => {
+    e.stopPropagation()
+    if (isClient) return
+
+    setProcessingId(sessionId)
+    try {
+      const res = await checkInSession(sessionId)
+      if (res.success) {
+        await loadData()
+        if (selectedDetailSession && selectedDetailSession.id === sessionId) {
+          setSelectedDetailSession({
+            ...selectedDetailSession,
+            status: 'check_in',
+            checkInAt: res.checkInAt || new Date().toISOString()
+          })
+        }
+        showAlert(`Client ${clientName ? clientName + ' ' : ''}berhasil Check-In! Sesi latihan sedang berlangsung.`, 'success', 'Check-In Berhasil')
+      } else {
+        showAlert(res.error || 'Gagal melakukan check-in', 'error')
+      }
+    } catch (err: any) {
+      showAlert(err.message || 'Terjadi kesalahan', 'error')
+    } finally {
+      setProcessingId(null)
+    }
+  }
+
   // Status Change Handler for PT
   const handleStatusChange = async (sessionId: string, status: any) => {
     if (isClient) return
@@ -304,7 +348,11 @@ export function SessionList() {
         if (selectedDetailSession && selectedDetailSession.id === sessionId) {
           setSelectedDetailSession({ ...selectedDetailSession, status })
         }
-        showAlert(`Status sesi berhasil diperbarui ke '${status === 'completed' ? 'Selesai' : 'Batal'}'!`, 'success', 'Status Diperbarui')
+        const statusLabel = 
+          status === 'completed' ? 'Selesai' : 
+          status === 'check_in' ? 'Check-In' : 
+          status === 'cancelled' ? 'Batal' : 'Scheduled'
+        showAlert(`Status sesi berhasil diperbarui ke '${statusLabel}'!`, 'success', 'Status Diperbarui')
       } else {
         showAlert(res.error || 'Gagal memperbarui status sesi', 'error')
       }
@@ -387,14 +435,18 @@ export function SessionList() {
   }
 
   // Status Badge Helper
-  const renderStatusPill = (status: string) => {
+  const renderStatusPill = (status: string, checkInAt?: string | Date) => {
     switch (status) {
       case 'completed':
         return <span className="pt-status-pill pill-completed">✅ Completed</span>
       case 'cancelled':
         return <span className="pt-status-pill pill-cancelled">🔴 Cancelled</span>
       case 'check_in':
-        return <span className="pt-status-pill pill-checkin">🟢 Check-In</span>
+        return (
+          <span className="pt-status-pill pill-checkin">
+            🟢 Check-In{checkInAt ? ` • ${format(new Date(checkInAt), 'HH:mm')}` : ''}
+          </span>
+        )
       default:
         return <span className="pt-status-pill pill-scheduled">🔵 Scheduled</span>
     }
@@ -462,7 +514,7 @@ export function SessionList() {
                 <span className="c-datetime">
                   📅 {format(new Date(s.scheduledAt), 'EEEE, dd MMM yyyy • HH:mm', { locale: idLocale })}
                 </span>
-                {renderStatusPill(s.status)}
+                {renderStatusPill(s.status, s.checkInAt)}
               </div>
               <h4 className="c-program">{s.programType || 'Total Body Workout'}</h4>
               <div className="c-details-row">
@@ -493,7 +545,7 @@ export function SessionList() {
                 <div className="pt-detail-sec">
                   <div className="flex-between">
                     <h3 className="pt-dt-client">{selectedDetailSession.programType || 'Total Body'}</h3>
-                    {renderStatusPill(selectedDetailSession.status)}
+                    {renderStatusPill(selectedDetailSession.status, selectedDetailSession.checkInAt)}
                   </div>
 
                   <div className="pt-dt-grid">
@@ -508,6 +560,15 @@ export function SessionList() {
                       <span className="pt-dt-lbl">📍 Lokasi</span>
                       <span className="pt-dt-val">{selectedDetailSession.location || 'Gym Hang Lekir'}</span>
                     </div>
+
+                    {selectedDetailSession.checkInAt && (
+                      <div className="pt-dt-item pt-dt-item-checkin">
+                        <span className="pt-dt-lbl">🟢 Waktu Check-In</span>
+                        <span className="pt-dt-val text-emerald-400 font-bold">
+                          {format(new Date(selectedDetailSession.checkInAt), 'HH:mm', { locale: idLocale })} WIB
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -583,6 +644,63 @@ export function SessionList() {
         </div>
       </div>
 
+      {/* QUICK_CHECKIN_DISPATCH: SMART 1-CLICK ACTION BANNER */}
+      {nextDispatchSession && (
+        <div className={`pt-dispatch-banner animate-slide-down ${nextDispatchSession.type === 'active' ? 'active-session' : ''}`}>
+          <div className="pt-dispatch-left">
+            <div className={`pt-dispatch-icon-pulse ${nextDispatchSession.type === 'active' ? 'pulse' : ''}`}>
+              {nextDispatchSession.type === 'active' ? '🟢' : '⚡'}
+            </div>
+            <div className="pt-dispatch-info">
+              <span className="pt-dispatch-tag">
+                {nextDispatchSession.type === 'active' ? 'SESI SEDANG BERLANGSUNG' : 'QUICK CHECK-IN DISPATCH'}
+              </span>
+              <span className="pt-dispatch-title">
+                {nextDispatchSession.session.clientName}
+              </span>
+              <span className="pt-dispatch-sub">
+                {format(new Date(nextDispatchSession.session.scheduledAt), 'HH:mm')} WIB • {nextDispatchSession.session.programType || 'Total Body'} • 📍 {nextDispatchSession.session.location || 'Hang Lekir'}
+              </span>
+            </div>
+          </div>
+
+          {nextDispatchSession.type === 'scheduled' ? (
+            <button
+              type="button"
+              disabled={processingId === nextDispatchSession.session.id}
+              onClick={(e) => handleQuickCheckIn(e, nextDispatchSession.session.id, nextDispatchSession.session.clientName)}
+              className="btn-dispatch-trigger"
+              title="Check-In Client Sekarang (1-Klik Cepat)"
+            >
+              {processingId === nextDispatchSession.session.id ? (
+                <Loader2 size={14} className="spin" />
+              ) : (
+                <Sparkles size={14} />
+              )}
+              <span>Check-In</span>
+            </button>
+          ) : (
+            <button
+              type="button"
+              disabled={processingId === nextDispatchSession.session.id}
+              onClick={(e) => {
+                e.stopPropagation()
+                handleStatusChange(nextDispatchSession.session.id, 'completed')
+              }}
+              className="btn-dispatch-trigger complete"
+              title="Selesaikan Sesi Latihan"
+            >
+              {processingId === nextDispatchSession.session.id ? (
+                <Loader2 size={14} className="spin" />
+              ) : (
+                <CheckCircle2 size={14} />
+              )}
+              <span>Selesaikan</span>
+            </button>
+          )}
+        </div>
+      )}
+
       {/* 2 & 5. TOGGLE VIEW & DATE NAVIGATION BAR */}
       <div className="pt-nav-control-bar">
         {/* Date Navigation Switcher */}
@@ -652,6 +770,7 @@ export function SessionList() {
           { id: 'today', label: 'Hari Ini' },
           { id: 'tomorrow', label: 'Besok' },
           { id: 'scheduled', label: 'Scheduled 🔵' },
+          { id: 'check_in', label: 'Check-In 🟢' },
           { id: 'completed', label: 'Completed ✅' },
           { id: 'cancelled', label: 'Cancelled 🔴' },
         ].map(chip => (
@@ -718,13 +837,60 @@ export function SessionList() {
                     <div className={`pt-compact-card ${session.status}`}>
                       <div className="pt-cc-header">
                         <span className="pt-cc-client">{session.clientName}</span>
-                        {renderStatusPill(session.status)}
+                        {renderStatusPill(session.status, session.checkInAt)}
                       </div>
 
                       <div className="pt-cc-body">
                         <span className="pt-cc-prog">🏋️ {session.programType || 'Total Body'}</span>
                         <span className="pt-cc-meta">📍 {session.location || 'Gym Hang Lekir'} • 🔥 RPE {session.rpe || 8}</span>
                       </div>
+
+                      {/* QUICK CHECK-IN & FAST DISPATCH ACTIONS */}
+                      {!isClient && (session.status === 'scheduled' || session.status === 'check_in') && (
+                        <div className="pt-cc-actions" onClick={(e) => e.stopPropagation()}>
+                          {session.status === 'scheduled' && (
+                            <button
+                              type="button"
+                              disabled={processingId === session.id}
+                              onClick={(e) => handleQuickCheckIn(e, session.id, session.clientName)}
+                              className="btn-quick-checkin-action"
+                              title="Check-In Client Langsung (1-Klik)"
+                            >
+                              {processingId === session.id ? (
+                                <Loader2 size={13} className="spin" />
+                              ) : (
+                                <Sparkles size={13} />
+                              )}
+                              <span>⚡ Check-In</span>
+                            </button>
+                          )}
+
+                          {session.status === 'check_in' && (
+                            <div className="pt-cc-checkin-badge-row">
+                              <span className="pt-checkin-timestamp">
+                                ✓ Hadir {session.checkInAt ? format(new Date(session.checkInAt), 'HH:mm') : ''} WIB
+                              </span>
+                              <button
+                                type="button"
+                                disabled={processingId === session.id}
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  handleStatusChange(session.id, 'completed')
+                                }}
+                                className="btn-quick-complete-action"
+                                title="Selesaikan Sesi Latihan"
+                              >
+                                {processingId === session.id ? (
+                                  <Loader2 size={13} className="spin" />
+                                ) : (
+                                  <CheckCircle2 size={13} />
+                                )}
+                                <span>✅ Selesai</span>
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
                 )
@@ -793,9 +959,14 @@ export function SessionList() {
                         <div
                           key={s.id}
                           onClick={() => setSelectedDetailSession(s)}
-                          className="pt-week-card"
+                          className={`pt-week-card ${s.status === 'check_in' ? 'is-checkin' : ''}`}
                         >
-                          <span className="pt-wc-time">{format(new Date(s.scheduledAt), 'HH:mm')}</span>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            {s.status === 'check_in' && (
+                              <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#10b981', display: 'inline-block' }} />
+                            )}
+                            <span className="pt-wc-time">{format(new Date(s.scheduledAt), 'HH:mm')}</span>
+                          </div>
                           <span className="pt-wc-name">{s.clientName}</span>
                           <span className="pt-wc-prog">{s.programType}</span>
                         </div>
@@ -865,6 +1036,7 @@ export function SessionList() {
                     className="mc-select"
                   >
                     <option value="scheduled">🔵 Scheduled</option>
+                    <option value="check_in">🟢 Check-In</option>
                     <option value="completed">✅ Completed</option>
                     <option value="cancelled">🔴 Cancelled</option>
                     <option value="no_show">⚠️ No Show</option>
@@ -1007,7 +1179,7 @@ export function SessionList() {
               <div className="pt-detail-sec">
                 <div className="flex-between">
                   <h3 className="pt-dt-client">{selectedDetailSession.clientName}</h3>
-                  {renderStatusPill(selectedDetailSession.status)}
+                  {renderStatusPill(selectedDetailSession.status, selectedDetailSession.checkInAt)}
                 </div>
 
                 <div className="pt-dt-grid">
@@ -1032,6 +1204,15 @@ export function SessionList() {
                     <span className="pt-dt-lbl">🔥 Intensitas RPE</span>
                     <span className="pt-dt-val">RPE {selectedDetailSession.rpe || 8}</span>
                   </div>
+
+                  {selectedDetailSession.checkInAt && (
+                    <div className="pt-dt-item pt-dt-item-checkin">
+                      <span className="pt-dt-lbl">🟢 Waktu Check-In</span>
+                      <span className="pt-dt-val text-emerald-400 font-bold">
+                        {format(new Date(selectedDetailSession.checkInAt), 'dd MMM yyyy • HH:mm', { locale: idLocale })} WIB
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -1040,23 +1221,60 @@ export function SessionList() {
 
               {/* PT STATUS ACTION BUTTONS */}
               <div className="pt-action-buttons-wrap">
-                <button
-                  type="button"
-                  onClick={() => handleStatusChange(selectedDetailSession.id, 'completed')}
-                  disabled={processingId === selectedDetailSession.id}
-                  className="pt-act-btn btn-complete"
-                >
-                  ✅ Complete Sesi
-                </button>
+                {selectedDetailSession.status === 'scheduled' && (
+                  <button
+                    type="button"
+                    onClick={(e) => handleQuickCheckIn(e, selectedDetailSession.id, selectedDetailSession.clientName)}
+                    disabled={processingId === selectedDetailSession.id}
+                    className="pt-act-btn btn-checkin"
+                  >
+                    ⚡ Check-In Client
+                  </button>
+                )}
 
-                <button
-                  type="button"
-                  onClick={() => handleStatusChange(selectedDetailSession.id, 'cancelled')}
-                  disabled={processingId === selectedDetailSession.id}
-                  className="pt-act-btn btn-cancel"
-                >
-                  🔴 Cancel
-                </button>
+                {selectedDetailSession.status === 'check_in' && (
+                  <button
+                    type="button"
+                    onClick={() => handleStatusChange(selectedDetailSession.id, 'scheduled')}
+                    disabled={processingId === selectedDetailSession.id}
+                    className="pt-act-btn btn-revert"
+                    title="Batalkan check-in dan kembali ke Scheduled"
+                  >
+                    ↩️ Batal Check-In
+                  </button>
+                )}
+
+                {selectedDetailSession.status !== 'completed' ? (
+                  <button
+                    type="button"
+                    onClick={() => handleStatusChange(selectedDetailSession.id, 'completed')}
+                    disabled={processingId === selectedDetailSession.id}
+                    className="pt-act-btn btn-complete"
+                  >
+                    ✅ Complete Sesi
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => handleStatusChange(selectedDetailSession.id, 'scheduled')}
+                    disabled={processingId === selectedDetailSession.id}
+                    className="pt-act-btn btn-revert"
+                    title="Kembalikan kuota paket dan ubah status ke Scheduled"
+                  >
+                    ↩️ Batal Selesai
+                  </button>
+                )}
+
+                {selectedDetailSession.status !== 'cancelled' && selectedDetailSession.status !== 'completed' && (
+                  <button
+                    type="button"
+                    onClick={() => handleStatusChange(selectedDetailSession.id, 'cancelled')}
+                    disabled={processingId === selectedDetailSession.id}
+                    className="pt-act-btn btn-cancel"
+                  >
+                    🔴 Cancel
+                  </button>
+                )}
 
                 <button
                   type="button"

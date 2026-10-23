@@ -32,6 +32,7 @@ export const userRoleEnum = pgEnum('user_role', [
 
 export const sessionStatusEnum = pgEnum('session_status', [
   'scheduled',
+  'check_in',
   'completed',
   'cancelled',
   'rescheduled',
@@ -310,6 +311,7 @@ export const workoutSessions = pgTable('workout_sessions', {
   programId: uuid('program_id').references(() => workoutPrograms.id),
   scheduledAt: timestamp('scheduled_at', { withTimezone: true }).notNull(),
   completedAt: timestamp('completed_at', { withTimezone: true }),
+  checkInAt: timestamp('check_in_at', { withTimezone: true }),
   status: sessionStatusEnum('status').default('scheduled').notNull(),
   location: varchar('location', { length: 255 }),
   duration: integer('duration').default(60), // minutes (default 60)

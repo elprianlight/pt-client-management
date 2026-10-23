@@ -51,20 +51,20 @@ export async function getCRMAlerts(): Promise<CRMAlertClient[]> {
 
   const clientIds = allClients.map(c => c.id)
 
-  // 2. Fetch packages for remaining sessions calculation
-  const packages = await db.select()
-    .from(ptPackages)
-    .where(inArray(ptPackages.clientId, clientIds))
-
-  // 3. Fetch latest completed workout sessions
-  const sessions = await db.select({
-    clientId: workoutSessions.clientId,
-    scheduledAt: workoutSessions.scheduledAt,
-    status: workoutSessions.status,
-  })
-  .from(workoutSessions)
-  .where(inArray(workoutSessions.clientId, clientIds))
-  .orderBy(desc(workoutSessions.scheduledAt))
+  // 2 & 3. Fetch packages and latest completed workout sessions in parallel
+  const [packages, sessions] = await Promise.all([
+    db.select()
+      .from(ptPackages)
+      .where(inArray(ptPackages.clientId, clientIds)),
+    db.select({
+      clientId: workoutSessions.clientId,
+      scheduledAt: workoutSessions.scheduledAt,
+      status: workoutSessions.status,
+    })
+    .from(workoutSessions)
+    .where(inArray(workoutSessions.clientId, clientIds))
+    .orderBy(desc(workoutSessions.scheduledAt)),
+  ])
 
   const now = new Date()
   const sevenDaysAgo = dateSubDays(now, 7)
@@ -211,16 +211,26 @@ export interface CRMAnalyticsData {
 }
 
 export async function getCRMAnalytics(): Promise<CRMAnalyticsData> {
-  const profile = await getAuthProfile()
+  await getAuthProfile()
 
-  // 1. Total Active Clients
-  const [activeClientsCount] = await db.select({ value: sql<number>`count(*)` })
-    .from(clients)
-    .innerJoin(users, eq(clients.userId, users.id))
-    .where(eq(users.isActive, true))
+  // Fetch all analytics datasets in parallel in 1 roundtrip
+  const [
+    [activeClientsCount],
+    allPackages,
+    allTransactions,
+    allSessions,
+    alerts,
+  ] = await Promise.all([
+    db.select({ value: sql<number>`count(*)` })
+      .from(clients)
+      .innerJoin(users, eq(clients.userId, users.id))
+      .where(eq(users.isActive, true)),
+    db.select().from(ptPackages),
+    db.select().from(ptTransactions).orderBy(desc(ptTransactions.createdAt)),
+    db.select().from(workoutSessions),
+    getCRMAlerts(),
+  ])
 
-  // 2. Fetch Packages
-  const allPackages = await db.select().from(ptPackages)
   let activePkgs = 0
   let lowPkgs = 0
   let expiredPkgs = 0
@@ -232,8 +242,6 @@ export async function getCRMAnalytics(): Promise<CRMAnalyticsData> {
     else activePkgs++
   })
 
-  // 3. Transactions & Revenue
-  const allTransactions = await db.select().from(ptTransactions).orderBy(desc(ptTransactions.createdAt))
   const now = new Date()
   const currentMonthStart = dateStartOfMonth(now)
 
@@ -263,8 +271,7 @@ export async function getCRMAnalytics(): Promise<CRMAnalyticsData> {
     })
   }
 
-  // 4. Session activity for current month
-  const allSessions = await db.select().from(workoutSessions)
+  // Session activity for current month
   const weeklySessionsMap: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0 }
   allSessions.forEach(s => {
     const d = new Date(s.scheduledAt)
@@ -281,7 +288,6 @@ export async function getCRMAnalytics(): Promise<CRMAnalyticsData> {
     { week: 'Mgg 4', count: weeklySessionsMap[4] || 0 },
   ]
 
-  const alerts = await getCRMAlerts()
   const lowFromAlerts = alerts.filter(a => a.alertType === 'low_session').length
   const effectiveLow = Math.max(lowPkgs, lowFromAlerts)
 

@@ -24,7 +24,7 @@ import {
 const formSchema = z.object({
   packageId: z.string().min(1, 'Pilih paket client'),
   scheduledAt: z.string().min(1, 'Tanggal & jam wajib diisi'),
-  status: z.enum(['scheduled', 'completed', 'cancelled', 'no_show']),
+  status: z.enum(['scheduled', 'check_in', 'completed', 'cancelled', 'no_show']),
   programType: z.string().min(1, 'Pilih program latihan'),
   rpe: z.coerce.number().min(1).max(10).optional().or(z.literal('')),
   sessionNotes: z.string().optional(),
@@ -223,6 +223,7 @@ export function SessionForm({
                 id="select-session-status"
               >
                 <option value="completed">✓ Completed (Selesai)</option>
+                <option value="check_in">🟢 Check-In (Hadir / Sedang Latihan)</option>
                 <option value="scheduled">📅 Scheduled (Terjadwal)</option>
                 <option value="cancelled">❌ Cancelled (Dibatalkan)</option>
                 <option value="no_show">🚫 No Show (Tidak Hadir)</option>

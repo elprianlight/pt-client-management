@@ -2016,6 +2016,139 @@
   padding: 6px 10px;
 }
 
+/* ─── OPSI 1: ULTRA-COMPACT 1-BARIS HORIZONTAL SWIPEABLE CHIPS ─── */
+.dev-client-compact-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 2px 2px 6px 2px;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  width: 100%;
+}
+
+.dev-client-compact-row::-webkit-scrollbar {
+  display: none;
+}
+
+.dev-client-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 5px 12px 5px 6px;
+  border-radius: 9999px;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  height: 36px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+}
+
+[data-theme="light"] .dev-client-pill {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+.dev-client-pill:hover {
+  background: rgba(30, 41, 59, 0.9);
+  border-color: rgba(99, 102, 241, 0.5);
+  transform: translateY(-1px);
+}
+
+[data-theme="light"] .dev-client-pill:hover {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+}
+
+.dev-client-pill.active {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.22) 0%, rgba(168, 85, 247, 0.16) 100%);
+  border-color: #818cf8;
+  box-shadow: 0 0 14px -2px rgba(99, 102, 241, 0.4);
+}
+
+[data-theme="light"] .dev-client-pill.active {
+  background: #e0e7ff;
+  border-color: #6366f1;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.25);
+}
+
+.dev-client-pill-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #6366f1, #a855f7);
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+.dev-client-pill.active .dev-client-pill-avatar {
+  background: linear-gradient(135deg, #4f46e5, #06b6d4);
+  border-color: #ffffff;
+}
+
+.dev-client-pill-name {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #f1f5f9;
+  line-height: 1;
+}
+
+[data-theme="light"] .dev-client-pill-name {
+  color: #1e293b;
+}
+
+.dev-client-pill.active .dev-client-pill-name {
+  color: #a5b4fc;
+}
+
+[data-theme="light"] .dev-client-pill.active .dev-client-pill-name {
+  color: #4338ca;
+}
+
+.dev-client-pill-divider {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+}
+
+[data-theme="light"] .dev-client-pill-divider {
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.dev-client-pill-quota {
+  font-size: 10px;
+  color: #34d399;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.dev-client-pill-quota.postpaid {
+  color: #38bdf8;
+}
+
+.dev-client-pill-check {
+  color: #818cf8;
+  display: flex;
+  align-items: center;
+  margin-left: 2px;
+}
+
+[data-theme="light"] .dev-client-pill-check {
+  color: #4f46e5;
+}
+
+
 /* Package Active Card - Pastel Neo-Glass */
 .dev-package-card {
   display: flex;
@@ -2286,24 +2419,99 @@
   font-size: 11.5px;
 }
 
+/* ─── SECTION 02: ULTRA-COMPACT TANGGAL & WAKTU ─── */
+.dev-dt-header-now-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  background: rgba(234, 179, 8, 0.12);
+  border: 1px solid rgba(234, 179, 8, 0.4);
+  color: #facc15;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  line-height: 1.4;
+}
+
+.dev-dt-header-now-btn:hover {
+  background: rgba(234, 179, 8, 0.22);
+  border-color: #facc15;
+  box-shadow: 0 0 8px rgba(250, 204, 21, 0.35);
+}
+
+.dev-dt-header-now-btn:active {
+  transform: scale(0.95);
+}
+
+.dev-zap-icon {
+  color: #facc15;
+  filter: drop-shadow(0 0 3px rgba(250, 204, 21, 0.6));
+}
+
+.dev-now-time {
+  font-size: 9.5px;
+  color: #fef08a;
+  letter-spacing: -0.2px;
+}
+
+.dev-dt-date-pill {
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+  color: #94a3b8;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.dev-dt-date-pill:hover {
+  background: rgba(255, 255, 255, 0.07);
+  color: #e2e8f0;
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.dev-dt-date-pill.active {
+  background: rgba(99, 102, 241, 0.2);
+  border-color: #818cf8;
+  color: #c7d2fe;
+  font-weight: 700;
+  box-shadow: 0 0 8px rgba(99, 102, 241, 0.35);
+}
+
 /* Time Chips Bar (Single Scrollable Row) */
 .dev-time-chips-bar {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   overflow-x: auto;
-  padding-bottom: 2px;
+  padding: 3px 1px 1px 1px;
   scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
 }
 
 .dev-time-chips-bar::-webkit-scrollbar {
   display: none;
 }
 
+.dev-time-divider {
+  width: 1px;
+  height: 16px;
+  background: rgba(255, 255, 255, 0.14);
+  flex-shrink: 0;
+  margin: 0 2px;
+}
+
 .dev-time-chip {
-  border-radius: 7px;
-  padding: 5px 9px;
-  font-size: 11.5px;
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 11px;
   font-weight: 700;
   cursor: pointer;
   white-space: nowrap;
@@ -2311,27 +2519,15 @@
   flex-shrink: 0;
 }
 
-/* ─── OPTION B: PASTEL SUNRISE TIME SLOTS ─── */
-/* 05:30 - Soft Lavender */
-.dev-time-chip.time-slot-0 {
-  border: 1px solid rgba(216, 180, 254, 0.35);
-  color: #d8b4fe;
-  background: rgba(216, 180, 254, 0.06);
-}
-.dev-time-chip.time-slot-0:hover, .dev-time-chip.time-slot-0.active {
-  background: linear-gradient(135deg, #c084fc, #a855f7);
-  border-color: #d8b4fe;
-  color: #ffffff;
-  box-shadow: 0 0 12px rgba(192, 132, 252, 0.45);
-}
 
+/* ─── MORNING SLOTS (06:00 - 10:00) ─── */
 /* 06:00 - Soft Periwinkle Sky */
-.dev-time-chip.time-slot-1 {
+.dev-time-chip.time-slot-0 {
   border: 1px solid rgba(147, 197, 253, 0.35);
   color: #93c5fd;
   background: rgba(147, 197, 253, 0.06);
 }
-.dev-time-chip.time-slot-1:hover, .dev-time-chip.time-slot-1.active {
+.dev-time-chip.time-slot-0:hover, .dev-time-chip.time-slot-0.active {
   background: linear-gradient(135deg, #60a5fa, #3b82f6);
   border-color: #93c5fd;
   color: #ffffff;
@@ -2339,12 +2535,12 @@
 }
 
 /* 07:00 - Soft Aqua Teal */
-.dev-time-chip.time-slot-2 {
+.dev-time-chip.time-slot-1 {
   border: 1px solid rgba(94, 234, 212, 0.35);
   color: #5eead4;
   background: rgba(94, 234, 212, 0.06);
 }
-.dev-time-chip.time-slot-2:hover, .dev-time-chip.time-slot-2.active {
+.dev-time-chip.time-slot-1:hover, .dev-time-chip.time-slot-1.active {
   background: linear-gradient(135deg, #2dd4bf, #14b8a6);
   border-color: #5eead4;
   color: #ffffff;
@@ -2352,55 +2548,458 @@
 }
 
 /* 08:00 - Soft Butter Gold */
-.dev-time-chip.time-slot-3 {
+.dev-time-chip.time-slot-2 {
   border: 1px solid rgba(253, 224, 71, 0.35);
   color: #fde047;
   background: rgba(253, 224, 71, 0.06);
 }
-.dev-time-chip.time-slot-3:hover, .dev-time-chip.time-slot-3.active {
+.dev-time-chip.time-slot-2:hover, .dev-time-chip.time-slot-2.active {
   background: linear-gradient(135deg, #eab308, #ca8a04);
   border-color: #fde047;
   color: #ffffff;
   box-shadow: 0 0 12px rgba(250, 204, 21, 0.45);
 }
 
-/* 08:30 - Soft Apricot Peach */
-.dev-time-chip.time-slot-4 {
-  border: 1px solid rgba(253, 186, 116, 0.35);
-  color: #fdba74;
-  background: rgba(253, 186, 116, 0.06);
-}
-.dev-time-chip.time-slot-4:hover, .dev-time-chip.time-slot-4.active {
-  background: linear-gradient(135deg, #fb923c, #f97316);
-  border-color: #fdba74;
-  color: #ffffff;
-  box-shadow: 0 0 12px rgba(251, 146, 60, 0.45);
-}
-
 /* 09:00 - Soft Rose Pink */
-.dev-time-chip.time-slot-5 {
+.dev-time-chip.time-slot-3 {
   border: 1px solid rgba(244, 114, 182, 0.35);
   color: #f472b6;
   background: rgba(244, 114, 182, 0.06);
 }
-.dev-time-chip.time-slot-5:hover, .dev-time-chip.time-slot-5.active {
+.dev-time-chip.time-slot-3:hover, .dev-time-chip.time-slot-3.active {
   background: linear-gradient(135deg, #f43f5e, #e11d48);
   border-color: #fb7185;
   color: #ffffff;
   box-shadow: 0 0 12px rgba(244, 63, 94, 0.45);
 }
 
-/* 09:30 - Soft Mint Dew */
-.dev-time-chip.time-slot-6 {
+/* 10:00 - Soft Mint Dew */
+.dev-time-chip.time-slot-4 {
   border: 1px solid rgba(167, 243, 208, 0.35);
   color: #a7f3d0;
   background: rgba(167, 243, 208, 0.06);
 }
-.dev-time-chip.time-slot-6:hover, .dev-time-chip.time-slot-6.active {
+.dev-time-chip.time-slot-4:hover, .dev-time-chip.time-slot-4.active {
   background: linear-gradient(135deg, #34d399, #10b981);
   border-color: #6ee7b7;
   color: #ffffff;
   box-shadow: 0 0 12px rgba(52, 211, 153, 0.45);
+}
+
+/* ─── EVENING SLOTS (16:00 - 20:00) ─── */
+/* 16:00 - Warm Sunset Amber */
+.dev-time-chip.time-slot-e-0 {
+  border: 1px solid rgba(251, 146, 60, 0.35);
+  color: #fdba74;
+  background: rgba(251, 146, 60, 0.06);
+}
+.dev-time-chip.time-slot-e-0:hover, .dev-time-chip.time-slot-e-0.active {
+  background: linear-gradient(135deg, #f97316, #ea580c);
+  border-color: #fdba74;
+  color: #ffffff;
+  box-shadow: 0 0 12px rgba(249, 115, 22, 0.45);
+}
+
+/* 17:00 - Radiant Crimson Sunset */
+.dev-time-chip.time-slot-e-1 {
+  border: 1px solid rgba(244, 63, 94, 0.35);
+  color: #fda4af;
+  background: rgba(244, 63, 94, 0.06);
+}
+.dev-time-chip.time-slot-e-1:hover, .dev-time-chip.time-slot-e-1.active {
+  background: linear-gradient(135deg, #f43f5e, #be123c);
+  border-color: #fda4af;
+  color: #ffffff;
+  box-shadow: 0 0 12px rgba(244, 63, 94, 0.45);
+}
+
+/* 18:00 - Twilight Magenta / Purple */
+.dev-time-chip.time-slot-e-2 {
+  border: 1px solid rgba(168, 85, 247, 0.35);
+  color: #d8b4fe;
+  background: rgba(168, 85, 247, 0.06);
+}
+.dev-time-chip.time-slot-e-2:hover, .dev-time-chip.time-slot-e-2.active {
+  background: linear-gradient(135deg, #a855f7, #7e22ce);
+  border-color: #d8b4fe;
+  color: #ffffff;
+  box-shadow: 0 0 12px rgba(168, 85, 247, 0.45);
+}
+
+/* 19:00 - Electric Indigo */
+.dev-time-chip.time-slot-e-3 {
+  border: 1px solid rgba(99, 102, 241, 0.35);
+  color: #a5b4fc;
+  background: rgba(99, 102, 241, 0.06);
+}
+.dev-time-chip.time-slot-e-3:hover, .dev-time-chip.time-slot-e-3.active {
+  background: linear-gradient(135deg, #6366f1, #4338ca);
+  border-color: #a5b4fc;
+  color: #ffffff;
+  box-shadow: 0 0 12px rgba(99, 102, 241, 0.45);
+}
+
+/* 20:00 - Royal Cobalt Night */
+.dev-time-chip.time-slot-e-4 {
+  border: 1px solid rgba(59, 130, 246, 0.35);
+  color: #93c5fd;
+  background: rgba(59, 130, 246, 0.06);
+}
+.dev-time-chip.time-slot-e-4:hover, .dev-time-chip.time-slot-e-4.active {
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  border-color: #93c5fd;
+  color: #ffffff;
+  box-shadow: 0 0 12px rgba(59, 130, 246, 0.45);
+}
+
+/* ─── MODERN CLIENT DROPDOWN WITH GRID CARDS (01 // PILIH KLIEN) ─── */
+.dev-client-dropdown-container {
+  position: relative;
+  width: 100%;
+}
+
+.dev-client-trigger-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  height: 38px;
+  padding: 0 10px;
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: #94a3b8;
+  font-size: 11.5px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  text-align: left;
+  user-select: none;
+}
+
+.dev-client-trigger-btn:hover {
+  background: rgba(15, 23, 42, 0.9);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #e2e8f0;
+}
+
+.dev-client-trigger-btn.active,
+.dev-client-trigger-btn.has-value {
+  border-color: rgba(16, 185, 129, 0.5);
+  background: rgba(16, 185, 129, 0.06);
+  color: #f1f5f9;
+}
+
+.dev-client-trigger-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.dev-client-user-icon {
+  color: #64748b;
+  flex-shrink: 0;
+}
+
+.dev-client-avatar-mini {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9.5px;
+  font-weight: 800;
+  flex-shrink: 0;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.35);
+}
+
+.dev-client-trigger-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 700;
+  font-size: 11.5px;
+  color: #f1f5f9;
+}
+
+.dev-client-trigger-placeholder {
+  color: #64748b;
+  font-size: 11.5px;
+}
+
+.dev-client-trigger-badge {
+  font-size: 9px;
+  padding: 1.5px 6px;
+  border-radius: 4px;
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  color: #34d399;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.dev-client-trigger-badge.postpaid {
+  background: rgba(56, 189, 248, 0.15);
+  border-color: rgba(56, 189, 248, 0.35);
+  color: #38bdf8;
+}
+
+.dev-client-trigger-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.dev-client-clear-btn {
+  background: transparent;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  padding: 2px 4px;
+  font-size: 10px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+.dev-client-clear-btn:hover {
+  color: #f43f5e;
+  background: rgba(244, 63, 94, 0.15);
+}
+
+.dev-client-chevron {
+  color: #64748b;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.dev-client-chevron.open {
+  transform: rotate(180deg);
+  color: #10b981;
+}
+
+/* Popover Modal / Menu for Client */
+.dev-client-popover {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  width: 100%;
+  background: #0f172a;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  box-shadow: 0 16px 36px -4px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  padding: 10px;
+  z-index: 120;
+  animation: popover-fade 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.dev-client-popover-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2px 4px 8px 4px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 9.5px;
+  font-weight: 800;
+  color: #94a3b8;
+  letter-spacing: 0.6px;
+}
+
+.dev-client-count-pill {
+  font-size: 9px;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  font-weight: 700;
+}
+
+.dev-client-close-mini-btn {
+  background: transparent;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  padding: 2px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.dev-client-close-mini-btn:hover {
+  color: #f1f5f9;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* Search bar inside Client Popover */
+.dev-client-search-wrap {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 9px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 7px;
+  margin-top: 8px;
+  margin-bottom: 8px;
+  transition: border-color 0.15s ease;
+}
+.dev-client-search-wrap:focus-within {
+  border-color: #10b981;
+}
+
+.dev-client-search-icon {
+  color: #64748b;
+  flex-shrink: 0;
+}
+
+.dev-client-search-input {
+  background: transparent;
+  border: none;
+  color: #f1f5f9;
+  font-size: 11px;
+  outline: none;
+  width: 100%;
+}
+.dev-client-search-input::placeholder {
+  color: #64748b;
+}
+
+/* 2-Column Grid Cards for Clients */
+.dev-client-cards-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  max-height: 240px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.dev-client-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.dev-client-card:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(16, 185, 129, 0.4);
+  transform: translateY(-1px);
+}
+
+.dev-client-card.active {
+  background: rgba(16, 185, 129, 0.08);
+  border-color: #10b981;
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.2);
+}
+
+.dev-client-card-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  font-size: 10px;
+  font-weight: 800;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+
+.dev-client-card.active .dev-client-card-avatar {
+  background: #10b981;
+  color: #ffffff;
+}
+
+.dev-client-card-info {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  flex: 1;
+  gap: 2px;
+}
+
+.dev-client-card-name {
+  font-size: 11px;
+  font-weight: 700;
+  color: #e2e8f0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dev-client-card.active .dev-client-card-name {
+  color: #ffffff;
+}
+
+.dev-client-card-pkg {
+  font-size: 9px;
+  color: #94a3b8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dev-client-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.dev-client-card-quota {
+  font-size: 8px;
+  padding: 1px 4px;
+  border-radius: 3px;
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  font-weight: 700;
+}
+
+.dev-client-card-quota.postpaid {
+  background: rgba(56, 189, 248, 0.15);
+  color: #38bdf8;
+}
+
+.dev-client-card-scheduled {
+  font-size: 8px;
+  padding: 1px 4px;
+  border-radius: 3px;
+  background: rgba(245, 158, 11, 0.2);
+  color: #f59e0b;
+  font-weight: 700;
+}
+
+.dev-client-check-icon {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  color: #10b981;
+}
+
+.dev-client-empty {
+  padding: 20px 10px;
+  text-align: center;
+  color: #64748b;
+  font-size: 11px;
 }
 
 /* 2 Column Grid for Program & Location */
@@ -2408,6 +3007,502 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
+}
+
+/* ─── MODERN PROGRAM DROPDOWN WITH 4:2 GRID CARDS ─── */
+.dev-prog-dropdown-container {
+  position: relative;
+  width: 100%;
+}
+
+.dev-prog-trigger-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  height: 38px;
+  padding: 0 10px;
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: #94a3b8;
+  font-size: 11.5px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  text-align: left;
+  user-select: none;
+}
+
+.dev-prog-trigger-btn:hover {
+  background: rgba(15, 23, 42, 0.9);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #e2e8f0;
+}
+
+.dev-prog-trigger-btn.active,
+.dev-prog-trigger-btn.has-value {
+  border-color: rgba(245, 158, 11, 0.45);
+  background: rgba(245, 158, 11, 0.05);
+  color: #f1f5f9;
+}
+
+.dev-prog-trigger-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dev-prog-icon {
+  flex-shrink: 0;
+}
+
+.dev-prog-trigger-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+  font-size: 11.5px;
+}
+
+.dev-prog-chevron {
+  color: #64748b;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.dev-prog-chevron.open {
+  transform: rotate(180deg);
+  color: #f59e0b;
+}
+
+/* Popover Modal / Menu (4:2 Grid) */
+.dev-prog-popover {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  width: 330px;
+  max-width: calc(100vw - 36px);
+  background: #0f172a;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  box-shadow: 0 16px 36px -4px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  padding: 10px;
+  z-index: 100;
+  animation: popover-fade 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.dev-prog-popover-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2px 4px 8px 4px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 9.5px;
+  font-weight: 800;
+  color: #94a3b8;
+  letter-spacing: 0.6px;
+}
+
+.dev-prog-close-mini-btn {
+  background: transparent;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  padding: 2px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.dev-prog-close-mini-btn:hover {
+  color: #f1f5f9;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* 4:2 Grid Cards inside Dropdown */
+.dev-prog-cards-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
+
+.dev-prog-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.dev-prog-card:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: var(--prog-theme, rgba(245, 158, 11, 0.4));
+  transform: translateY(-1px);
+}
+
+.dev-prog-card.active {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--prog-theme, #f59e0b);
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.2);
+}
+
+.dev-prog-card-icon-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+
+.dev-prog-card-info {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  flex: 1;
+}
+
+.dev-prog-card-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: #e2e8f0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dev-prog-card.active .dev-prog-card-title {
+  color: #ffffff;
+}
+
+.dev-prog-card-desc {
+  font-size: 9.5px;
+  color: #64748b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dev-prog-check-icon {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+}
+
+/* Custom Program Input Inside Popover */
+.dev-prog-custom-wrap {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.dev-prog-custom-input {
+  flex: 1;
+  height: 32px;
+  padding: 0 9px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  color: #f1f5f9;
+  font-size: 11px;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.dev-prog-custom-input:focus {
+  border-color: #f59e0b;
+}
+
+.dev-prog-apply-btn {
+  height: 32px;
+  padding: 0 10px;
+  background: #d97706;
+  border: none;
+  border-radius: 6px;
+  color: #ffffff;
+  font-size: 10.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.dev-prog-apply-btn:hover {
+  background: #b45309;
+}
+
+/* ─── MODERN LOCATION DROPDOWN WITH GRID CARDS ─── */
+.dev-loc-dropdown-container {
+  position: relative;
+  width: 100%;
+}
+
+.dev-loc-trigger-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  height: 38px;
+  padding: 0 10px;
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: #94a3b8;
+  font-size: 11.5px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  text-align: left;
+  user-select: none;
+}
+
+.dev-loc-trigger-btn:hover {
+  background: rgba(15, 23, 42, 0.9);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #e2e8f0;
+}
+
+.dev-loc-trigger-btn.active,
+.dev-loc-trigger-btn.has-value {
+  border-color: rgba(56, 189, 248, 0.5);
+  background: rgba(56, 189, 248, 0.06);
+  color: #f1f5f9;
+}
+
+.dev-loc-trigger-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dev-loc-pin-icon {
+  color: #38bdf8;
+  flex-shrink: 0;
+}
+
+.dev-loc-trigger-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+  font-size: 11.5px;
+}
+
+.dev-loc-chevron {
+  color: #64748b;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.dev-loc-chevron.open {
+  transform: rotate(180deg);
+  color: #38bdf8;
+}
+
+/* Popover Modal / Menu */
+.dev-loc-popover {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  width: 320px;
+  max-width: calc(100vw - 36px);
+  background: #0f172a;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  box-shadow: 0 16px 36px -4px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  padding: 10px;
+  z-index: 100;
+  animation: popover-fade 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes popover-fade {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.dev-loc-popover-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2px 4px 8px 4px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 9.5px;
+  font-weight: 800;
+  color: #94a3b8;
+  letter-spacing: 0.6px;
+}
+
+.dev-loc-close-mini-btn {
+  background: transparent;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  padding: 2px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.dev-loc-close-mini-btn:hover {
+  color: #f1f5f9;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* Cards Grid inside Dropdown */
+.dev-loc-cards-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
+
+.dev-loc-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.dev-loc-card:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: var(--loc-theme, rgba(56, 189, 248, 0.4));
+  transform: translateY(-1px);
+}
+
+.dev-loc-card.active {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--loc-theme, #38bdf8);
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.25);
+}
+
+.dev-loc-card-icon-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #94a3b8;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+
+.dev-loc-card.active .dev-loc-card-icon-wrap {
+  background: rgba(56, 189, 248, 0.22);
+  color: #38bdf8;
+}
+
+.dev-loc-card-info {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  flex: 1;
+}
+
+.dev-loc-card-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: #e2e8f0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dev-loc-card.active .dev-loc-card-title {
+  color: #ffffff;
+}
+
+.dev-loc-card-desc {
+  font-size: 9.5px;
+  color: #64748b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dev-loc-check-icon {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  color: #38bdf8;
+}
+
+/* Custom Location Input Inside Popover */
+.dev-loc-custom-wrap {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.dev-loc-custom-input {
+  flex: 1;
+  height: 32px;
+  padding: 0 9px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  color: #f1f5f9;
+  font-size: 11px;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.dev-loc-custom-input:focus {
+  border-color: #38bdf8;
+}
+
+.dev-loc-apply-btn {
+  height: 32px;
+  padding: 0 10px;
+  background: #0284c7;
+  border: none;
+  border-radius: 6px;
+  color: #ffffff;
+  font-size: 10.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.dev-loc-apply-btn:hover {
+  background: #0369a1;
 }
 
 .dev-mini-chips {
