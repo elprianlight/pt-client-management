@@ -369,7 +369,7 @@ export function Sidebar({ className }: SidebarProps) {
           align-items: center;
           justify-content: center;
           flex-shrink: 0;
-          box-shadow: 0 0 12px rgba(99, 102, 241, 0.3);
+          box-shadow: var(--shadow-sm);
         }
 
         .sidebar-user-info {
@@ -438,8 +438,8 @@ export function Sidebar({ className }: SidebarProps) {
         }
 
         .sidebar-search:focus-within {
-          border-color: var(--border-brand);
-          box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.15);
+          border-color: var(--brand-primary);
+          box-shadow: 0 0 0 2px rgba(192, 57, 43, 0.12);
         }
 
         .sidebar-search-icon {

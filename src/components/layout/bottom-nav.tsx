@@ -221,14 +221,14 @@ export function BottomNav() {
           width: 52px;
           height: 52px;
           border-radius: 50%;
-          background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+          background: var(--gradient-brand);
           display: flex;
           align-items: center;
           justify-content: center;
           color: white;
           margin-top: -24px;
-          box-shadow: 0 4px 18px rgba(99, 102, 241, 0.45);
-          border: 3px solid var(--bottom-nav-bg, #09090b);
+          box-shadow: var(--shadow-brand);
+          border: 3px solid var(--bg-surface);
           transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease;
         }
 
@@ -238,7 +238,7 @@ export function BottomNav() {
 
         :global(.bottom-nav-center-item:hover) .bottom-nav-center-btn {
           transform: translateY(-2px) scale(1.04);
-          box-shadow: 0 6px 24px rgba(99, 102, 241, 0.6);
+          box-shadow: 0 6px 20px rgba(192, 57, 43, 0.35);
         }
 
         .bottom-nav-center-label {
@@ -291,7 +291,7 @@ export function BottomNav() {
         }
 
         :global(.bottom-nav-more-item.active) {
-          background: rgba(99, 102, 241, 0.12);
+          background: rgba(192, 57, 43, 0.08);
           color: var(--brand-primary);
           font-weight: 700;
         }

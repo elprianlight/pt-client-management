@@ -39,8 +39,14 @@ export function MobileHeader() {
     pathname.startsWith(key)
   )?.[1] ?? { title: 'Dashboard', slug: 'dashboard', tag: 'OVERVIEW' }
 
-  // Format role badge
-  const roleBadge = role === 'personal_trainer' ? 'PT' : role === 'super_admin' ? 'ROOT' : 'CLIENT'
+  // Format role label & badge
+  const roleLabelMap: Record<string, string> = {
+    super_admin: 'Super Admin',
+    personal_trainer: 'Personal Trainer',
+    client: 'Client',
+  }
+  const formattedRole = (role && roleLabelMap[role]) || 'User'
+  const roleBadge = role === 'personal_trainer' ? 'PT' : role === 'super_admin' ? 'Admin' : 'Client'
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -116,66 +122,67 @@ export function MobileHeader() {
           )}
         </button>
 
-        {/* Profile Squircle Avatar (Konsep 1 & 8) + Dropdown */}
+        {/* Profile Avatar + Dropdown */}
         {user && (
-          <div className="dev-hdr-profile" ref={dropdownRef}>
+          <div className="profile-hdr-container" ref={dropdownRef}>
             <button
-              className="dev-squircle-avatar-btn font-mono"
+              className="profile-avatar-btn"
               onClick={() => setShowDropdown(!showDropdown)}
-              aria-label="Toggle profile menu"
+              aria-label="Menu profil pengguna"
               aria-expanded={showDropdown}
               id="btn-mobile-profile"
             >
-              <span className="dev-avatar-letter">{userInitial}</span>
-              <span className="dev-avatar-role">{roleBadge}</span>
+              <span className="profile-avatar-circle">{userInitial}</span>
+              <span className="profile-avatar-badge">{roleBadge}</span>
             </button>
 
             {showDropdown && (
               <>
                 {/* Backdrop */}
                 <div
-                  className="dev-dropdown-backdrop"
+                  className="profile-dropdown-backdrop"
                   onClick={() => setShowDropdown(false)}
                   aria-hidden="true"
                 />
 
-                {/* Developer Dropdown */}
-                <div className="dev-dropdown animate-slide-down font-mono">
-                  <div className="dev-dropdown-header">
-                    <div className="dev-dropdown-avatar-box">
+                {/* Clean & Simple Profile Dropdown */}
+                <div className="profile-dropdown animate-slide-down">
+                  <div className="profile-dropdown-header">
+                    <div className="profile-dropdown-avatar">
                       {userInitial}
                     </div>
-                    <div className="dev-dropdown-user-meta">
-                      <p className="dev-dropdown-name">{user.fullName}</p>
-                      <p className="dev-dropdown-email">{user.email}</p>
-                      <div className="dev-dropdown-role-tag">
-                        ROLE: {role?.toUpperCase() || 'USER'} // ACTIVE
+                    <div className="profile-dropdown-info">
+                      <p className="profile-dropdown-name">{user.fullName}</p>
+                      <p className="profile-dropdown-email">{user.email}</p>
+                      <div className="profile-dropdown-role">
+                        <span className="profile-role-dot" />
+                        <span>{formattedRole}</span>
                       </div>
                     </div>
                   </div>
 
-                  <div className="dev-dropdown-divider" />
+                  <div className="profile-dropdown-divider" />
 
                   <Link
                     href="/settings"
-                    className="dev-dropdown-item"
+                    className="profile-dropdown-item"
                     onClick={() => setShowDropdown(false)}
                     id="btn-mobile-settings"
                   >
-                    <Settings size={14} className="text-indigo-400" />
-                    <span>[ CONFIG ] Pengaturan</span>
+                    <Settings size={16} strokeWidth={1.8} className="profile-dropdown-icon" />
+                    <span>Pengaturan Akun</span>
                   </Link>
 
-                  <div className="dev-dropdown-divider" />
+                  <div className="profile-dropdown-divider" />
 
                   <button
-                    className="dev-dropdown-item dev-logout-btn"
+                    className="profile-dropdown-item profile-logout-item"
                     onClick={handleLogout}
                     disabled={isLoggingOut}
                     id="btn-mobile-logout"
                   >
-                    <LogOut size={14} />
-                    <span>{isLoggingOut ? 'TERMINATING...' : '[ LOGOUT ] Keluar'}</span>
+                    <LogOut size={16} strokeWidth={1.8} className="profile-dropdown-icon" />
+                    <span>{isLoggingOut ? 'Memproses...' : 'Keluar'}</span>
                   </button>
                 </div>
               </>
@@ -187,8 +194,8 @@ export function MobileHeader() {
       <style jsx>{`
         .dev-header {
           height: var(--header-height, 56px);
-          background: #080c14;
-          border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+          background: var(--bg-surface);
+          border-bottom: 1px solid var(--border-default);
           display: flex;
           align-items: center;
           justify-content: space-between;
@@ -196,15 +203,7 @@ export function MobileHeader() {
           position: sticky;
           top: 0;
           z-index: 50;
-          backdrop-filter: blur(16px);
-          -webkit-backdrop-filter: blur(16px);
           transition: background-color 0.2s ease, border-color 0.2s ease;
-        }
-
-        :global([data-theme="light"]) .dev-header {
-          background: #ffffff;
-          border-bottom-color: #e2e8f0;
-          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
         }
 
         /* ─── LEFT ─── */
@@ -218,10 +217,10 @@ export function MobileHeader() {
         .dev-hdr-keycap-btn {
           width: 34px;
           height: 34px;
-          border-radius: 8px;
-          background: rgba(255, 255, 255, 0.04);
-          border: 1px solid rgba(255, 255, 255, 0.09);
-          color: #94a3b8;
+          border-radius: var(--radius-md);
+          background: var(--bg-elevated);
+          border: 1px solid var(--border-default);
+          color: var(--text-secondary);
           display: flex;
           align-items: center;
           justify-content: center;
@@ -230,16 +229,10 @@ export function MobileHeader() {
           flex-shrink: 0;
         }
 
-        :global([data-theme="light"]) .dev-hdr-keycap-btn {
-          background: #f1f5f9;
-          border-color: #cbd5e1;
-          color: #475569;
-        }
-
         .dev-hdr-keycap-btn:hover {
-          background: rgba(99, 102, 241, 0.15);
-          border-color: rgba(99, 102, 241, 0.4);
-          color: #818cf8;
+          background: var(--bg-subtle);
+          border-color: var(--border-strong);
+          color: var(--text-primary);
         }
 
         @media (min-width: 1025px) {
@@ -260,7 +253,7 @@ export function MobileHeader() {
           object-fit: contain;
         }
 
-        /* Breadcrumb (Konsep 1) */
+        /* Breadcrumb — Clean Analog editorial */
         .dev-hdr-breadcrumb {
           display: flex;
           align-items: center;
@@ -269,40 +262,33 @@ export function MobileHeader() {
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
+          font-family: var(--font-body), 'DM Sans', sans-serif;
         }
 
         .dev-hdr-org {
-          color: #64748b;
-          font-weight: 600;
-        }
-
-        :global([data-theme="light"]) .dev-hdr-org {
-          color: #94a3b8;
+          color: var(--text-muted);
+          font-weight: 500;
         }
 
         .dev-hdr-slash {
-          color: #475569;
+          color: var(--text-muted);
           font-weight: 400;
         }
 
         .dev-hdr-page {
-          color: #f1f5f9;
-          font-weight: 800;
+          color: var(--text-primary);
+          font-weight: 700;
           letter-spacing: -0.01em;
-        }
-
-        :global([data-theme="light"]) .dev-hdr-page {
-          color: #0f172a;
         }
 
         .dev-hdr-live-pill {
           display: inline-flex;
           align-items: center;
           gap: 4px;
-          background: rgba(16, 185, 129, 0.1);
-          border: 1px solid rgba(16, 185, 129, 0.25);
+          background: var(--success-bg);
+          border: 1px solid rgba(39,134,74,0.2);
           padding: 1px 6px;
-          border-radius: 4px;
+          border-radius: var(--radius-sm);
           margin-left: 2px;
         }
 
@@ -310,8 +296,7 @@ export function MobileHeader() {
           width: 5px;
           height: 5px;
           border-radius: 50%;
-          background: #10b981;
-          box-shadow: 0 0 6px #10b981;
+          background: var(--success);
           animation: dev-pulse 1.8s infinite;
         }
 
@@ -322,9 +307,9 @@ export function MobileHeader() {
 
         .dev-live-text {
           font-size: 9.5px;
-          font-weight: 800;
-          color: #34d399;
-          letter-spacing: 0.05em;
+          font-weight: 700;
+          color: var(--success);
+          letter-spacing: 0.04em;
           text-transform: uppercase;
         }
 
@@ -346,204 +331,201 @@ export function MobileHeader() {
         }
 
         .theme-icon-sun {
-          color: #f59e0b;
+          color: var(--warning);
         }
         .theme-icon-moon {
-          color: #818cf8;
+          color: var(--brand-accent);
         }
 
-        /* Squircle Avatar & Role Pill */
-        .dev-hdr-profile {
+        /* ─── Profile Avatar & Dropdown (Clean & Simple) ─── */
+        .profile-hdr-container {
           position: relative;
         }
 
-        .dev-squircle-avatar-btn {
+        .profile-avatar-btn {
           display: flex;
           align-items: center;
-          gap: 5px;
-          padding: 3px 7px 3px 4px;
+          gap: 6px;
+          padding: 3px 8px 3px 4px;
           height: 34px;
-          border-radius: 9px;
-          background: #0d1322;
-          border: 1px solid rgba(99, 102, 241, 0.3);
-          color: #f1f5f9;
+          border-radius: var(--radius-lg);
+          background: var(--bg-elevated);
+          border: 1px solid var(--border-default);
+          color: var(--text-primary);
           cursor: pointer;
-          transition: all 0.15s ease;
-          box-shadow: 0 0 10px rgba(99, 102, 241, 0.15);
+          transition: all var(--transition-fast);
         }
 
-        :global([data-theme="light"]) .dev-squircle-avatar-btn {
-          background: #f8fafc;
-          border-color: #c7d2fe;
-          box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+        .profile-avatar-btn:hover {
+          border-color: var(--border-brand);
+          background: var(--bg-surface);
         }
 
-        .dev-squircle-avatar-btn:hover {
-          border-color: #818cf8;
-          background: rgba(99, 102, 241, 0.15);
-          box-shadow: 0 0 14px rgba(99, 102, 241, 0.35);
-          transform: translateY(-1px);
-        }
-
-        .dev-avatar-letter {
-          width: 24px;
-          height: 24px;
-          border-radius: 6px;
-          background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+        .profile-avatar-circle {
+          width: 26px;
+          height: 26px;
+          border-radius: 50%;
+          background: var(--brand-primary);
           color: #ffffff;
           font-size: 12px;
-          font-weight: 900;
+          font-weight: 700;
           display: flex;
           align-items: center;
           justify-content: center;
           flex-shrink: 0;
         }
 
-        .dev-avatar-role {
-          font-size: 10px;
-          font-weight: 800;
-          color: #818cf8;
-          letter-spacing: 0.05em;
+        .profile-avatar-badge {
+          font-size: 11px;
+          font-weight: 600;
+          color: var(--text-secondary);
         }
 
-        :global([data-theme="light"]) .dev-avatar-role {
-          color: #4f46e5;
-        }
-
-        /* ─── DEVELOPER DROPDOWN ─── */
-        .dev-dropdown-backdrop {
+        /* Dropdown Overlay & Container */
+        .profile-dropdown-backdrop {
           position: fixed;
           inset: 0;
           z-index: 150;
         }
 
-        .dev-dropdown {
+        .profile-dropdown {
           position: absolute;
           top: calc(100% + 8px);
           right: 0;
-          width: 240px;
-          background: #090d16;
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          border-radius: 12px;
-          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8), 0 0 20px rgba(99, 102, 241, 0.1);
-          padding: 8px;
+          width: 250px;
+          background: var(--bg-surface);
+          border: 1px solid var(--border-default);
+          border-radius: var(--radius-lg);
+          box-shadow: var(--shadow-lg);
+          padding: 6px;
           z-index: 151;
-          backdrop-filter: blur(20px);
+          font-family: inherit;
         }
 
-        :global([data-theme="light"]) .dev-dropdown {
-          background: #ffffff;
-          border-color: #e2e8f0;
-          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
-        }
-
-        .dev-dropdown-header {
+        .profile-dropdown-header {
           display: flex;
           align-items: center;
-          gap: 10px;
-          padding: 8px;
+          gap: 12px;
+          padding: 8px 10px 10px;
         }
 
-        .dev-dropdown-avatar-box {
-          width: 32px;
-          height: 32px;
-          border-radius: 8px;
-          background: rgba(99, 102, 241, 0.2);
-          border: 1px solid rgba(99, 102, 241, 0.4);
-          color: #818cf8;
-          font-size: 13px;
-          font-weight: 900;
+        .profile-dropdown-avatar {
+          width: 38px;
+          height: 38px;
+          border-radius: 50%;
+          background: var(--brand-primary);
+          color: #ffffff;
+          font-size: 15px;
+          font-weight: 700;
           display: flex;
           align-items: center;
           justify-content: center;
           flex-shrink: 0;
+          box-shadow: var(--shadow-sm);
         }
 
-        .dev-dropdown-user-meta {
+        .profile-dropdown-info {
           min-width: 0;
           flex: 1;
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
         }
 
-        .dev-dropdown-name {
-          font-size: 12px;
-          font-weight: 800;
-          color: #ffffff;
+        .profile-dropdown-name {
+          font-size: 13.5px;
+          font-weight: 700;
+          color: var(--text-primary);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
           margin: 0;
+          line-height: 1.3;
         }
 
-        :global([data-theme="light"]) .dev-dropdown-name {
-          color: #0f172a;
-        }
-
-        .dev-dropdown-email {
-          font-size: 10px;
-          color: #94a3b8;
+        .profile-dropdown-email {
+          font-size: 11.5px;
+          color: var(--text-muted);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
-          margin: 1px 0 0 0;
+          margin: 0;
+          line-height: 1.3;
         }
 
-        .dev-dropdown-role-tag {
-          font-size: 9px;
-          color: #34d399;
-          margin-top: 3px;
-          letter-spacing: 0.04em;
+        .profile-dropdown-role {
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+          margin-top: 4px;
+          padding: 2px 7px;
+          background: var(--success-bg);
+          border: 1px solid rgba(39, 134, 74, 0.2);
+          border-radius: 999px;
+          font-size: 10.5px;
+          font-weight: 600;
+          color: var(--success);
+          width: fit-content;
         }
 
-        .dev-dropdown-divider {
+        .profile-role-dot {
+          width: 5px;
+          height: 5px;
+          border-radius: 50%;
+          background: var(--success);
+        }
+
+        .profile-dropdown-divider {
           height: 1px;
-          background: rgba(255, 255, 255, 0.08);
-          margin: 6px 0;
+          background: var(--border-default);
+          margin: 4px 0;
         }
 
-        :global([data-theme="light"]) .dev-dropdown-divider {
-          background: #e2e8f0;
-        }
-
-        .dev-dropdown-item {
+        .profile-dropdown-item {
           display: flex;
           align-items: center;
-          gap: 8px;
+          gap: 10px;
           width: 100%;
-          padding: 8px 10px;
-          font-size: 11.5px;
-          font-weight: 700;
-          color: #cbd5e1;
+          padding: 9px 12px;
+          font-size: 13px;
+          font-weight: 500;
+          color: var(--text-primary);
           background: transparent;
           border: none;
-          border-radius: 8px;
+          border-radius: var(--radius-md);
           cursor: pointer;
           text-decoration: none;
-          transition: all 0.12s ease;
+          transition: all var(--transition-fast);
           text-align: left;
           box-sizing: border-box;
         }
 
-        :global([data-theme="light"]) .dev-dropdown-item {
-          color: #475569;
+        .profile-dropdown-item:hover {
+          background: var(--bg-elevated);
+          color: var(--text-primary);
         }
 
-        .dev-dropdown-item:hover {
-          background: rgba(255, 255, 255, 0.06);
-          color: #ffffff;
+        .profile-dropdown-icon {
+          color: var(--text-secondary);
+          flex-shrink: 0;
+          transition: color var(--transition-fast);
         }
 
-        :global([data-theme="light"]) .dev-dropdown-item:hover {
-          background: #f1f5f9;
-          color: #0f172a;
+        .profile-dropdown-item:hover .profile-dropdown-icon {
+          color: var(--brand-primary);
         }
 
-        .dev-logout-btn {
-          color: #f87171;
+        .profile-logout-item {
+          color: var(--error);
         }
 
-        .dev-logout-btn:hover {
-          background: rgba(239, 68, 68, 0.12);
-          color: #ef4444;
+        .profile-logout-item .profile-dropdown-icon {
+          color: var(--error);
+        }
+
+        .profile-logout-item:hover {
+          background: var(--error-bg);
+          color: var(--error);
         }
       `}</style>
     </header>
