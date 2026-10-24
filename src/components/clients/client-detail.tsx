@@ -27,6 +27,7 @@ import { deleteSession } from '@/lib/actions/session'
 import { toggleClientStatus, deleteClient } from '@/lib/actions/client'
 import { CustomModal, ModalType } from '@/components/ui/custom-modal'
 import { getCleanNotes } from '@/lib/utils'
+import { generateExecutiveReportHtml } from '@/lib/reports/executive-report'
 import { MonthlyBillingCard } from './monthly-billing-card'
 
 type SubTab = 'overview' | 'packages' | 'sessions' | 'workout' | 'nutrition' | 'progress' | 'reports'
@@ -38,6 +39,10 @@ interface ClientDetailProps {
   measurements?: any[]
   workouts?: any[]
   nutritionPlans?: any[]
+  currentTrainer?: {
+    fullName?: string | null
+    role?: string | null
+  }
 }
 
 export function ClientDetail({
@@ -47,6 +52,7 @@ export function ClientDetail({
   measurements = [],
   workouts = [],
   nutritionPlans = [],
+  currentTrainer,
 }: ClientDetailProps) {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<SubTab>('sessions')
@@ -171,48 +177,49 @@ export function ClientDetail({
     }
   }
 
-  // Handle HTML Export
+  // Handle Executive HTML & PDF Export
   const handleExportHTML = () => {
-    const clientName = clientData.user?.fullName || 'Client'
-    const htmlContent = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="utf-8"/>
-        <title>Riwayat Sesi - ${clientName}</title>
-        <style>
-          body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 32px; background: #09090b; color: #f4f4f5; }
-          h1 { color: #f97316; margin-bottom: 4px; font-size: 24px; }
-          .meta { color: #a1a1aa; margin-bottom: 24px; font-size: 14px; border-bottom: 1px solid #27272a; padding-bottom: 12px; }
-          .card { background: #18181b; border: 1px solid #27272a; border-radius: 12px; padding: 16px; margin-bottom: 14px; }
-          .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-          .title { font-weight: 700; font-size: 16px; color: #ffffff; }
-          .badge { background: rgba(16,185,129,0.18); color: #10b981; padding: 4px 12px; border-radius: 50px; font-size: 12px; font-weight: 700; text-transform: uppercase; }
-          .time { font-size: 13px; color: #a1a1aa; margin-bottom: 8px; }
-          .notes { font-size: 13.5px; color: #d4d4d8; line-height: 1.5; white-space: pre-wrap; }
-        </style>
-      </head>
-      <body>
-        <h1>Riwayat Sesi Latihan</h1>
-        <div class="meta">Klien: <strong>${clientName}</strong> | Tanggal Cetak: ${format(new Date(), 'dd MMMM yyyy', { locale: id })}</div>
-        ${filteredSessions.map(s => `
-          <div class="card">
-            <div class="card-header">
-              <div class="title">${s.programType || 'Total Body'} · RPE ${s.rpe ?? '-'}</div>
-              <div class="badge">${s.status === 'completed' ? 'Complete' : s.status}</div>
-            </div>
-            <div class="time">⏱ ${format(new Date(s.scheduledAt), 'dd/MM/yyyy HH:mm', { locale: id })} | Paket: ${s.packageName || '-'}</div>
-            <div class="notes">${getCleanNotes(s.ptNotes, s.sessionNotes) || 'Tidak ada catatan.'}</div>
-          </div>
-        `).join('')}
-      </body>
-      </html>
-    `
-    const win = window.open('', '_blank')
-    if (win) {
-      win.document.write(htmlContent)
-      win.document.close()
-      win.print()
+    try {
+      const selectedPkg =
+        selectedPackageFilter !== 'all'
+          ? packages.find((p: any) => p.id === selectedPackageFilter)
+          : null
+
+      const htmlContent = generateExecutiveReportHtml({
+        client: clientData,
+        selectedPackage: selectedPkg,
+        sessions: filteredSessions,
+        trainer: currentTrainer || {
+          fullName: 'Elprian Light',
+          role: 'Head Coach & Founder',
+        },
+      })
+
+      // Use a Blob URL so the report opens in a clean full new tab with responsive styling
+      const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' })
+      const blobUrl = URL.createObjectURL(blob)
+      const win = window.open(blobUrl, '_blank')
+      if (!win) {
+        // In case pop-up was blocked by browser, try document.write fallback
+        const fallbackWin = window.open('', '_blank')
+        if (fallbackWin) {
+          fallbackWin.document.write(htmlContent)
+          fallbackWin.document.close()
+        } else {
+          // Direct file download fallback
+          const clientName = clientData.user?.fullName || 'Client'
+          const fileNameSlug = clientName.replace(/[^a-zA-Z0-9_-]/g, '_')
+          const a = document.createElement('a')
+          a.href = blobUrl
+          a.download = `Laporan_${fileNameSlug}_ElprianTraining.html`
+          document.body.appendChild(a)
+          a.click()
+          document.body.removeChild(a)
+        }
+      }
+    } catch (err: any) {
+      console.error('Export HTML error:', err)
+      showAlert('Gagal membuat laporan: ' + (err?.message || 'Terjadi kesalahan sistem'), 'error')
     }
   }
 
@@ -575,9 +582,10 @@ export function ClientDetail({
                   onClick={handleExportHTML}
                   className="sess-export-btn"
                   id="btn-export-html"
+                  title="Export Laporan Sesi (Buka HTML & Cetak PDF)"
                 >
                   <FileDown size={15} />
-                  <span>Export HTML</span>
+                  <span>Export Laporan</span>
                 </button>
                 <Link
                   href={`/session/new?clientId=${clientData.id}`}
@@ -756,7 +764,7 @@ export function ClientDetail({
               </div>
             </div>
 
-            <div className="glass-card" style={{ padding: 24 }}>
+            <div className="glass-card" style={{ padding: 24, marginBottom: 16 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
                 <BarChart3 size={24} style={{ color: 'var(--brand-primary)' }} />
                 <h4 style={{ fontSize: 16, fontWeight: 700 }}>Ringkasan Performa Client</h4>
@@ -778,6 +786,34 @@ export function ClientDetail({
                   <span className="detail-label">Sisa Kuota Paket</span>
                   <span className="detail-value">{packages.reduce((acc, p) => acc + (p.totalSessions - p.usedSessions), 0)} Sesi</span>
                 </div>
+              </div>
+            </div>
+
+            {/* Official Executive Report Card */}
+            <div className="glass-card" style={{ padding: 24, borderLeft: '4px solid #FF5A1F' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                    <FileDown size={22} style={{ color: '#FF5A1F' }} />
+                    <h4 style={{ fontSize: 16, fontWeight: 800 }}>Executive Fitness Report</h4>
+                    <span style={{ fontSize: 11, fontWeight: 800, background: 'rgba(255,90,31,0.1)', color: '#FF5A1F', padding: '2px 8px', borderRadius: 12 }}>
+                      Format Resmi
+                    </span>
+                  </div>
+                  <p style={{ fontSize: 13, color: 'var(--text-secondary)', maxWidth: 560, lineHeight: 1.5 }}>
+                    Dokumen rekapitulasi sesi aktual, status kehadiran, RPE, catatan coach, serta rekonsiliasi paket. Siap dicetak sebagai PDF atau diunduh sebagai file HTML untuk dikirim langsung ke klien via WhatsApp atau Email.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleExportHTML}
+                  className="btn-primary"
+                  id="btn-reports-tab-export"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 20px', fontWeight: 700, whiteSpace: 'nowrap' }}
+                >
+                  <FileDown size={16} />
+                  <span>Buka & Cetak Laporan</span>
+                </button>
               </div>
             </div>
           </div>

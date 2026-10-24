@@ -58,6 +58,7 @@ export default async function ClientDetailPage({
     programType: workoutSessions.programType,
     rpe: workoutSessions.rpe,
     sessionNotes: workoutSessions.sessionNotes,
+    ptNotes: workoutSessions.ptNotes,
     packageName: ptPackages.packageName,
   })
     .from(workoutSessions)
@@ -124,6 +125,7 @@ export default async function ClientDetailPage({
           packages={activePackages}
           sessions={recentSessions}
           measurements={[]}
+          currentTrainer={{ fullName: profile.fullName }}
         />
       )}
     </div>
