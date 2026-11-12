@@ -2,11 +2,12 @@
 
 import dynamic from 'next/dynamic'
 import { useEffect, useState } from 'react'
+import type { GymVariant } from './gym-scene'
 
 const GymScene = dynamic(() => import('./gym-scene'), { ssr: false, loading: () => null })
 
 /** Pembungkus aman: tanpa SSR, dilewati bila reduced-motion atau tanpa WebGL. */
-export function GymSceneLazy({ className }: { className?: string }) {
+export function GymSceneLazy({ className, variant }: { className?: string; variant?: GymVariant }) {
   const [enabled, setEnabled] = useState(false)
 
   useEffect(() => {
@@ -22,5 +23,5 @@ export function GymSceneLazy({ className }: { className?: string }) {
   }, [])
 
   if (!enabled) return null
-  return <GymScene className={className} />
+  return <GymScene className={className} variant={variant} />
 }

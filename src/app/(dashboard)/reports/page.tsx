@@ -5,6 +5,7 @@ import { db } from '@/lib/db'
 import { users, workoutSessions, ptPackages, clients } from '@/lib/db/schema'
 import { eq, desc, count } from 'drizzle-orm'
 import { ReportsView } from '@/components/reports/reports-view'
+import { PageHero } from '@/components/ui/page-hero'
 
 export const metadata: Metadata = { title: 'Laporan & Analytics' }
 
@@ -78,6 +79,13 @@ export default async function ReportsPage() {
 
   return (
     <div className="page-container">
+      <PageHero
+        eyebrow="Laporan & Analytics"
+        title="Ringkasan Performa"
+        subtitle="Kehadiran, penyelesaian sesi, dan riwayat latihan."
+        chips={[`${totalSessionsCount} SESI`, `${attendanceRate}% HADIR`]}
+        variant="donut"
+      />
       <ReportsView
         role={profile.role ?? 'client'}
         completedCount={completedCount}

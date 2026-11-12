@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { createPortal } from 'react-dom'
 import { useAuthStore } from '@/store/auth-store'
 import { createClient } from '@/lib/supabase/client'
+import { GymSceneLazy } from '@/components/three/gym-scene-lazy'
 import { updateUserProfile } from '@/lib/actions/client'
 import {
   User,
@@ -267,6 +268,7 @@ export default function SettingsPage() {
         <div className="ah-orb ah-orb-1" />
         <div className="ah-orb ah-orb-2" />
         <div className="ah-pattern" />
+        <GymSceneLazy className="hero-3d-stage" variant="gear" />
 
         <div className="ah-content">
           {/* Avatar with Camera Overlay & Click Trigger */}
@@ -918,7 +920,7 @@ export default function SettingsPage() {
           min-height: 180px;
           border-radius: 24px;
           padding: 22px 24px;
-          background: linear-gradient(135deg, rgba(30, 27, 75, 0.55) 0%, rgba(15, 23, 42, 0.85) 50%, rgba(49, 46, 129, 0.5) 100%);
+          background: linear-gradient(135deg, #14306e 0%, #1c47b8 55%, #4f46e5 100%);
           border: 1px solid rgba(255, 255, 255, 0.14);
           box-shadow: 0 16px 40px rgba(0, 0, 0, 0.25);
           backdrop-filter: blur(24px);

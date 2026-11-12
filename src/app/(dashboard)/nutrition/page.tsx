@@ -9,6 +9,7 @@ import { getNutritionLogs } from '@/lib/actions/nutrition'
 import { DataTable } from '@/components/ui/data-table'
 import { format } from 'date-fns'
 import { id } from 'date-fns/locale'
+import { PageHero } from '@/components/ui/page-hero'
 
 export const metadata: Metadata = { title: 'Nutrition & Diet' }
 
@@ -50,16 +51,13 @@ export default async function NutritionPage() {
 
   return (
     <div className="page-container">
-      <div className="page-header animate-fade-in-up">
-        <div className="page-title-row">
-          <div className="page-header-icon" style={{ background: 'linear-gradient(135deg, rgba(34,197,94,0.2), rgba(20,184,166,0.2))', borderColor: 'rgba(34,197,94,0.25)', color: '#22c55e' }}>
-            <Apple size={20} strokeWidth={1.8} />
-          </div>
-          <div>
-            <h1 className="page-title">Nutrition & Diet</h1>
-            <p className="page-desc">Pantau target nutrisi, asupan kalori, dan catatan diet.</p>
-          </div>
-        </div>
+      <PageHero
+        eyebrow="Nutrition & Diet"
+        title="Nutrisi & Pola Makan"
+        subtitle="Pantau target nutrisi, asupan kalori, dan catatan diet."
+        variant="apple"
+      />
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 14 }}>
         <button className="btn-primary" disabled style={{ opacity: 0.5, cursor: 'not-allowed' }}>
           <Plus size={16} /> Catat Makanan (Segera Hadir)
         </button>

@@ -9,6 +9,7 @@ import Link from 'next/link'
 import { ExerciseList } from '@/components/workout/exercise-list'
 import { ProgramList } from '@/components/workout/program-list'
 import { listExercises, listPrograms } from '@/lib/actions/workout'
+import { PageHero } from '@/components/ui/page-hero'
 
 export const metadata: Metadata = { title: 'Workout Builder' }
 
@@ -33,6 +34,12 @@ export default async function WorkoutPage({
 
   return (
     <div className="page-container">
+      <PageHero
+        eyebrow="Workout Builder"
+        title="Program & Library Gerakan"
+        subtitle="Susun program latihan dan jelajahi library gerakan."
+        variant="dumbbell"
+      />
 
       <div className="tabs animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
         <Link href="/workout?tab=programs" className={`tab-item ${activeTab === 'programs' ? 'active' : ''}`}>

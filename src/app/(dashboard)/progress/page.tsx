@@ -8,6 +8,7 @@ import { Plus, TrendingUp } from 'lucide-react'
 import Link from 'next/link'
 import { ProgressList } from '@/components/progress/progress-list'
 import { listMeasurements } from '@/lib/actions/progress'
+import { PageHero } from '@/components/ui/page-hero'
 
 export const metadata: Metadata = { title: 'Progress Tracking' }
 
@@ -24,6 +25,12 @@ export default async function ProgressPage() {
 
   return (
     <div className="page-container">
+      <PageHero
+        eyebrow="Progress Tracking"
+        title="Perkembangan Tubuh Anda"
+        subtitle="Catat pengukuran dan lihat tren dari waktu ke waktu."
+        variant="bars"
+      />
       <div className="glass-card animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
         <ProgressList data={measurements} />
       </div>

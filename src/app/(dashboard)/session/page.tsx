@@ -7,6 +7,7 @@ import { eq } from 'drizzle-orm'
 import { Calendar, Plus } from 'lucide-react'
 import Link from 'next/link'
 import { SessionList } from '@/components/sessions/session-list'
+import { PageHero } from '@/components/ui/page-hero'
 
 export const metadata: Metadata = { title: 'Sesi Latihan' }
 
@@ -20,6 +21,12 @@ export default async function SessionPage() {
 
   return (
     <div className="page-container">
+      <PageHero
+        eyebrow="Sesi Latihan"
+        title="Riwayat & Jadwal Sesi"
+        subtitle="Lihat sesi yang sudah dijalani dan yang akan datang."
+        variant="kettlebell"
+      />
       <div className="glass-card animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
         <SessionList />
       </div>

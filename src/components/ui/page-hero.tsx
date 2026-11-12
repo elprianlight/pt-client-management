@@ -1,22 +1,24 @@
 'use client'
 
 import { GymSceneLazy } from '@/components/three/gym-scene-lazy'
+import type { GymVariant } from '@/components/three/gym-scene'
 
 interface PageHeroProps {
   eyebrow: string
   title: string
   subtitle?: string
   chips?: string[]
+  variant?: GymVariant
 }
 
 /**
  * Banner halaman bergaya Urban PT: eyebrow, judul besar, subjudul,
  * chip metrik, dan visual 3D gym/wellness interaktif di sisi kanan.
  */
-export function PageHero({ eyebrow, title, subtitle, chips }: PageHeroProps) {
+export function PageHero({ eyebrow, title, subtitle, chips, variant }: PageHeroProps) {
   return (
     <section className="page-hero animate-fade-in-up">
-      <GymSceneLazy className="page-hero-stage" />
+      <GymSceneLazy className="page-hero-stage" variant={variant} />
       <div className="page-hero-body">
         <span className="page-hero-eyebrow">{eyebrow}</span>
         <h1 className="page-hero-title">{title}</h1>
