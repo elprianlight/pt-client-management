@@ -284,7 +284,7 @@ export function ClientListClient({ initialData, totalCount }: ClientListClientPr
             return (
               <div
                 key={client.id}
-                className={`sr-card ${cardBorderClass}`}
+                className={`sr-card tilt-card ${cardBorderClass}`}
                 onClick={() => router.push(`/clients/${client.id}`)}
                 id={`client-card-${client.id}`}
                 style={{ animationDelay: `${idx * 20}ms` }}

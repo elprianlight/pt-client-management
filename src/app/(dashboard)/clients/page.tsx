@@ -6,6 +6,7 @@ import { users } from '@/lib/db/schema'
 import { eq } from 'drizzle-orm'
 import { listClients, getClientCount } from '@/lib/actions/client'
 import { ClientListClient } from '@/components/clients/client-list-client'
+import { PageHero } from '@/components/ui/page-hero'
 
 export const metadata: Metadata = { title: 'Client' }
 
@@ -27,6 +28,12 @@ export default async function ClientsPage() {
 
   return (
     <div className="page-container">
+      <PageHero
+        eyebrow="Client Management"
+        title="Kelola Client & Progres Latihan"
+        subtitle="Pantau paket, sisa sesi, dan aktivitas setiap client dalam satu tampilan."
+        chips={[`${totalCount} CLIENT`]}
+      />
       <ClientListClient initialData={clientList} totalCount={totalCount} />
     </div>
   )

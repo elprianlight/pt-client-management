@@ -228,7 +228,7 @@ export function BottomNav() {
           color: white;
           margin-top: -24px;
           box-shadow: var(--shadow-brand);
-          border: 3px solid var(--bg-surface);
+          border: 3px solid var(--bg-overlay);
           transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease;
         }
 

@@ -5,6 +5,7 @@ import { db } from '@/lib/db'
 import { users } from '@/lib/db/schema'
 import { eq } from 'drizzle-orm'
 import { JadwalView } from '@/components/jadwal/jadwal-view'
+import { PageHero } from '@/components/ui/page-hero'
 
 export const metadata: Metadata = {
   title: 'Jadwal & Check-In — Strength Lab / Elprian Training',
@@ -30,6 +31,11 @@ export default async function JadwalPage({
 
   return (
     <div className="page-container" style={{ paddingTop: 4 }}>
+      <PageHero
+        eyebrow="Jadwal & Check-In"
+        title="Jadwal Sesi Latihan"
+        subtitle="Atur sesi, catat check-in, dan lihat performa mingguan tim Anda."
+      />
       <JadwalView
         initialOpenNew={initialOpenNew}
         defaultPackageId={defaultPackageId}

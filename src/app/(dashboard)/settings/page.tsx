@@ -968,7 +968,7 @@ export default function SettingsPage() {
           width: 22px; height: 22px; border-radius: 50%;
           background: var(--brand-primary); color: white;
           display: flex; align-items: center; justify-content: center;
-          border: 2px solid var(--bg-surface);
+          border: 2px solid var(--bg-overlay);
         }
 
         .ah-identity-group {

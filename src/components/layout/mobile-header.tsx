@@ -195,13 +195,18 @@ export function MobileHeader() {
         .dev-header {
           height: var(--header-height, 56px);
           background: var(--bg-surface);
-          border-bottom: 1px solid var(--border-default);
+          -webkit-backdrop-filter: var(--glass-blur);
+          backdrop-filter: var(--glass-blur);
+          border: 1px solid var(--border-default);
+          border-radius: 28px;
+          box-shadow: var(--shadow-md), var(--glass-highlight);
+          margin: 10px 10px 0;
           display: flex;
           align-items: center;
           justify-content: space-between;
-          padding: 0 16px;
+          padding: 0 14px;
           position: sticky;
-          top: 0;
+          top: 10px;
           z-index: 50;
           transition: background-color 0.2s ease, border-color 0.2s ease;
         }

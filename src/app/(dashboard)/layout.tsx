@@ -17,6 +17,7 @@ export const metadata: Metadata = {
 
 import { BottomNav } from '@/components/layout/bottom-nav'
 import { MobileHeader } from '@/components/layout/mobile-header'
+import { TiltProvider } from '@/components/ui/tilt-provider'
 
 export default async function DashboardLayout({
   children,
@@ -38,6 +39,7 @@ export default async function DashboardLayout({
   return (
     <div className="dashboard-layout">
       <AuthProvider user={profile} role={profile.role} />
+      <TiltProvider />
       <Sidebar />
       <div className="dashboard-main">
         <MobileHeader />
