@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import { StatsCard } from './stats-card'
+import { HeroSceneLazy } from '@/components/three/hero-scene-lazy'
 import {
   Users,
   UserCheck,
@@ -92,6 +93,9 @@ function HeroHeader({
       <div className="hero-orb hero-orb-2" />
       <div className="hero-pattern-overlay" />
 
+      {/* Visual 3D interaktif (dekoratif, mengikuti kursor) */}
+      <HeroSceneLazy className="hero-3d-stage" />
+
       <div className="hero-content-container">
         {/* Left Side: Greeting Card & Personal Welcome */}
         <div className="hero-left-section">
@@ -131,10 +135,10 @@ function HeroHeader({
       <style jsx>{`
         .hero-header-banner {
           position: relative;
-          min-height: 220px;
-          border-radius: 24px;
+          min-height: 260px;
+          border-radius: 28px;
           padding: 28px 32px;
-          background: linear-gradient(135deg, rgba(30, 27, 75, 0.5) 0%, rgba(15, 23, 42, 0.8) 50%, rgba(49, 46, 129, 0.45) 100%);
+          background: linear-gradient(135deg, #2a1a7a 0%, #4b2bd6 55%, #7c3aed 100%);
           border: 1px solid rgba(255, 255, 255, 0.12);
           box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25), 0 0 40px rgba(99, 102, 241, 0.12);
           backdrop-filter: blur(24px);
@@ -196,6 +200,7 @@ function HeroHeader({
         .hero-content-container {
           position: relative;
           z-index: 1;
+          pointer-events: none;
           width: 100%;
           display: flex;
           align-items: center;

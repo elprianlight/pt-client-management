@@ -7,6 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { loginSchema, type LoginFormData } from '@/lib/validations/auth'
 import { createClient } from '@/lib/supabase/client'
 import { Eye, EyeOff, Dumbbell, Loader2, AlertCircle } from 'lucide-react'
+import { HeroSceneLazy } from '@/components/three/hero-scene-lazy'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -79,6 +80,9 @@ export default function LoginPage() {
         <div className="login-bg-orb orb-3" />
         <div className="login-bg-grid" />
       </div>
+
+      {/* Visual 3D interaktif di latar belakang */}
+      <HeroSceneLazy className="login-3d-stage" />
 
       {/* Card */}
       <div className="login-card animate-fade-in-up">
@@ -213,13 +217,13 @@ export default function LoginPage() {
         }
         .orb-1 {
           width: 600px; height: 600px;
-          background: radial-gradient(circle, #6366f1, transparent);
+          background: radial-gradient(circle, #7c5cff, transparent);
           top: -200px; left: -200px;
           animation: float1 12s ease-in-out infinite;
         }
         .orb-2 {
           width: 500px; height: 500px;
-          background: radial-gradient(circle, #8b5cf6, transparent);
+          background: radial-gradient(circle, #ff6b9d, transparent);
           bottom: -150px; right: -150px;
           animation: float2 10s ease-in-out infinite;
         }
@@ -245,16 +249,13 @@ export default function LoginPage() {
           z-index: 1;
           width: 100%;
           max-width: 420px;
-          background: rgba(15, 17, 23, 0.85);
-          backdrop-filter: blur(24px);
-          -webkit-backdrop-filter: blur(24px);
-          border: 1px solid rgba(255,255,255,0.08);
-          border-radius: 20px;
-          padding: 36px;
-          box-shadow:
-            0 32px 64px rgba(0,0,0,0.6),
-            0 0 0 1px rgba(99,102,241,0.1),
-            inset 0 1px 0 rgba(255,255,255,0.06);
+          background: var(--bg-surface);
+          backdrop-filter: var(--glass-blur);
+          -webkit-backdrop-filter: var(--glass-blur);
+          border: 1px solid var(--border-default);
+          border-radius: 28px;
+          padding: 40px 36px;
+          box-shadow: var(--shadow-lg), var(--glass-highlight);
         }
 
         /* ── Logo ── */
@@ -298,8 +299,10 @@ export default function LoginPage() {
           margin-bottom: 24px;
         }
         .login-title {
-          font-size: 22px;
+          font-family: var(--font-heading), sans-serif;
+          font-size: 26px;
           font-weight: 700;
+          letter-spacing: -0.03em;
           color: var(--text-primary);
           margin-bottom: 4px;
         }
@@ -398,7 +401,7 @@ export default function LoginPage() {
           height: 16px;
           border: 1px solid var(--border-default);
           border-radius: 4px;
-          background: rgba(255, 255, 255, 0.05);
+          background: var(--bg-elevated);
           cursor: pointer;
           position: relative;
           transition: all var(--transition-fast);

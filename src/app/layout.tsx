@@ -1,10 +1,10 @@
 import type { Metadata, Viewport } from 'next'
-import { DM_Sans, DM_Serif_Display } from 'next/font/google'
+import { Plus_Jakarta_Sans, Sora } from 'next/font/google'
 import './globals.css'
 import { ThemeProvider } from '@/components/providers/theme-provider'
 
-const dmSans = DM_Sans({ subsets: ['latin'], variable: '--font-body' })
-const dmSerif = DM_Serif_Display({ weight: '400', subsets: ['latin'], variable: '--font-heading' })
+const jakarta = Plus_Jakarta_Sans({ subsets: ['latin'], variable: '--font-body' })
+const sora = Sora({ subsets: ['latin'], variable: '--font-heading' })
 export const metadata: Metadata = {
   title: {
     template: '%s — PT Client Management',
@@ -31,8 +31,8 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 5,
   themeColor: [
-    { media: '(prefers-color-scheme: dark)', color: '#1a1714' },
-    { media: '(prefers-color-scheme: light)', color: '#faf8f5' },
+    { media: '(prefers-color-scheme: dark)', color: '#090913' },
+    { media: '(prefers-color-scheme: light)', color: '#f3f4fb' },
   ],
 }
 
@@ -43,7 +43,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="id" suppressHydrationWarning data-theme="light">
-      <body className={`${dmSans.variable} ${dmSerif.variable} min-h-screen antialiased`}>
+      <body className={`${jakarta.variable} ${sora.variable} min-h-screen antialiased`}>
         <ThemeProvider />
         {children}
       </body>
