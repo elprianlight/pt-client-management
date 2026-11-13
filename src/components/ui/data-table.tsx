@@ -168,7 +168,7 @@ export function DataTable<T extends { id: string }>({
         .dt-search-input:focus {
           border-color: var(--brand-primary);
           background: rgba(0, 0, 0, 0.4);
-          box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+          box-shadow: 0 0 0 3px rgba(210, 58, 42, 0.15);
         }
 
         .dt-table-container {

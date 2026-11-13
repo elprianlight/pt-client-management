@@ -51,8 +51,8 @@ export function PageHeader({ title, description, icon: Icon, action }: PageHeade
         .page-header-icon {
           width: 44px;
           height: 44px;
-          background: linear-gradient(135deg, rgba(99,102,241,0.2), rgba(139,92,246,0.2));
-          border: 1px solid rgba(99,102,241,0.25);
+          background: linear-gradient(135deg, rgba(210,58,42,0.2), rgba(139,92,246,0.2));
+          border: 1px solid rgba(210,58,42,0.25);
           border-radius: 12px;
           display: flex;
           align-items: center;

@@ -11,9 +11,9 @@ import * as THREE from 'three'
  * Interaktif: objek mengikuti gerakan kursor / sentuhan.
  */
 
-const ACCENT = '#7c5cff'
-const ACCENT_2 = '#22d3ee'
-const ACCENT_3 = '#ff6b9d'
+const ACCENT = '#ee5a45'
+const ACCENT_2 = '#ff9a6b'
+const ACCENT_3 = '#b02a1c'
 
 function Plate({ x, r, h, color }: { x: number; r: number; h: number; color: string }) {
   return (
@@ -115,7 +115,15 @@ function Orbs() {
   )
 }
 
-export default function HeroScene({ className }: { className?: string }) {
+export default function HeroScene({
+  className,
+  offset = [0, 0],
+  scale = 1,
+}: {
+  className?: string
+  offset?: [number, number]
+  scale?: number
+}) {
   return (
     <div className={className} aria-hidden="true">
       <Canvas
@@ -128,9 +136,11 @@ export default function HeroScene({ className }: { className?: string }) {
         <pointLight position={[-4, -2, 3]} intensity={18} color={ACCENT_2} />
         <pointLight position={[4, -3, 2]} intensity={14} color={ACCENT_3} />
 
-        <Float speed={1.6} rotationIntensity={0.15} floatIntensity={0.9}>
-          <Dumbbell />
-        </Float>
+        <group position={[offset[0], offset[1], 0]} scale={scale}>
+          <Float speed={1.6} rotationIntensity={0.15} floatIntensity={0.9}>
+            <Dumbbell />
+          </Float>
+        </group>
         <Rings />
         <Orbs />
         <Sparkles count={60} scale={[8, 5, 4]} size={2.2} speed={0.4} color="#ffffff" opacity={0.6} />

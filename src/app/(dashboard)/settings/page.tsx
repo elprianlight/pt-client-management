@@ -318,7 +318,7 @@ export default function SettingsPage() {
         <div className="account-section-card">
           <div className="asc-header">
             <div className="asc-title-wrap">
-              <div className="asc-icon-box" style={{ background: 'rgba(99, 102, 241, 0.15)', color: '#6366f1' }}>
+              <div className="asc-icon-box" style={{ background: 'rgba(210, 58, 42, 0.15)', color: '#d23a2a' }}>
                 <User size={18} />
               </div>
               <div>
@@ -847,7 +847,7 @@ export default function SettingsPage() {
           <div className="modal-card animate-slide-up" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 540 }}>
             <div className="mc-header">
               <div className="mc-title-group">
-                <div className="mc-icon-badge" style={{ background: 'rgba(99, 102, 241, 0.15)', color: '#6366f1' }}>
+                <div className="mc-icon-badge" style={{ background: 'rgba(210, 58, 42, 0.15)', color: '#d23a2a' }}>
                   <Shield size={20} />
                 </div>
                 <div>
@@ -920,7 +920,7 @@ export default function SettingsPage() {
           min-height: 180px;
           border-radius: 24px;
           padding: 22px 24px;
-          background: linear-gradient(135deg, #14306e 0%, #1c47b8 55%, #4f46e5 100%);
+          background: linear-gradient(135deg, #1a0f0d 0%, #4a1511 50%, #c0392b 100%);
           border: 1px solid rgba(255, 255, 255, 0.14);
           box-shadow: 0 16px 40px rgba(0, 0, 0, 0.25);
           backdrop-filter: blur(24px);
@@ -935,12 +935,12 @@ export default function SettingsPage() {
         }
         .ah-orb-1 {
           top: -50px; right: -40px; width: 200px; height: 200px;
-          background: radial-gradient(circle, rgba(99, 102, 241, 0.3) 0%, rgba(168, 85, 247, 0) 70%);
+          background: radial-gradient(circle, rgba(210, 58, 42, 0.3) 0%, rgba(168, 85, 247, 0) 70%);
           filter: blur(30px);
         }
         .ah-orb-2 {
           bottom: -40px; left: -30px; width: 160px; height: 160px;
-          background: radial-gradient(circle, rgba(16, 185, 129, 0.2) 0%, rgba(99, 102, 241, 0) 70%);
+          background: radial-gradient(circle, rgba(16, 185, 129, 0.2) 0%, rgba(210, 58, 42, 0) 70%);
           filter: blur(25px);
         }
         .ah-pattern {
@@ -959,11 +959,11 @@ export default function SettingsPage() {
         }
         .ah-avatar-circle {
           width: 68px; height: 68px; border-radius: 50%;
-          background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+          background: linear-gradient(135deg, #d23a2a 0%, #a855f7 100%);
           border: 2px solid rgba(255, 255, 255, 0.3);
           display: flex; align-items: center; justify-content: center;
           color: white; font-size: 22px; font-weight: 900;
-          box-shadow: 0 8px 20px rgba(99, 102, 241, 0.4);
+          box-shadow: 0 8px 20px rgba(210, 58, 42, 0.4);
         }
         .ah-camera-badge {
           position: absolute; bottom: 0; right: 0;
@@ -983,7 +983,7 @@ export default function SettingsPage() {
           padding: 2px 8px; border-radius: 100px; font-size: 11px; font-weight: 800;
         }
         .role-pt { background: rgba(16, 185, 129, 0.25); color: #a7f3d0; border: 1px solid rgba(16, 185, 129, 0.4); }
-        .role-client { background: rgba(99, 102, 241, 0.25); color: #e0e7ff; border: 1px solid rgba(165, 180, 252, 0.4); }
+        .role-client { background: rgba(210, 58, 42, 0.25); color: #e0e7ff; border: 1px solid rgba(165, 180, 252, 0.4); }
         .ah-verified-pill {
           padding: 2px 8px; border-radius: 100px; font-size: 11px; font-weight: 700;
           background: rgba(255, 255, 255, 0.15); color: #f1f5f9; border: 1px solid rgba(255, 255, 255, 0.2);
@@ -1000,7 +1000,7 @@ export default function SettingsPage() {
 
         /* AI ACCOUNT CARD */
         .ai-account-card {
-          background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(168, 85, 247, 0.1) 100%);
+          background: linear-gradient(135deg, rgba(210, 58, 42, 0.15) 0%, rgba(168, 85, 247, 0.1) 100%);
           border: 1px solid rgba(168, 85, 247, 0.3);
           border-radius: 18px; padding: 14px 16px; backdrop-filter: blur(16px);
           display: flex; flex-direction: column; gap: 4px;
@@ -1036,7 +1036,7 @@ export default function SettingsPage() {
 
         .asc-edit-btn, .asc-pwd-btn {
           height: 34px; padding: 0 12px; border-radius: 10px;
-          background: rgba(99, 102, 241, 0.12); border: 1px solid rgba(99, 102, 241, 0.28);
+          background: rgba(210, 58, 42, 0.12); border: 1px solid rgba(210, 58, 42, 0.28);
           color: var(--brand-primary); font-size: 12px; font-weight: 700;
           display: flex; align-items: center; gap: 6px; cursor: pointer;
         }
@@ -1112,7 +1112,7 @@ export default function SettingsPage() {
         .mc-title-group { display: flex; align-items: center; gap: 8px; }
         .mc-icon-badge {
           width: 36px; height: 36px; border-radius: 10px;
-          background: rgba(99, 102, 241, 0.15); color: #6366f1;
+          background: rgba(210, 58, 42, 0.15); color: #d23a2a;
           display: flex; align-items: center; justify-content: center;
         }
         .mc-title { font-size: 16px; font-weight: 800; color: var(--text-primary); }
@@ -1201,7 +1201,7 @@ export default function SettingsPage() {
         }
         .custom-loading-pulse {
           width: 36px; height: 36px; border-radius: 50%;
-          border: 3px solid rgba(99, 102, 241, 0.2);
+          border: 3px solid rgba(210, 58, 42, 0.2);
           border-top-color: var(--brand-primary); animation: spin 0.8s linear infinite;
         }
         .loading-text { font-size: 13px; font-weight: 700; color: var(--text-primary); }

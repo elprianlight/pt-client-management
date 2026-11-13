@@ -25,7 +25,7 @@ export function StatsCard({
   value,
   subtitle,
   icon: Icon,
-  iconColor = '#6366f1',
+  iconColor = '#d23a2a',
   trend,
   gradient,
   className,

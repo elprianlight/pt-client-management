@@ -45,9 +45,9 @@ export function PageHero({ eyebrow, title, subtitle, chips, variant }: PageHeroP
           border-radius: 32px;
           color: #fff;
           background:
-            radial-gradient(520px 260px at 88% 10%, rgba(34, 211, 238, 0.3), transparent 60%),
-            radial-gradient(520px 300px at 0% 110%, rgba(139, 109, 255, 0.35), transparent 60%),
-            linear-gradient(135deg, #14306e 0%, #1c47b8 55%, #4f46e5 100%);
+            radial-gradient(520px 260px at 88% 10%, rgba(255, 138, 92, 0.32), transparent 60%),
+            radial-gradient(520px 300px at 0% 110%, rgba(231, 76, 60, 0.32), transparent 60%),
+            linear-gradient(135deg, #1a0f0d 0%, #4a1511 50%, #c0392b 100%);
           border: 1px solid rgba(255, 255, 255, 0.14);
           box-shadow: var(--shadow-lg), var(--shadow-glow);
         }
@@ -74,7 +74,7 @@ export function PageHero({ eyebrow, title, subtitle, chips, variant }: PageHeroP
           font-weight: 700;
           letter-spacing: 0.18em;
           text-transform: uppercase;
-          color: #9fd0ff;
+          color: #ffb4a6;
         }
         .page-hero-title {
           font-family: var(--font-heading), 'Sora', sans-serif;
@@ -87,7 +87,7 @@ export function PageHero({ eyebrow, title, subtitle, chips, variant }: PageHeroP
         }
         .page-hero-sub {
           font-size: 13.5px;
-          color: rgba(226, 236, 255, 0.82);
+          color: rgba(255, 236, 230, 0.85);
           max-width: 420px;
         }
         .page-hero-chips {

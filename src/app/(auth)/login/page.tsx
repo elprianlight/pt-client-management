@@ -82,7 +82,7 @@ export default function LoginPage() {
       </div>
 
       {/* Visual 3D interaktif di latar belakang */}
-      <HeroSceneLazy className="login-3d-stage" />
+      <HeroSceneLazy className="login-3d-stage" aside />
 
       {/* Card */}
       <div className="login-card animate-fade-in-up">
@@ -91,7 +91,7 @@ export default function LoginPage() {
           <img 
             src="/logo_full_transparent.png" 
             alt="PT Client Management System" 
-            style={{ width: '180px', height: 'auto', objectFit: 'contain' }} 
+            style={{ width: '250px', height: 'auto', objectFit: 'contain' }} 
           />
         </div>
 
@@ -217,13 +217,13 @@ export default function LoginPage() {
         }
         .orb-1 {
           width: 600px; height: 600px;
-          background: radial-gradient(circle, #7c5cff, transparent);
+          background: radial-gradient(circle, #ee5a45, transparent);
           top: -200px; left: -200px;
           animation: float1 12s ease-in-out infinite;
         }
         .orb-2 {
           width: 500px; height: 500px;
-          background: radial-gradient(circle, #ff6b9d, transparent);
+          background: radial-gradient(circle, #b02a1c, transparent);
           bottom: -150px; right: -150px;
           animation: float2 10s ease-in-out infinite;
         }
@@ -273,7 +273,7 @@ export default function LoginPage() {
           align-items: center;
           justify-content: center;
           color: white;
-          box-shadow: 0 0 24px rgba(99,102,241,0.4);
+          box-shadow: 0 0 24px rgba(210,58,42,0.4);
           flex-shrink: 0;
         }
         .logo-title {

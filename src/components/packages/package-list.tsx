@@ -260,7 +260,7 @@ export function PackageList() {
             font-size: 13px;
             font-weight: 700;
             text-decoration: none;
-            box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+            box-shadow: 0 4px 14px rgba(210, 58, 42, 0.35);
           }
           :global(.pt-action-btn) {
             display: inline-flex;
@@ -642,7 +642,7 @@ export function PackageList() {
         .mc-prog-label { color: var(--text-secondary); }
         .mc-prog-percent { font-weight: 800; color: var(--brand-primary); }
         .mc-progress-bar-wrap { width: 100%; height: 6px; background: rgba(255, 255, 255, 0.08); border-radius: 100px; overflow: hidden; }
-        .mc-progress-fill { height: 100%; background: linear-gradient(90deg, #6366f1 0%, #a855f7 100%); border-radius: 100px; }
+        .mc-progress-fill { height: 100%; background: linear-gradient(90deg, #d23a2a 0%, #a855f7 100%); border-radius: 100px; }
         .mc-prog-bottom { display: flex; align-items: center; justify-content: space-between; font-size: 11.5px; }
         .mc-rem-tag { font-weight: 700; color: #10b981; }
         .mc-info-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
@@ -667,7 +667,7 @@ export function PackageList() {
         .sp-item { display: flex; align-items: center; justify-content: space-between; font-size: 11.5px; color: var(--text-secondary); }
         .sp-date { font-weight: 700; color: var(--brand-primary); }
         .sp-prog { font-weight: 600; }
-        .mc-detail-btn { width: 100%; height: 38px; background: rgba(99, 102, 241, 0.14); border: 1px solid rgba(99, 102, 241, 0.3); border-radius: 12px; color: var(--brand-primary); font-size: 13px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; }
+        .mc-detail-btn { width: 100%; height: 38px; background: rgba(210, 58, 42, 0.14); border: 1px solid rgba(210, 58, 42, 0.3); border-radius: 12px; color: var(--brand-primary); font-size: 13px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; }
         .package-empty-card { background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: 24px; padding: 36px 20px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 10px; }
         .empty-icon-wrap { width: 60px; height: 60px; border-radius: 18px; background: rgba(234, 179, 8, 0.15); color: #eab308; display: flex; align-items: center; justify-content: center; }
         .empty-title { font-size: 16.5px; font-weight: 800; color: var(--text-primary); }

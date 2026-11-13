@@ -153,8 +153,8 @@ export function CRMTaskManager({ initialTasks }: CRMTaskManagerProps) {
           width: 36px;
           height: 36px;
           border-radius: 10px;
-          background: rgba(99, 102, 241, 0.15);
-          border: 1px solid rgba(99, 102, 241, 0.3);
+          background: rgba(210, 58, 42, 0.15);
+          border: 1px solid rgba(210, 58, 42, 0.3);
           color: var(--brand-primary);
           display: flex;
           align-items: center;

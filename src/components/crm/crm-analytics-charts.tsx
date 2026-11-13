@@ -176,8 +176,8 @@ export function CRMAnalyticsCharts({ data }: CRMAnalyticsChartsProps) {
           color: #10b981;
         }
         .ac-icon-brand {
-          background: rgba(99, 102, 241, 0.15);
-          border: 1px solid rgba(99, 102, 241, 0.3);
+          background: rgba(210, 58, 42, 0.15);
+          border: 1px solid rgba(210, 58, 42, 0.3);
           color: var(--brand-primary);
         }
         .ac-title {

@@ -157,7 +157,7 @@ export function CustomModal({
           max-width: 400px;
           background: var(--bg-surface, #1e1e2d);
           border: 1px solid rgba(255, 255, 255, 0.12);
-          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5), 0 0 20px rgba(99, 102, 241, 0.15);
+          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5), 0 0 20px rgba(210, 58, 42, 0.15);
           border-radius: 24px;
           padding: 28px 24px;
           position: relative;
@@ -214,15 +214,15 @@ export function CustomModal({
         }
         .icon-badge-wrap.info,
         .icon-badge-wrap.loading {
-          background: rgba(99, 102, 241, 0.15);
-          border: 1px solid rgba(99, 102, 241, 0.3);
+          background: rgba(210, 58, 42, 0.15);
+          border: 1px solid rgba(210, 58, 42, 0.3);
         }
 
         :global(.text-success) { color: #10b981; }
         :global(.text-danger) { color: #ef4444; }
         :global(.text-warning) { color: #f59e0b; }
         :global(.text-info) { color: #3b82f6; }
-        :global(.text-brand) { color: #6366f1; }
+        :global(.text-brand) { color: #d23a2a; }
 
         .custom-modal-title {
           font-size: 18px;
@@ -247,7 +247,7 @@ export function CustomModal({
         .btn-modal-ok,
         .btn-modal-confirm {
           flex: 1;
-          background: linear-gradient(135deg, #6366f1, #4f46e5);
+          background: linear-gradient(135deg, #d23a2a, #b62e20);
           color: white;
           border: none;
           padding: 12px 16px;
@@ -255,7 +255,7 @@ export function CustomModal({
           font-weight: 700;
           font-size: 14px;
           cursor: pointer;
-          box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+          box-shadow: 0 4px 12px rgba(210, 58, 42, 0.3);
           transition: all 0.2s;
           display: flex;
           align-items: center;
@@ -264,7 +264,7 @@ export function CustomModal({
         .btn-modal-ok:hover,
         .btn-modal-confirm:hover {
           transform: translateY(-1px);
-          box-shadow: 0 6px 16px rgba(99, 102, 241, 0.4);
+          box-shadow: 0 6px 16px rgba(210, 58, 42, 0.4);
         }
 
         .btn-modal-cancel {

@@ -142,7 +142,7 @@ export function ClientDashboard({
         <div className="compact-analytics-card">
           <div className="cac-top">
             <span className="cac-title">Sisa Sesi</span>
-            <div className="cac-icon-wrap" style={{ background: 'rgba(99, 102, 241, 0.15)', color: '#6366f1' }}>
+            <div className="cac-icon-wrap" style={{ background: 'rgba(210, 58, 42, 0.15)', color: '#d23a2a' }}>
               <Calendar size={18} />
             </div>
           </div>
@@ -477,7 +477,7 @@ export function ClientDashboard({
           padding: 22px 24px;
           background: linear-gradient(135deg, rgba(30, 27, 75, 0.55) 0%, rgba(15, 23, 42, 0.85) 50%, rgba(49, 46, 129, 0.5) 100%);
           border: 1px solid rgba(255, 255, 255, 0.14);
-          box-shadow: 0 16px 40px rgba(0, 0, 0, 0.25), 0 0 30px rgba(99, 102, 241, 0.15);
+          box-shadow: 0 16px 40px rgba(0, 0, 0, 0.25), 0 0 30px rgba(210, 58, 42, 0.15);
           backdrop-filter: blur(24px);
           -webkit-backdrop-filter: blur(24px);
           overflow: hidden;
@@ -495,7 +495,7 @@ export function ClientDashboard({
           right: -40px;
           width: 220px;
           height: 220px;
-          background: radial-gradient(circle, rgba(99, 102, 241, 0.3) 0%, rgba(168, 85, 247, 0) 70%);
+          background: radial-gradient(circle, rgba(210, 58, 42, 0.3) 0%, rgba(168, 85, 247, 0) 70%);
           filter: blur(30px);
         }
         .c-hero-orb-2 {
@@ -503,7 +503,7 @@ export function ClientDashboard({
           left: -30px;
           width: 180px;
           height: 180px;
-          background: radial-gradient(circle, rgba(16, 185, 129, 0.2) 0%, rgba(99, 102, 241, 0) 70%);
+          background: radial-gradient(circle, rgba(16, 185, 129, 0.2) 0%, rgba(210, 58, 42, 0) 70%);
           filter: blur(25px);
         }
         .c-hero-pattern {
@@ -533,7 +533,7 @@ export function ClientDashboard({
           display: inline-flex;
           align-items: center;
           gap: 6px;
-          background: rgba(99, 102, 241, 0.28);
+          background: rgba(210, 58, 42, 0.28);
           border: 1px solid rgba(165, 180, 252, 0.4);
           padding: 4px 12px;
           border-radius: 100px;
@@ -556,7 +556,7 @@ export function ClientDashboard({
           font-size: 24px;
           font-weight: 900;
           line-height: 1.15;
-          background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 50%, #a5b4fc 100%);
+          background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 50%, #ff9a86 100%);
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
         }
@@ -605,7 +605,7 @@ export function ClientDashboard({
           font-weight: 800;
           color: #ffffff;
           letter-spacing: 0.04em;
-          text-shadow: 0 0 12px rgba(99, 102, 241, 0.6);
+          text-shadow: 0 0 12px rgba(210, 58, 42, 0.6);
         }
         .c-clock-bottom {
           display: flex;
@@ -708,9 +708,9 @@ export function ClientDashboard({
           color: var(--text-primary);
         }
         .cp-badge-pill {
-          background: rgba(99, 102, 241, 0.14);
-          border: 1px solid rgba(99, 102, 241, 0.3);
-          color: #6366f1;
+          background: rgba(210, 58, 42, 0.14);
+          border: 1px solid rgba(210, 58, 42, 0.3);
+          color: #d23a2a;
           padding: 3px 9px;
           border-radius: 100px;
           font-size: 11px;
@@ -770,8 +770,8 @@ export function ClientDashboard({
         :global(.ns-action-btn) {
           width: 100%;
           height: 38px;
-          background: rgba(99, 102, 241, 0.14);
-          border: 1px solid rgba(99, 102, 241, 0.3);
+          background: rgba(210, 58, 42, 0.14);
+          border: 1px solid rgba(210, 58, 42, 0.3);
           border-radius: 12px;
           color: var(--brand-primary);
           font-size: 13px;
@@ -794,7 +794,7 @@ export function ClientDashboard({
           width: 52px;
           height: 52px;
           border-radius: 50%;
-          background: rgba(99, 102, 241, 0.12);
+          background: rgba(210, 58, 42, 0.12);
           color: var(--brand-primary);
           display: flex;
           align-items: center;
@@ -827,7 +827,7 @@ export function ClientDashboard({
 
         /* 4. AI INSIGHT */
         .ai-insight-card {
-          background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(168, 85, 247, 0.1) 100%);
+          background: linear-gradient(135deg, rgba(210, 58, 42, 0.15) 0%, rgba(168, 85, 247, 0.1) 100%);
           border: 1px solid rgba(168, 85, 247, 0.3);
           border-radius: 18px;
           padding: 14px 16px;

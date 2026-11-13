@@ -16,12 +16,12 @@ export const metadata: Metadata = {
   authors: [{ name: 'PT Management System' }],
   icons: {
     icon: [
-      { url: '/favicon.png', type: 'image/png' },
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/icon-192.png', type: 'image/png', sizes: '192x192' },
+      { url: '/icon-512.png', type: 'image/png', sizes: '512x512' },
     ],
-    shortcut: ['/favicon.png'],
-    apple: [
-      { url: '/favicon.png', type: 'image/png' },
-    ],
+    shortcut: ['/favicon.ico'],
+    apple: [{ url: '/apple-touch-icon.png', sizes: '512x512', type: 'image/png' }],
   },
   manifest: '/site.webmanifest',
 }
@@ -31,8 +31,8 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 5,
   themeColor: [
-    { media: '(prefers-color-scheme: dark)', color: '#090913' },
-    { media: '(prefers-color-scheme: light)', color: '#f3f4fb' },
+    { media: '(prefers-color-scheme: dark)', color: '#14110f' },
+    { media: '(prefers-color-scheme: light)', color: '#f3ebe4' },
   ],
 }
 

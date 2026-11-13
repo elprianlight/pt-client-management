@@ -853,7 +853,7 @@ export function ClientDetail({
           align-items: center;
           justify-content: center;
           flex-shrink: 0;
-          box-shadow: 0 0 16px rgba(99,102,241,0.3);
+          box-shadow: 0 0 16px rgba(210,58,42,0.3);
         }
         .client-meta {
           display: flex;
@@ -947,7 +947,7 @@ export function ClientDetail({
         .client-subnav-item.active {
           color: var(--brand-primary);
           border-bottom-color: var(--brand-primary);
-          background: rgba(99,102,241,0.08);
+          background: rgba(210,58,42,0.08);
           font-weight: 600;
         }
         .subnav-badge {
@@ -1128,9 +1128,9 @@ export function ClientDetail({
           transition: all var(--transition-fast);
         }
         :global(.sess-icon-btn:hover) {
-          background: rgba(99,102,241,0.12);
+          background: rgba(210,58,42,0.12);
           color: var(--brand-primary);
-          border-color: rgba(99,102,241,0.3);
+          border-color: rgba(210,58,42,0.3);
         }
         :global(.sess-delete-btn:hover) {
           background: rgba(239,68,68,0.12);

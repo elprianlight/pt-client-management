@@ -80,7 +80,7 @@ export default async function EditSessionPage({ params }: { params: Promise<{ id
           Kembali ke Jadwal Sesi
         </Link>
         <div className="new-client-title-row">
-          <div className="page-header-icon" style={{ background: 'linear-gradient(135deg, rgba(59,130,246,0.2), rgba(99,102,241,0.2))', borderColor: 'rgba(59,130,246,0.25)', color: '#3b82f6' }}>
+          <div className="page-header-icon" style={{ background: 'linear-gradient(135deg, rgba(59,130,246,0.2), rgba(210,58,42,0.2))', borderColor: 'rgba(59,130,246,0.25)', color: '#3b82f6' }}>
             <Edit size={20} strokeWidth={1.8} />
           </div>
           <div>

@@ -11,9 +11,9 @@ import * as THREE from 'three'
  * Murni dekoratif — tidak membaca/menulis data. Mengikuti kursor/sentuhan.
  */
 
-const BLUE = '#3b9bff'
-const VIOLET = '#8b6dff'
-const CYAN = '#22d3ee'
+const BLUE = '#ee5a45'
+const VIOLET = '#b02a1c'
+const CYAN = '#ff9a6b'
 const MINT = '#4ade80'
 
 function Kettlebell() {
@@ -33,7 +33,7 @@ function Kettlebell() {
       {/* Badan */}
       <mesh position={[0, -0.2, 0]}>
         <sphereGeometry args={[1, 64, 64]} />
-        <meshPhysicalMaterial color="#1e2a4d" metalness={0.75} roughness={0.28} clearcoat={1} clearcoatRoughness={0.12} />
+        <meshPhysicalMaterial color="#2a2421" metalness={0.75} roughness={0.28} clearcoat={1} clearcoatRoughness={0.12} />
       </mesh>
       {/* Pita aksen di badan */}
       <mesh position={[0, -0.2, 0]} rotation={[Math.PI / 2, 0, 0]}>
@@ -43,7 +43,7 @@ function Kettlebell() {
       {/* Pegangan */}
       <mesh position={[0, 0.98, 0]}>
         <torusGeometry args={[0.55, 0.13, 24, 64, Math.PI * 1.0]} />
-        <meshPhysicalMaterial color="#c7d2fe" metalness={0.9} roughness={0.2} clearcoat={1} />
+        <meshPhysicalMaterial color="#eadbd3" metalness={0.9} roughness={0.2} clearcoat={1} />
       </mesh>
       {/* Bobot (label) */}
       <mesh position={[0, -0.2, 1]} rotation={[Math.PI / 2, 0, 0]}>
@@ -175,7 +175,7 @@ function Capsules() {
             {/* Tabung kaca */}
             <mesh>
               <capsuleGeometry args={[0.42, 1.7, 12, 32]} />
-              <meshPhysicalMaterial color="#cfe3ff" transparent opacity={0.22} roughness={0.05} transmission={0.6} thickness={0.4} clearcoat={1} />
+              <meshPhysicalMaterial color="#ffe3dc" transparent opacity={0.22} roughness={0.05} transmission={0.6} thickness={0.4} clearcoat={1} />
             </mesh>
             {/* Cairan = sisa sesi */}
             <mesh position={[0, -0.85 + lv * 0.85, 0]} scale={[1, lv, 1]}>
@@ -248,7 +248,7 @@ function Bars() {
         {/* Alas */}
         <mesh position={[0, -0.05, 0]}>
           <boxGeometry args={[4.6, 0.08, 1.2]} />
-          <meshStandardMaterial color="#1e2a4d" metalness={0.6} roughness={0.4} />
+          <meshStandardMaterial color="#2a2421" metalness={0.6} roughness={0.4} />
         </mesh>
       </group>
     </PointerGroup>
@@ -286,7 +286,7 @@ function Gear() {
       <group ref={ref}>
         <mesh>
           <torusGeometry args={[1, 0.34, 24, 64]} />
-          <meshPhysicalMaterial color="#c7d2fe" metalness={0.85} roughness={0.25} clearcoat={1} />
+          <meshPhysicalMaterial color="#eadbd3" metalness={0.85} roughness={0.25} clearcoat={1} />
         </mesh>
         {Array.from({ length: teeth }).map((_, i) => {
           const a = (i / teeth) * Math.PI * 2
@@ -343,7 +343,7 @@ export default function GymScene({ className, variant = 'kettlebell' }: { classN
         <MiniDumbbell position={[-2.9, 1.5, -0.6]} rotation={[0.3, 0.4, 0.6]} />
         <Leaf position={[2.7, 1.6, -0.8]} color={MINT} scale={0.7} />
         <Leaf position={[-2.5, -1.7, -0.5]} color={MINT} scale={0.55} />
-        <Sparkles count={50} scale={[8, 5, 4]} size={2} speed={0.35} color="#bcd4ff" opacity={0.6} />
+        <Sparkles count={50} scale={[8, 5, 4]} size={2} speed={0.35} color="#ffd2c6" opacity={0.6} />
       </Canvas>
     </div>
   )

@@ -138,9 +138,9 @@ function HeroHeader({
           min-height: 260px;
           border-radius: 28px;
           padding: 28px 32px;
-          background: linear-gradient(135deg, #2a1a7a 0%, #4b2bd6 55%, #7c3aed 100%);
+          background: linear-gradient(135deg, #1a0f0d 0%, #4a1511 50%, #c0392b 100%);
           border: 1px solid rgba(255, 255, 255, 0.12);
-          box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25), 0 0 40px rgba(99, 102, 241, 0.12);
+          box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25), 0 0 40px rgba(210, 58, 42, 0.12);
           backdrop-filter: blur(24px);
           -webkit-backdrop-filter: blur(24px);
           margin-top: 0;
@@ -177,7 +177,7 @@ function HeroHeader({
           right: -60px;
           width: 280px;
           height: 280px;
-          background: radial-gradient(circle, rgba(99, 102, 241, 0.3) 0%, rgba(168, 85, 247, 0) 70%);
+          background: radial-gradient(circle, rgba(210, 58, 42, 0.3) 0%, rgba(168, 85, 247, 0) 70%);
           filter: blur(35px);
         }
         .hero-orb-2 {
@@ -185,7 +185,7 @@ function HeroHeader({
           left: -40px;
           width: 220px;
           height: 220px;
-          background: radial-gradient(circle, rgba(236, 72, 153, 0.22) 0%, rgba(99, 102, 241, 0) 70%);
+          background: radial-gradient(circle, rgba(236, 72, 153, 0.22) 0%, rgba(210, 58, 42, 0) 70%);
           filter: blur(30px);
         }
         .hero-pattern-overlay {
@@ -220,7 +220,7 @@ function HeroHeader({
           display: inline-flex;
           align-items: center;
           gap: 8px;
-          background: rgba(99, 102, 241, 0.28);
+          background: rgba(210, 58, 42, 0.28);
           border: 1px solid rgba(165, 180, 252, 0.4);
           padding: 6px 14px;
           border-radius: 100px;
@@ -254,7 +254,7 @@ function HeroHeader({
           font-weight: 900;
           line-height: 1.15;
           letter-spacing: -0.02em;
-          background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 50%, #a5b4fc 100%);
+          background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 50%, #ff9a86 100%);
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
         }
@@ -316,7 +316,7 @@ function HeroHeader({
           font-weight: 800;
           color: #ffffff;
           letter-spacing: 0.05em;
-          text-shadow: 0 0 16px rgba(99, 102, 241, 0.6);
+          text-shadow: 0 0 16px rgba(210, 58, 42, 0.6);
         }
         .hero-clock-bottom {
           display: flex;
@@ -411,7 +411,7 @@ function AICoachInsights({
         id: 'revenue',
         type: 'info',
         icon: Target,
-        iconColor: '#6366f1',
+        iconColor: '#d23a2a',
         title: 'Revenue Bulan Ini',
         desc: `Revenue bulan ini mencapai Rp ${rev.toLocaleString('id-ID')}.`,
         actionLabel: 'Lihat Laporan',
@@ -439,7 +439,7 @@ function AICoachInsights({
         id: 'welcome',
         type: 'info',
         icon: Award,
-        iconColor: '#6366f1',
+        iconColor: '#d23a2a',
         title: 'Selamat Datang',
         desc: 'Mulai tambahkan client dan jadwalkan sesi untuk melihat insight otomatis di sini.',
         actionLabel: 'Tambah Client',
@@ -509,8 +509,8 @@ function AICoachInsights({
           width: 38px;
           height: 38px;
           border-radius: 12px;
-          background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(168, 85, 247, 0.2));
-          border: 1px solid rgba(99, 102, 241, 0.3);
+          background: linear-gradient(135deg, rgba(210, 58, 42, 0.2), rgba(168, 85, 247, 0.2));
+          border: 1px solid rgba(210, 58, 42, 0.3);
           color: var(--brand-primary);
           display: flex;
           align-items: center;
@@ -932,7 +932,7 @@ export function SuperAdminDashboard({
           title="Total Personal Trainer"
           value={stats?.totalPTs ?? 0}
           icon={UserCheck}
-          iconColor="#6366f1"
+          iconColor="#d23a2a"
           trend={{ value: 0, label: 'bulan ini', direction: 'neutral' }}
         />
         <StatsCard
@@ -1077,7 +1077,7 @@ export function PTDashboard({
           title="Total Client"
           value={stats?.totalClients ?? 0}
           icon={Users}
-          iconColor="#6366f1"
+          iconColor="#d23a2a"
           subtitle="Client aktif Anda"
         />
         <StatsCard
@@ -1138,7 +1138,7 @@ export function PTDashboard({
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <div style={{ background: 'rgba(99,102,241,0.1)', padding: '10px', borderRadius: '50%', color: '#6366f1' }}>
+                    <div style={{ background: 'rgba(210,58,42,0.1)', padding: '10px', borderRadius: '50%', color: '#d23a2a' }}>
                       <Calendar size={20} />
                     </div>
                     <div>
@@ -1253,7 +1253,7 @@ export function ClientDashboard({
           title="Sesi Tersisa"
           value={stats?.remainingSessions?.toString() || '0'}
           icon={Calendar}
-          iconColor="#6366f1"
+          iconColor="#d23a2a"
           subtitle="Dari paket aktif"
         />
         <StatsCard
@@ -1281,7 +1281,7 @@ export function ClientDashboard({
           </div>
           {stats?.nextSession ? (
             <div className="empty-state" style={{ padding: '24px 16px' }}>
-              <div style={{ background: 'rgba(99,102,241,0.1)', padding: '16px', borderRadius: '50%', marginBottom: '12px', color: '#6366f1' }}>
+              <div style={{ background: 'rgba(210,58,42,0.1)', padding: '16px', borderRadius: '50%', marginBottom: '12px', color: '#d23a2a' }}>
                 <Calendar size={32} />
               </div>
               <p style={{ fontSize: '16px', color: 'var(--text-primary)' }}>

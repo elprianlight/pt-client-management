@@ -28,9 +28,9 @@ interface ClientListClientProps {
 
 // Deterministic gradients for avatars
 const AVATAR_GRADIENTS = [
-  'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+  'linear-gradient(135deg, #d23a2a 0%, #8b5cf6 100%)',
   'linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)',
-  'linear-gradient(135deg, #06b6d4 0%, #6366f1 100%)',
+  'linear-gradient(135deg, #06b6d4 0%, #d23a2a 100%)',
   'linear-gradient(135deg, #10b981 0%, #06b6d4 100%)',
   'linear-gradient(135deg, #f97316 0%, #ef4444 100%)',
   'linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%)',
@@ -564,15 +564,15 @@ export function ClientListClient({ initialData, totalCount }: ClientListClientPr
         }
 
         .sr-sum-item.active {
-          background: rgba(99, 102, 241, 0.16);
-          border-color: rgba(99, 102, 241, 0.4);
+          background: rgba(210, 58, 42, 0.16);
+          border-color: rgba(210, 58, 42, 0.4);
           color: #ffffff;
         }
 
         [data-theme="light"] .sr-sum-item.active {
-          background: rgba(99, 102, 241, 0.1);
-          border-color: #6366f1;
-          color: #4f46e5;
+          background: rgba(210, 58, 42, 0.1);
+          border-color: #d23a2a;
+          color: #b62e20;
         }
 
         .sr-sum-dot {
@@ -597,7 +597,7 @@ export function ClientListClient({ initialData, totalCount }: ClientListClientPr
           color: #0f172a;
         }
 
-        .text-brand { color: #818cf8 !important; }
+        .text-brand { color: #ee5a45 !important; }
         .text-amber { color: #fbbf24 !important; }
         .text-rose { color: #f87171 !important; }
 
@@ -611,7 +611,7 @@ export function ClientListClient({ initialData, totalCount }: ClientListClientPr
         }
 
         [data-theme="light"] .sr-sum-item.active .sr-sum-label {
-          color: #4f46e5;
+          color: #b62e20;
         }
 
         .sr-sum-divider {
@@ -629,7 +629,7 @@ export function ClientListClient({ initialData, totalCount }: ClientListClientPr
           display: flex;
           align-items: center;
           gap: 5px;
-          background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+          background: linear-gradient(135deg, #d23a2a 0%, #b62e20 100%);
           color: #ffffff;
           border: none;
           border-radius: 9px;
@@ -640,12 +640,12 @@ export function ClientListClient({ initialData, totalCount }: ClientListClientPr
           white-space: nowrap;
           flex-shrink: 0;
           transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-          box-shadow: 0 3px 10px rgba(99, 102, 241, 0.35);
+          box-shadow: 0 3px 10px rgba(210, 58, 42, 0.35);
         }
 
         .sr-add-btn:hover {
           transform: translateY(-1px);
-          box-shadow: 0 5px 15px rgba(99, 102, 241, 0.5);
+          box-shadow: 0 5px 15px rgba(210, 58, 42, 0.5);
         }
 
         .sr-add-btn:active {
@@ -811,8 +811,8 @@ export function ClientListClient({ initialData, totalCount }: ClientListClientPr
         }
 
         .sr-tag-pkg {
-          color: #a5b4fc;
-          border-color: rgba(99, 102, 241, 0.25);
+          color: #ff9a86;
+          border-color: rgba(210, 58, 42, 0.25);
         }
 
         /* Status Badge */
@@ -1040,14 +1040,14 @@ export function ClientListClient({ initialData, totalCount }: ClientListClientPr
         }
 
         .sr-detail-action-btn:hover {
-          background: rgba(99, 102, 241, 0.16);
-          border-color: #6366f1;
+          background: rgba(210, 58, 42, 0.16);
+          border-color: #d23a2a;
           color: #ffffff;
         }
 
         [data-theme="light"] .sr-detail-action-btn:hover {
           background: #e2e8f0;
-          color: #4f46e5;
+          color: #b62e20;
         }
 
         /* Empty state */
@@ -1100,9 +1100,9 @@ export function ClientListClient({ initialData, totalCount }: ClientListClientPr
 
         .sr-empty-reset-btn {
           margin-top: 8px;
-          background: rgba(99, 102, 241, 0.16);
-          border: 1px solid #6366f1;
-          color: #818cf8;
+          background: rgba(210, 58, 42, 0.16);
+          border: 1px solid #d23a2a;
+          color: #ee5a45;
           padding: 8px 16px;
           border-radius: 9px;
           font-size: 12.5px;

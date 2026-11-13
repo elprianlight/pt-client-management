@@ -326,7 +326,7 @@ export function NutritionTracker() {
         }
         .meal-badge.breakfast { background: rgba(245,158,11,0.15); color: #f59e0b; }
         .meal-badge.lunch { background: rgba(16,185,129,0.15); color: #10b981; }
-        .meal-badge.dinner { background: rgba(99,102,241,0.15); color: #6366f1; }
+        .meal-badge.dinner { background: rgba(210,58,42,0.15); color: #d23a2a; }
         .meal-badge.snack { background: rgba(236,72,153,0.15); color: #ec4899; }
         .food-name {
           font-size: 13px;

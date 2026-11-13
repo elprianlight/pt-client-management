@@ -860,7 +860,7 @@ export function ReportsView({
         }
 
         .ops-mini-search-input:focus {
-          border-color: #818cf8;
+          border-color: #ee5a45;
         }
 
         .ops-mini-clear-btn {
@@ -913,9 +913,9 @@ export function ReportsView({
         }
 
         .ops-mini-select-wrap.active-filter .ops-mini-select {
-          border-color: #818cf8;
-          background: rgba(99, 102, 241, 0.12);
-          color: #a5b4fc;
+          border-color: #ee5a45;
+          background: rgba(210, 58, 42, 0.12);
+          color: #ff9a86;
         }
 
         .ops-mini-select option {
@@ -1085,7 +1085,7 @@ export function ReportsView({
         }
 
         .ops-dot-indigo {
-          background: #818cf8;
+          background: #ee5a45;
           box-shadow: 0 0 6px rgba(129, 140, 248, 0.6);
         }
 
@@ -1145,7 +1145,7 @@ export function ReportsView({
         }
 
         .ops-status-sched {
-          color: #818cf8;
+          color: #ee5a45;
         }
 
         .ops-card-line2 {
@@ -1191,7 +1191,7 @@ export function ReportsView({
         }
 
         .ops-rpe-badge {
-          color: #818cf8;
+          color: #ee5a45;
           font-weight: 800;
           font-size: 10px;
         }
@@ -1228,9 +1228,9 @@ export function ReportsView({
           gap: 4px;
           margin-top: 6px;
           padding: 4px 8px;
-          background: rgba(99, 102, 241, 0.15);
-          border: 1px solid rgba(99, 102, 241, 0.35);
-          color: #818cf8;
+          background: rgba(210, 58, 42, 0.15);
+          border: 1px solid rgba(210, 58, 42, 0.35);
+          color: #ee5a45;
           border-radius: 5px;
           font-size: 10px;
           font-weight: 800;
@@ -1295,8 +1295,8 @@ export function ReportsView({
         }
 
         .ops-page-btn:hover:not(:disabled) {
-          background: rgba(99, 102, 241, 0.15);
-          border-color: rgba(99, 102, 241, 0.4);
+          background: rgba(210, 58, 42, 0.15);
+          border-color: rgba(210, 58, 42, 0.4);
           color: #ffffff;
         }
 
@@ -1339,10 +1339,10 @@ export function ReportsView({
         }
 
         .ops-page-num-btn.active {
-          background: #6366f1;
-          border-color: #6366f1;
+          background: #d23a2a;
+          border-color: #d23a2a;
           color: #ffffff;
-          box-shadow: 0 0 8px rgba(99, 102, 241, 0.4);
+          box-shadow: 0 0 8px rgba(210, 58, 42, 0.4);
         }
 
         .ops-page-ellipsis {

@@ -185,7 +185,7 @@ export function SessionForm({
         <div className="sc-card animate-slide-up">
           <div className="sc-card-header">
             <div className="sc-card-title-group">
-              <div className="sc-card-icon" style={{ background: 'rgba(99, 102, 241, 0.15)', color: '#6366f1' }}>
+              <div className="sc-card-icon" style={{ background: 'rgba(210, 58, 42, 0.15)', color: '#d23a2a' }}>
                 <User size={18} />
               </div>
               <div>
@@ -536,7 +536,7 @@ export function SessionForm({
           }
           .sc-input-select:focus {
             border-color: var(--brand-primary);
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+            box-shadow: 0 0 0 3px rgba(210, 58, 42, 0.2);
           }
           .sc-quota-summary {
             margin-top: 14px;
@@ -560,7 +560,7 @@ export function SessionForm({
             font-size: 12px;
             font-weight: 800;
             color: var(--brand-primary);
-            background: rgba(99, 102, 241, 0.12);
+            background: rgba(210, 58, 42, 0.12);
             padding: 3px 10px;
             border-radius: 100px;
           }
@@ -573,7 +573,7 @@ export function SessionForm({
           }
           .sc-quota-fill {
             height: 100%;
-            background: linear-gradient(90deg, #6366f1 0%, #a855f7 100%);
+            background: linear-gradient(90deg, #d23a2a 0%, #a855f7 100%);
             border-radius: 100px;
             transition: width 0.4s ease;
           }
@@ -602,7 +602,7 @@ export function SessionForm({
           }
           .sc-input-field:focus {
             border-color: var(--brand-primary);
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+            box-shadow: 0 0 0 3px rgba(210, 58, 42, 0.2);
           }
           :global(.sc-input-icon) {
             position: absolute;
@@ -613,8 +613,8 @@ export function SessionForm({
           .sc-hang-suggest-btn {
             margin-top: 6px;
             padding: 8px 12px;
-            background: rgba(99, 102, 241, 0.15);
-            border: 1px solid rgba(99, 102, 241, 0.3);
+            background: rgba(210, 58, 42, 0.15);
+            border: 1px solid rgba(210, 58, 42, 0.3);
             border-radius: 10px;
             color: var(--brand-primary);
             font-size: 12px;
@@ -626,7 +626,7 @@ export function SessionForm({
             transition: all var(--transition-fast);
           }
           .sc-hang-suggest-btn:hover {
-            background: rgba(99, 102, 241, 0.25);
+            background: rgba(210, 58, 42, 0.25);
             transform: translateY(-1px);
           }
           .sc-textarea-field {
@@ -644,7 +644,7 @@ export function SessionForm({
           }
           .sc-textarea-field:focus {
             border-color: var(--brand-primary);
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+            box-shadow: 0 0 0 3px rgba(210, 58, 42, 0.2);
           }
           :global(.sc-textarea-icon) {
             position: absolute;
@@ -666,7 +666,7 @@ export function SessionForm({
             height: 52px;
             border-radius: 999px;
             border: none;
-            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%);
+            background: linear-gradient(135deg, #d23a2a 0%, #8b5cf6 50%, #ec4899 100%);
             color: white;
             font-size: 15.5px;
             font-weight: 800;
@@ -675,12 +675,12 @@ export function SessionForm({
             justify-content: center;
             gap: 8px;
             cursor: pointer;
-            box-shadow: 0 10px 24px rgba(99, 102, 241, 0.4);
+            box-shadow: 0 10px 24px rgba(210, 58, 42, 0.4);
             transition: all var(--transition-fast);
           }
           :global(.sc-save-btn:hover:not(:disabled)) {
             transform: translateY(-2px);
-            box-shadow: 0 14px 32px rgba(99, 102, 241, 0.55);
+            box-shadow: 0 14px 32px rgba(210, 58, 42, 0.55);
           }
           :global(.sc-save-btn:active:not(:disabled)) {
             transform: scale(0.98);

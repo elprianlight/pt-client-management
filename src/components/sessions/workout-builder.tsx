@@ -175,7 +175,7 @@ export function WorkoutBuilder({ sessionId }: { sessionId?: string }) {
             font-size: 13px;
             color: var(--text-muted, #94a3b8);
           }
-          .text-brand { color: #6366f1; }
+          .text-brand { color: #d23a2a; }
           .spin { animation: spin 1s linear infinite; }
           @keyframes spin { to { transform: rotate(360deg); } }
         `}</style>
@@ -228,8 +228,8 @@ export function WorkoutBuilder({ sessionId }: { sessionId?: string }) {
             width: 64px;
             height: 64px;
             border-radius: 18px;
-            background: rgba(99, 102, 241, 0.12);
-            border: 1px solid rgba(99, 102, 241, 0.25);
+            background: rgba(210, 58, 42, 0.12);
+            border: 1px solid rgba(210, 58, 42, 0.25);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -237,7 +237,7 @@ export function WorkoutBuilder({ sessionId }: { sessionId?: string }) {
           }
 
           :global(.wb-empty-icon) {
-            color: #6366f1;
+            color: #d23a2a;
           }
 
           .wb-empty-title {
@@ -260,19 +260,19 @@ export function WorkoutBuilder({ sessionId }: { sessionId?: string }) {
             align-items: center;
             gap: 8px;
             padding: 10px 20px;
-            background: linear-gradient(135deg, #6366f1, #4f46e5);
+            background: linear-gradient(135deg, #d23a2a, #b62e20);
             color: white;
             border: none;
             border-radius: 12px;
             font-size: 13.5px;
             font-weight: 700;
             cursor: pointer;
-            box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+            box-shadow: 0 4px 14px rgba(210, 58, 42, 0.35);
             transition: all 0.2s;
           }
           .btn-create-program-empty:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 18px rgba(99, 102, 241, 0.5);
+            box-shadow: 0 6px 18px rgba(210, 58, 42, 0.5);
           }
 
           .animate-fade-in {
@@ -505,7 +505,7 @@ export function WorkoutBuilder({ sessionId }: { sessionId?: string }) {
           gap: 8px;
         }
         .text-brand {
-          color: #6366f1;
+          color: #d23a2a;
         }
         .wb-title {
           font-size: 14px;
@@ -518,9 +518,9 @@ export function WorkoutBuilder({ sessionId }: { sessionId?: string }) {
           align-items: center;
           gap: 6px;
           padding: 6px 12px;
-          background: rgba(99, 102, 241, 0.12);
-          color: #6366f1;
-          border: 1px solid rgba(99, 102, 241, 0.25);
+          background: rgba(210, 58, 42, 0.12);
+          color: #d23a2a;
+          border: 1px solid rgba(210, 58, 42, 0.25);
           border-radius: 10px;
           font-size: 12px;
           font-weight: 700;
@@ -528,7 +528,7 @@ export function WorkoutBuilder({ sessionId }: { sessionId?: string }) {
           transition: all 0.2s;
         }
         .btn-add-exercise:hover {
-          background: #6366f1;
+          background: #d23a2a;
           color: white;
         }
 
@@ -552,7 +552,7 @@ export function WorkoutBuilder({ sessionId }: { sessionId?: string }) {
           background: var(--bg-surface, #1e1e2d);
           padding: 14px;
           border-radius: 14px;
-          border: 1px dashed rgba(99, 102, 241, 0.35);
+          border: 1px dashed rgba(210, 58, 42, 0.35);
         }
 
         .wb-form-group {
@@ -593,10 +593,10 @@ export function WorkoutBuilder({ sessionId }: { sessionId?: string }) {
           transition: all 0.2s;
         }
         .wb-toggle-btn.active {
-          background: #6366f1;
+          background: #d23a2a;
           color: white;
           font-weight: 700;
-          box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+          box-shadow: 0 2px 8px rgba(210, 58, 42, 0.3);
         }
 
         .wb-inputs-grid {
@@ -627,7 +627,7 @@ export function WorkoutBuilder({ sessionId }: { sessionId?: string }) {
           box-sizing: border-box;
         }
         .wb-input:focus {
-          border-color: #6366f1;
+          border-color: #d23a2a;
         }
 
         .wb-unit-input-wrap {
@@ -660,7 +660,7 @@ export function WorkoutBuilder({ sessionId }: { sessionId?: string }) {
         .btn-submit-exercise {
           margin-top: 4px;
           width: 100%;
-          background: linear-gradient(135deg, #6366f1, #4f46e5);
+          background: linear-gradient(135deg, #d23a2a, #b62e20);
           color: white;
           border: none;
           border-radius: 10px;
@@ -676,7 +676,7 @@ export function WorkoutBuilder({ sessionId }: { sessionId?: string }) {
         }
         .btn-submit-exercise:hover:not(:disabled) {
           transform: translateY(-1px);
-          box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+          box-shadow: 0 4px 12px rgba(210, 58, 42, 0.3);
         }
 
         .wb-list {
@@ -747,7 +747,7 @@ export function WorkoutBuilder({ sessionId }: { sessionId?: string }) {
 
         .btn-save-program {
           width: 100%;
-          background: #6366f1;
+          background: #d23a2a;
           color: white;
           border: none;
           border-radius: 10px;
@@ -762,7 +762,7 @@ export function WorkoutBuilder({ sessionId }: { sessionId?: string }) {
           gap: 8px;
         }
         .btn-save-program:hover:not(:disabled) {
-          background: #4f46e5;
+          background: #b62e20;
         }
 
         .spin {

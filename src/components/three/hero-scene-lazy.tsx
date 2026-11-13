@@ -14,8 +14,9 @@ const HeroScene = dynamic(() => import('./hero-scene'), {
  * - dilewati bila pengguna memilih "kurangi gerakan"
  * - dilewati bila WebGL tidak tersedia (UI tetap tampil normal)
  */
-export function HeroSceneLazy({ className }: { className?: string }) {
+export function HeroSceneLazy({ className, aside = false }: { className?: string; aside?: boolean }) {
   const [enabled, setEnabled] = useState(false)
+  const [wide, setWide] = useState(false)
 
   useEffect(() => {
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -27,8 +28,11 @@ export function HeroSceneLazy({ className }: { className?: string }) {
       webgl = false
     }
     setEnabled(!reduce && webgl)
+    setWide(window.innerWidth >= 900)
   }, [])
 
   if (!enabled) return null
-  return <HeroScene className={className} />
+  // 'aside': geser barbel ke kiri agar tidak tertutup kartu di tengah layar
+  const shifted = aside && wide
+  return <HeroScene className={className} offset={shifted ? [-2.7, 0.1] : [0, 0]} scale={shifted ? 0.55 : 1} />
 }
