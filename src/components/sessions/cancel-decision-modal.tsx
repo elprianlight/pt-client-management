@@ -97,7 +97,7 @@ export function CancelDecisionModal({
         .cd-backdrop {
           position: fixed;
           inset: 0;
-          z-index: 1000;
+          z-index: 100000;
           display: flex;
           align-items: flex-end;
           justify-content: center;

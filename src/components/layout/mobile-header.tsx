@@ -14,6 +14,7 @@ const PAGE_CONFIG: Record<string, { title: string; slug: string; tag: string }> 
   '/pt': { title: 'Personal Trainer', slug: 'pt-hub', tag: 'TRAINERS' },
   '/clients': { title: 'Client', slug: 'clients', tag: 'DATABASE' },
   '/jadwal': { title: 'Jadwal', slug: 'jadwal', tag: 'DISPATCH' },
+  '/payments': { title: 'Pembayaran', slug: 'payments', tag: 'FINANCE' },
   '/packages': { title: 'Paket Sesi', slug: 'packages', tag: 'QUOTA' },
   '/session': { title: 'Sesi Latihan', slug: 'session', tag: 'LOGS' },
   '/workout': { title: 'Workout', slug: 'workout', tag: 'BUILDER' },

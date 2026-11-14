@@ -2,7 +2,7 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 const AUTH_ROUTES = ['/login', '/register', '/forgot-password']
-const PROTECTED_BASE = ['/dashboard', '/pt', '/clients', '/packages', '/workout', '/session', '/nutrition', '/progress', '/reports', '/settings']
+const PROTECTED_BASE = ['/dashboard', '/pt', '/clients', '/packages', '/workout', '/session', '/nutrition', '/progress', '/reports', '/settings', '/payments', '/jadwal']
 
 export async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })

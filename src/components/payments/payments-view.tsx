@@ -57,6 +57,7 @@ export function PaymentsView({ overview }: { overview: PaymentsOverview }) {
   const [pkgId, setPkgId] = useState('')
   const [amount, setAmount] = useState('')
   const [periodMonth, setPeriodMonth] = useState(overview.month)
+  const [proofKey, setProofKey] = useState(0)
   const [notes, setNotes] = useState('')
   const [proof, setProof] = useState<File | null>(null)
   const selectedPkg = useMemo(() => overview.packages.find((p) => p.packageId === pkgId), [overview.packages, pkgId])
@@ -106,6 +107,7 @@ export function PaymentsView({ overview }: { overview: PaymentsOverview }) {
       setAmount('')
       setNotes('')
       setProof(null)
+      setProofKey((k) => k + 1)
     } catch (e: any) {
       fail(e.message || 'Gagal mengirim laporan')
     } finally {
@@ -311,6 +313,7 @@ export function PaymentsView({ overview }: { overview: PaymentsOverview }) {
               />
               <label className="pay-label">Foto bukti transfer (wajib)</label>
               <input
+                key={proofKey}
                 className="input-field"
                 type="file"
                 accept="image/*"
@@ -496,6 +499,10 @@ export function PaymentsView({ overview }: { overview: PaymentsOverview }) {
         .pay-row-main { display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1 1 240px; }
         .pay-row-nums { display: flex; flex-direction: column; gap: 4px; align-items: flex-end; font-size: 13px; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
         .pay-row-nums b { color: var(--text-primary); }
+        @media (max-width: 520px) {
+          .pay-row { flex-direction: column; align-items: stretch; }
+          .pay-row-nums { align-items: flex-start; }
+        }
         .pay-sub { font-size: 12.5px; color: var(--text-secondary); }
         .pay-due { color: #ff7a7a; font-weight: 600; font-size: 13px; }
         .pay-ok { color: #3ddc97; font-weight: 600; }

@@ -127,7 +127,7 @@ function revalidateMoney() {
 // -----------------------------------------------------------------------------
 
 const recordSchema = z.object({
-  packageId: z.string().uuid(),
+  packageId: z.guid(),
   amount: z.coerce.number().positive('Jumlah harus lebih dari 0'),
   notes: z.string().max(500).optional(),
   monthStr: z.string().regex(/^\d{4}-\d{2}$/).optional(), // untuk tagihan pascabayar
@@ -242,7 +242,7 @@ export async function voidTransaction(transactionId: string, reason: string) {
 // -----------------------------------------------------------------------------
 
 const reportSchema = z.object({
-  packageId: z.string().uuid('Pilih paket'),
+  packageId: z.guid('Pilih paket'),
   amount: z.coerce.number().positive('Jumlah harus lebih dari 0'),
   proofPath: z.string().min(3, 'Foto bukti transfer wajib diunggah'),
   notes: z.string().max(500).optional(),
@@ -362,8 +362,8 @@ export async function rejectPaymentReport(reportId: string, reason: string) {
 // -----------------------------------------------------------------------------
 
 const bankSchema = z.object({
-  id: z.string().uuid().optional(),
-  trainerId: z.string().uuid('Pilih PT'),
+  id: z.guid().optional(),
+  trainerId: z.guid('Pilih PT'),
   bankName: z.string().min(2, 'Nama bank wajib diisi').max(100),
   accountNumber: z.string().min(4, 'Nomor rekening wajib diisi').max(50),
   accountHolder: z.string().min(2, 'Nama pemilik rekening wajib diisi').max(150),
@@ -485,6 +485,8 @@ export async function getPaymentsOverview(monthStr?: string): Promise<PaymentsOv
     const monthDate = new Date(`${month}-01T00:00:00+07:00`)
     const monthStart = startOfMonth(monthDate)
     const monthEnd = endOfMonth(monthDate)
+    const monthStartIso = monthStart.toISOString()
+    const monthEndIso = monthEnd.toISOString()
 
     // Ruang lingkup data per peran
     const scope = (col: { trainer: any; client: any }) =>
@@ -513,7 +515,7 @@ export async function getPaymentsOverview(monthStr?: string): Promise<PaymentsOv
       .select({
         packageId: workoutSessions.packageId,
         total: sql<number>`COUNT(*)`,
-        inMonth: sql<number>`COUNT(*) FILTER (WHERE ${workoutSessions.scheduledAt} >= ${monthStart} AND ${workoutSessions.scheduledAt} <= ${monthEnd})`,
+        inMonth: sql<number>`COUNT(*) FILTER (WHERE ${workoutSessions.scheduledAt} >= ${monthStartIso}::timestamptz AND ${workoutSessions.scheduledAt} <= ${monthEndIso}::timestamptz)`,
       })
       .from(workoutSessions)
       .where(
@@ -530,7 +532,7 @@ export async function getPaymentsOverview(monthStr?: string): Promise<PaymentsOv
       .select({
         packageId: ptTransactions.packageId,
         paid: sql<string>`COALESCE(SUM(CASE WHEN ${ptTransactions.kind} = 'refund' THEN -${ptTransactions.amount} ELSE ${ptTransactions.amount} END), 0)`,
-        paidInMonth: sql<string>`COALESCE(SUM(CASE WHEN ${ptTransactions.kind} = 'refund' THEN -${ptTransactions.amount} ELSE ${ptTransactions.amount} END) FILTER (WHERE ${ptTransactions.paymentDate} >= ${monthStart} AND ${ptTransactions.paymentDate} <= ${monthEnd}), 0)`,
+        paidInMonth: sql<string>`COALESCE(SUM(CASE WHEN ${ptTransactions.kind} = 'refund' THEN -${ptTransactions.amount} ELSE ${ptTransactions.amount} END) FILTER (WHERE ${ptTransactions.paymentDate} >= ${monthStartIso}::timestamptz AND ${ptTransactions.paymentDate} <= ${monthEndIso}::timestamptz), 0)`,
       })
       .from(ptTransactions)
       .where(
