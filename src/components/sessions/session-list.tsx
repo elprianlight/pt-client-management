@@ -43,6 +43,7 @@ import { format, addDays, subDays, startOfWeek, isSameDay, parseISO } from 'date
 import { id as idLocale } from 'date-fns/locale'
 import { WorkoutBuilder } from './workout-builder'
 import { CustomModal, ModalType } from '@/components/ui/custom-modal'
+import { CancelDecisionModal, type CancelDecisionStatus } from '@/components/sessions/cancel-decision-modal'
 import './session-list.css'
 
 export function SessionList() {
@@ -54,6 +55,8 @@ export function SessionList() {
   const [packagesData, setPackagesData] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [processingId, setProcessingId] = useState<string | null>(null)
+  // PRD v2: keputusan PT untuk sesi batal / no-show (dihitung atau tidak)
+  const [cancelTarget, setCancelTarget] = useState<{ id: string; status: CancelDecisionStatus; clientName?: string } | null>(null)
 
   // PT Selected Date for Day/Week Schedule View
   const [currentDate, setCurrentDate] = useState<Date>(new Date())
@@ -337,12 +340,23 @@ export function SessionList() {
   }
 
   // Status Change Handler for PT
-  const handleStatusChange = async (sessionId: string, status: any) => {
+  const handleStatusChange = async (
+    sessionId: string,
+    status: any,
+    decision?: { countsTowardBalance: boolean; reason: string }
+  ) => {
     if (isClient) return
+
+    // Batal / no-show wajib lewat keputusan PT (dihitung atau tidak + alasan)
+    if ((status === 'cancelled' || status === 'no_show') && !decision) {
+      const target = data.find((x: any) => x.id === sessionId)
+      setCancelTarget({ id: sessionId, status, clientName: target?.clientName })
+      return
+    }
 
     setProcessingId(sessionId)
     try {
-      const res = await updateSessionStatus(sessionId, status)
+      const res = await updateSessionStatus(sessionId, status, decision)
       if (res.success) {
         await loadData()
         if (selectedDetailSession && selectedDetailSession.id === sessionId) {
@@ -351,7 +365,7 @@ export function SessionList() {
         const statusLabel = 
           status === 'completed' ? 'Selesai' : 
           status === 'check_in' ? 'Check-In' : 
-          status === 'cancelled' ? 'Batal' : 'Scheduled'
+          status === 'cancelled' ? 'Batal' : status === 'no_show' ? 'No-show' : 'Scheduled'
         showAlert(`Status sesi berhasil diperbarui ke '${statusLabel}'!`, 'success', 'Status Diperbarui')
       } else {
         showAlert(res.error || 'Gagal memperbarui status sesi', 'error')
@@ -1276,6 +1290,17 @@ export function SessionList() {
                   </button>
                 )}
 
+                {selectedDetailSession.status !== 'no_show' && selectedDetailSession.status !== 'completed' && (
+                  <button
+                    type="button"
+                    onClick={() => handleStatusChange(selectedDetailSession.id, 'no_show')}
+                    disabled={processingId === selectedDetailSession.id}
+                    className="pt-act-btn btn-cancel"
+                  >
+                    ⚠️ No-show
+                  </button>
+                )}
+
                 <button
                   type="button"
                   onClick={() => setDeleteConfirmId(selectedDetailSession.id)}
@@ -1341,6 +1366,20 @@ export function SessionList() {
       )}
 
       {/* ==================== DELETE CONFIRMATION MODAL ==================== */}
+      <CancelDecisionModal
+        isOpen={cancelTarget !== null}
+        status={cancelTarget?.status ?? 'cancelled'}
+        clientName={cancelTarget?.clientName}
+        isSubmitting={cancelTarget !== null && processingId === cancelTarget.id}
+        onClose={() => setCancelTarget(null)}
+        onSubmit={async (decision) => {
+          if (!cancelTarget) return
+          const target = cancelTarget
+          await handleStatusChange(target.id, target.status, decision)
+          setCancelTarget(null)
+        }}
+      />
+
       <CustomModal
         isOpen={Boolean(deleteConfirmId)}
         onClose={() => setDeleteConfirmId(null)}

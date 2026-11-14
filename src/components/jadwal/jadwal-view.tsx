@@ -56,6 +56,7 @@ import { CustomModal, ModalType } from '@/components/ui/custom-modal'
 import { WhatsAppModal } from '@/components/crm/whatsapp-modal'
 import { WhatsAppIcon } from '@/components/ui/whatsapp-icon'
 import { getCleanNotes } from '@/lib/utils'
+import { CancelDecisionModal, type CancelDecisionStatus } from '@/components/sessions/cancel-decision-modal'
 import './jadwal.css'
 
 interface JadwalViewProps {
@@ -71,6 +72,8 @@ export function JadwalView({ initialOpenNew, defaultPackageId, defaultClientId }
 
   const [mounted, setMounted] = useState(false)
   const [data, setData] = useState<any[]>([])
+  // PRD v2: keputusan PT untuk sesi batal / no-show (dihitung atau tidak)
+  const [cancelTarget, setCancelTarget] = useState<{ id: string; status: CancelDecisionStatus; clientName?: string } | null>(null)
   const [packagesData, setPackagesData] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [processingId, setProcessingId] = useState<string | null>(null)
@@ -598,12 +601,19 @@ export function JadwalView({ initialOpenNew, defaultPackageId, defaultClientId }
   // Update Status
   const handleUpdateStatus = async (
     sessionId: string,
-    newStatus: 'scheduled' | 'completed' | 'cancelled' | 'no_show'
+    newStatus: 'scheduled' | 'completed' | 'cancelled' | 'no_show',
+    decision?: { countsTowardBalance: boolean; reason: string }
   ) => {
     if (isClient) return
+    // Batal / no-show wajib lewat keputusan PT (dihitung atau tidak + alasan)
+    if ((newStatus === 'cancelled' || newStatus === 'no_show') && !decision) {
+      const target = data.find((x: any) => x.id === sessionId)
+      setCancelTarget({ id: sessionId, status: newStatus, clientName: target?.clientName })
+      return
+    }
     setProcessingId(sessionId)
     try {
-      const res = await updateSessionStatus(sessionId, newStatus)
+      const res = await updateSessionStatus(sessionId, newStatus, decision)
       if (res.success) {
         await loadData()
         if (selectedDetailSession && selectedDetailSession.id === sessionId) {
@@ -743,9 +753,14 @@ export function JadwalView({ initialOpenNew, defaultPackageId, defaultClientId }
 
       // 2. If status was changed, update status to trigger quota adjustments if needed
       if (editSessionStatus !== selectedDetailSession.status) {
-        const resStatus = await updateSessionStatus(selectedDetailSession.id, editSessionStatus)
-        if (!resStatus.success) {
-          showAlert(resStatus.error || 'Gagal memperbarui status sesi', 'error')
+        if (editSessionStatus === 'cancelled' || editSessionStatus === 'no_show') {
+          // Perlu keputusan PT (dihitung atau tidak) sebelum status batal/no-show disimpan
+          setCancelTarget({ id: selectedDetailSession.id, status: editSessionStatus, clientName: selectedDetailSession.clientName })
+        } else {
+          const resStatus = await updateSessionStatus(selectedDetailSession.id, editSessionStatus)
+          if (!resStatus.success) {
+            showAlert(resStatus.error || 'Gagal memperbarui status sesi', 'error')
+          }
         }
       }
 
@@ -2498,6 +2513,20 @@ export function JadwalView({ initialOpenNew, defaultPackageId, defaultClientId }
       )}
 
       {/* ─── 7. DELETE CONFIRMATION MODAL ─── */}
+      <CancelDecisionModal
+        isOpen={cancelTarget !== null}
+        status={cancelTarget?.status ?? 'cancelled'}
+        clientName={cancelTarget?.clientName}
+        isSubmitting={cancelTarget !== null && processingId === cancelTarget.id}
+        onClose={() => setCancelTarget(null)}
+        onSubmit={async (decision) => {
+          if (!cancelTarget) return
+          const target = cancelTarget
+          await handleUpdateStatus(target.id, target.status, decision)
+          setCancelTarget(null)
+        }}
+      />
+
       <CustomModal
         isOpen={Boolean(deleteConfirmId)}
         onClose={() => setDeleteConfirmId(null)}

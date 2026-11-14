@@ -103,42 +103,81 @@ export async function scheduleSession(input: z.infer<typeof scheduleSessionSchem
 
 
 
-export async function updateSessionStatus(sessionId: string, newStatus: 'scheduled' | 'check_in' | 'completed' | 'cancelled' | 'rescheduled' | 'no_show') {
+/**
+ * Aturan saldo (PRD v2): sesi dihitung terhadap saldo bila selesai (completed),
+ * atau batal/no-show yang diputuskan PT untuk tetap dihitung.
+ */
+function isCountedSession(status: string, countsTowardBalance: boolean): boolean {
+  return status === 'completed' || ((status === 'cancelled' || status === 'no_show') && countsTowardBalance)
+}
+
+export async function updateSessionStatus(
+  sessionId: string,
+  newStatus: 'scheduled' | 'check_in' | 'completed' | 'cancelled' | 'rescheduled' | 'no_show',
+  options?: { countsTowardBalance?: boolean; reason?: string }
+) {
   try {
     const supabase = await createClient()
     const { data: { user: authUser } } = await supabase.auth.getUser()
     if (!authUser) return { success: false, error: 'Unauthorized' }
 
+    const [currentUser] = await db.select().from(users).where(eq(users.id, authUser.id))
+    if (!currentUser || currentUser.role === 'client') {
+      return { success: false, error: 'Unauthorized' }
+    }
+
     // Dapatkan sesi saat ini
     const [session] = await db.select().from(workoutSessions).where(eq(workoutSessions.id, sessionId))
     if (!session) return { success: false, error: 'Sesi tidak ditemukan' }
-    if (session.status === newStatus) return { success: true } // No change
+
+    // PT hanya boleh mengubah sesi klien miliknya
+    if (currentUser.role === 'personal_trainer') {
+      const [ptData] = await db.select().from(personalTrainers).where(eq(personalTrainers.userId, currentUser.id))
+      if (!ptData || ptData.id !== session.trainerId) {
+        return { success: false, error: 'Unauthorized: sesi ini bukan milik Anda' }
+      }
+    }
+
+    const isCancelType = newStatus === 'cancelled' || newStatus === 'no_show'
+    const reason = (options?.reason || '').trim()
+    if (isCancelType && !reason) {
+      return { success: false, error: 'Alasan wajib diisi untuk sesi batal atau no-show' }
+    }
+
+    const newCounts = isCancelType ? Boolean(options?.countsTowardBalance) : false
+    const newReason = isCancelType ? reason : null
+
+    if (
+      session.status === newStatus &&
+      session.countsTowardBalance === newCounts &&
+      (session.countReason || null) === newReason
+    ) {
+      return { success: true } // No change
+    }
 
     const oldStatus = session.status
+    const oldCounted = isCountedSession(oldStatus, session.countsTowardBalance)
+    const newCounted = isCountedSession(newStatus, newCounts)
+    const delta = Number(newCounted) - Number(oldCounted)
     const now = new Date()
 
-    // Mulai transaksi DB
     await db.transaction(async (tx) => {
-      // 1. Update status sesi
+      // 1. Update status sesi + keputusan hitung
       await tx.update(workoutSessions)
         .set({
           status: newStatus,
+          countsTowardBalance: newCounts,
+          countReason: newReason,
           completedAt: newStatus === 'completed' ? now : (oldStatus === 'completed' ? null : session.completedAt),
           checkInAt: newStatus === 'check_in' ? (session.checkInAt || now) : (newStatus === 'scheduled' ? null : session.checkInAt),
           updatedAt: now,
         })
         .where(eq(workoutSessions.id, sessionId))
 
-      // 2. Potong/Kembalikan kuota paket jika ada perubahan state 'completed'
-      if (oldStatus !== 'completed' && newStatus === 'completed') {
-        // Kurangi sesi (tambah usedSessions)
+      // 2. Sesuaikan saldo paket bila hitungan berubah
+      if (delta !== 0) {
         await tx.update(ptPackages)
-          .set({ usedSessions: sql`${ptPackages.usedSessions} + 1` })
-          .where(eq(ptPackages.id, session.packageId))
-      } else if (oldStatus === 'completed' && newStatus !== 'completed') {
-        // Kembalikan sesi (kurangi usedSessions)
-        await tx.update(ptPackages)
-          .set({ usedSessions: sql`${ptPackages.usedSessions} - 1` })
+          .set({ usedSessions: sql`GREATEST(${ptPackages.usedSessions} + ${delta}, 0)` })
           .where(eq(ptPackages.id, session.packageId))
       }
     })
@@ -148,13 +187,14 @@ export async function updateSessionStatus(sessionId: string, newStatus: 'schedul
       action: 'UPDATE_SESSION_STATUS',
       tableName: 'workout_sessions',
       recordId: sessionId,
-      oldValues: { status: oldStatus },
-      newValues: { status: newStatus },
+      oldValues: { status: oldStatus, countsTowardBalance: session.countsTowardBalance, countReason: session.countReason },
+      newValues: { status: newStatus, countsTowardBalance: newCounts, countReason: newReason },
     })
 
     revalidatePath('/jadwal')
     revalidatePath('/session')
-    revalidatePath('/packages') // Update package list as well
+    revalidatePath('/packages')
+    revalidatePath('/payments')
     return { success: true }
   } catch (err: any) {
     console.error('Update session status error:', err)
@@ -226,6 +266,8 @@ export async function listSessions() {
       rpe: workoutSessions.rpe,
       sessionNotes: workoutSessions.sessionNotes,
       ptNotes: workoutSessions.ptNotes,
+      countsTowardBalance: workoutSessions.countsTowardBalance,
+      countReason: workoutSessions.countReason,
       clientName: users.fullName,
       packageName: ptPackages.packageName,
       totalSessions: ptPackages.totalSessions,
@@ -310,9 +352,9 @@ export async function deleteSession(sessionId: string) {
 
     await db.transaction(async (tx) => {
       // If completed, we need to return the quota
-      if (session.status === 'completed') {
+      if (isCountedSession(session.status, session.countsTowardBalance)) {
         await tx.update(ptPackages)
-          .set({ usedSessions: sql`${ptPackages.usedSessions} - 1` })
+          .set({ usedSessions: sql`GREATEST(${ptPackages.usedSessions} - 1, 0)` })
           .where(eq(ptPackages.id, session.packageId))
       }
       

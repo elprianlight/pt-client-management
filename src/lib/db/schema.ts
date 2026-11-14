@@ -233,7 +233,7 @@ export const ptPackages = pgTable('pt_packages', {
   paymentStatus: paymentStatusEnum('payment_status').default('pending').notNull(),
   billingType: varchar('billing_type', { length: 20 }).default('prepaid').notNull(),
   startDate: date('start_date').notNull(),
-  expiresAt: date('expires_at').notNull(),
+  expiresAt: date('expires_at'), // PRD v2: paket tidak kedaluwarsa (boleh kosong)
   isActive: boolean('is_active').default(true).notNull(),
   notes: text('notes'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
@@ -255,12 +255,58 @@ export const ptTransactions = pgTable('pt_transactions', {
   paymentDate: timestamp('payment_date', { withTimezone: true }),
   receiptNumber: varchar('receipt_number', { length: 100 }),
   notes: text('notes'),
+  // PRD v2: jenis transaksi dan void (tidak menghapus baris)
+  kind: varchar('kind', { length: 20 }).default('payment').notNull(), // payment | refund | deposit
+  voidedAt: timestamp('voided_at', { withTimezone: true }),
+  voidReason: text('void_reason'),
+  voidedBy: uuid('voided_by'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 }, (table) => ({
   packageIdIdx: index('trx_package_id_idx').on(table.packageId),
   trainerIdIdx: index('trx_trainer_id_idx').on(table.trainerId),
   clientIdIdx: index('trx_client_id_idx').on(table.clientId),
 }))
+
+
+// Rekening tujuan transfer per PT (tampil di tagihan dan kuitansi)
+export const ptBankAccounts = pgTable('pt_bank_accounts', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  trainerId: uuid('trainer_id').notNull().references(() => personalTrainers.id, { onDelete: 'cascade' }),
+  bankName: varchar('bank_name', { length: 100 }).notNull(),
+  accountNumber: varchar('account_number', { length: 50 }).notNull(),
+  accountHolder: varchar('account_holder', { length: 150 }).notNull(),
+  isActive: boolean('is_active').default(true).notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  trainerIdIdx: index('bank_trainer_id_idx').on(table.trainerId),
+}))
+
+// Laporan pembayaran dari PT yang menunggu konfirmasi Admin
+export const paymentReports = pgTable('payment_reports', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  trainerId: uuid('trainer_id').notNull().references(() => personalTrainers.id),
+  clientId: uuid('client_id').notNull().references(() => clients.id),
+  packageId: uuid('package_id').notNull().references(() => ptPackages.id),
+  amount: decimal('amount', { precision: 12, scale: 2 }).notNull(),
+  proofPath: text('proof_path').notNull(), // path di Supabase Storage bucket payment-proofs
+  notes: text('notes'),
+  periodMonth: varchar('period_month', { length: 7 }), // yyyy-MM, untuk tagihan pascabayar
+  status: varchar('status', { length: 20 }).default('pending').notNull(), // pending | confirmed | rejected
+  rejectReason: text('reject_reason'),
+  transactionId: uuid('transaction_id').references(() => ptTransactions.id),
+  reviewedBy: uuid('reviewed_by'),
+  reviewedAt: timestamp('reviewed_at', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  statusIdx: index('payrep_status_idx').on(table.status),
+  trainerIdIdx: index('payrep_trainer_id_idx').on(table.trainerId),
+}))
+
+// Penghitung nomor kuitansi per tahun (ELP-TAHUN-URUTAN)
+export const receiptCounters = pgTable('receipt_counters', {
+  year: integer('year').primaryKey(),
+  lastNumber: integer('last_number').default(0).notNull(),
+})
 
 // =============================================================================
 // WORKOUT SYSTEM
@@ -322,6 +368,9 @@ export const workoutSessions = pgTable('workout_sessions', {
   rating: integer('rating'), // 1-5 client rating
   feedback: text('feedback'),
   pdfAttachmentUrl: text('pdf_attachment_url'),
+  // PRD v2: keputusan PT untuk batal/no-show (dihitung terhadap saldo atau tidak)
+  countsTowardBalance: boolean('counts_toward_balance').default(false).notNull(),
+  countReason: text('count_reason'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 }, (table) => ({
