@@ -901,6 +901,16 @@ export function SessionList() {
                                 )}
                                 <span>✅ Selesai</span>
                               </button>
+                              {!isClient && (
+                                <Link
+                                  href={`/jadwal/live/${session.id}`}
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="btn-quick-complete-action"
+                                  title="Buka layar Sesi Berjalan (timer, RPE, catatan)"
+                                >
+                                  <span>▶ Sesi berjalan</span>
+                                </Link>
+                              )}
                             </div>
                           )}
                         </div>

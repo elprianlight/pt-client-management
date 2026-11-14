@@ -245,6 +245,52 @@ export async function checkInSession(sessionId: string) {
   }
 }
 
+/**
+ * Layar "Sesi Berjalan" (PRD v2, A2/A3): selesaikan sesi dengan RPE dan catatan singkat.
+ * RPE dan catatan opsional; saldo paket dikurangi lewat updateSessionStatus.
+ */
+export async function completeLiveSession(
+  sessionId: string,
+  input: { rpe?: number | null; notes?: string }
+) {
+  try {
+    const supabase = await createClient()
+    const { data: { user: authUser } } = await supabase.auth.getUser()
+    if (!authUser) return { success: false, error: 'Unauthorized' }
+
+    const [currentUser] = await db.select().from(users).where(eq(users.id, authUser.id))
+    if (!currentUser || currentUser.role === 'client') return { success: false, error: 'Unauthorized' }
+
+    const [session] = await db.select().from(workoutSessions).where(eq(workoutSessions.id, sessionId))
+    if (!session) return { success: false, error: 'Sesi tidak ditemukan' }
+
+    if (currentUser.role === 'personal_trainer') {
+      const [ptData] = await db.select().from(personalTrainers).where(eq(personalTrainers.userId, currentUser.id))
+      if (!ptData || ptData.id !== session.trainerId) {
+        return { success: false, error: 'Unauthorized: sesi ini bukan milik Anda' }
+      }
+    }
+
+    const rpe = input.rpe != null ? Math.round(Number(input.rpe)) : null
+    if (rpe !== null && (rpe < 1 || rpe > 10)) return { success: false, error: 'RPE harus 1 sampai 10' }
+
+    const notes = (input.notes || '').trim()
+    const fields: Record<string, unknown> = { rpe, updatedAt: new Date() }
+    if (notes) {
+      fields.ptNotes = notes
+      // Jangan timpa sessionNotes bila berisi daftar latihan (JSON)
+      const existing = (session.sessionNotes || '').trim()
+      if (!existing.startsWith('[') && !existing.startsWith('{')) fields.sessionNotes = notes
+    }
+    await db.update(workoutSessions).set(fields).where(eq(workoutSessions.id, sessionId))
+
+    return await updateSessionStatus(sessionId, 'completed')
+  } catch (err: any) {
+    console.error('Complete live session error:', err)
+    return { success: false, error: 'Gagal menyelesaikan sesi' }
+  }
+}
+
 export async function listSessions() {
   try {
     const supabase = await createClient()
