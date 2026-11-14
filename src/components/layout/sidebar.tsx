@@ -19,6 +19,7 @@ import {
   TrendingUp,
   BarChart3,
   Settings,
+  Wallet,
   LogOut,
   ChevronLeft,
   ChevronRight,
@@ -89,6 +90,12 @@ const NAV_ITEMS: NavItem[] = [
     href: '/progress',
     icon: TrendingUp,
     roles: ['client'],
+  },
+  {
+    title: 'Pembayaran',
+    href: '/payments',
+    icon: Wallet,
+    roles: ['super_admin', 'personal_trainer', 'client'],
   },
   {
     title: 'Laporan',

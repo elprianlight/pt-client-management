@@ -16,6 +16,7 @@ import {
   BarChart3,
   MoreHorizontal,
   CheckCircle2,
+  Wallet,
 } from 'lucide-react'
 import type { UserRole } from '@/types'
 import { useState } from 'react'
@@ -86,7 +87,14 @@ const PRIMARY_NAV: NavItem[] = [
   },
 ]
 
-const MORE_NAV: NavItem[] = []
+const MORE_NAV: NavItem[] = [
+  {
+    title: 'Pembayaran',
+    href: '/payments',
+    icon: Wallet,
+    roles: ['super_admin', 'personal_trainer', 'client'],
+  },
+]
 
 export function BottomNav() {
   const pathname = usePathname()

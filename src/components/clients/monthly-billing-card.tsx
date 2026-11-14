@@ -32,6 +32,7 @@ import { createPostpaidPackage } from '@/lib/actions/package'
 import { buildWhatsAppUrl, getMonthlyInvoiceMessage } from '@/lib/utils/whatsapp-helper'
 import { WhatsAppIcon } from '@/components/ui/whatsapp-icon'
 import { CustomModal } from '@/components/ui/custom-modal'
+import { useAuthStore } from '@/store/auth-store'
 import './monthly-billing.css'
 
 interface MonthlyBillingCardProps {
@@ -47,6 +48,8 @@ export function MonthlyBillingCard({
   clientPhone,
   onRefreshParent,
 }: MonthlyBillingCardProps) {
+  // PRD v2: hanya Admin yang mencatat atau membatalkan pembayaran
+  const isAdmin = useAuthStore((st) => st.role) === 'super_admin'
   const [selectedMonth, setSelectedMonth] = useState(() => format(new Date(), 'yyyy-MM'))
   const [summary, setSummary] = useState<MonthlyBillingSummary | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -187,7 +190,7 @@ export function MonthlyBillingCard({
       const res = await recordMonthlyBillingPayment({
         clientId,
         packageId: summary.postpaidPackageId,
-        monthStr: summary.monthLabel,
+        monthStr: summary.monthStr,
         amount: summary.totalAmount,
         notes: `Pelunasan sesi ${summary.monthLabel}`,
       })
@@ -577,6 +580,12 @@ export function MonthlyBillingCard({
 
             {/* Mark as Paid Action */}
             <div className="mb-pay-group">
+              {!isAdmin ? (
+                <span className="mb-paid-notice font-mono">
+                  {summary.isPaid ? '✓ Lunas' : 'Pembayaran dicatat oleh Admin; laporkan lewat menu Pembayaran'}
+                </span>
+              ) : (
+                <>
               {!summary.isPaid ? (
                 <button
                   type="button"
@@ -602,6 +611,8 @@ export function MonthlyBillingCard({
                     Batal Lunas
                   </button>
                 </div>
+              )}
+                </>
               )}
             </div>
           </div>

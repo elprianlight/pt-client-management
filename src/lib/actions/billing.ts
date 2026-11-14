@@ -5,6 +5,7 @@ import { ptPackages, ptTransactions, clients, personalTrainers, users, workoutSe
 import { eq, desc, and, gte, lte, sql } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
+import { recordPayment, voidTransaction } from './payment'
 import { startOfMonth, endOfMonth, format } from 'date-fns'
 import { id as idLocale } from 'date-fns/locale'
 
@@ -82,6 +83,7 @@ export async function getMonthlyBillingSummary(clientId: string, monthStrInput?:
         id: workoutSessions.id,
         scheduledAt: workoutSessions.scheduledAt,
         status: workoutSessions.status,
+        countsTowardBalance: workoutSessions.countsTowardBalance,
         programType: workoutSessions.programType,
         location: workoutSessions.location,
       })
@@ -95,7 +97,10 @@ export async function getMonthlyBillingSummary(clientId: string, monthStrInput?:
       )
       .orderBy(workoutSessions.scheduledAt)
 
-    const completedSessions = monthSessions.filter((s) => s.status === 'completed')
+    // PRD v2: sesi selesai + batal/no-show yang diputuskan PT untuk dihitung
+    const completedSessions = monthSessions.filter(
+      (s) => s.status === 'completed' || ((s.status === 'cancelled' || s.status === 'no_show') && s.countsTowardBalance)
+    )
     const totalCompleted = completedSessions.length
     const totalAmount = totalCompleted * ratePerSession
 
@@ -113,6 +118,7 @@ export async function getMonthlyBillingSummary(clientId: string, monthStrInput?:
     // Match transaction notes containing the month e.g. "Billing Pascabayar: 2026-09" or "September 2026"
     const matchingTrx = transactions.find(
       (trx) =>
+        !trx.voidedAt &&
         trx.notes &&
         (trx.notes.includes(targetMonthStr) ||
           trx.notes.toLowerCase().includes(monthLabel.toLowerCase()))
@@ -159,74 +165,24 @@ export async function recordMonthlyBillingPayment(input: {
   amount: number
   notes?: string
 }) {
-  try {
-    const supabase = await createClient()
-    const { data: { user: authUser } } = await supabase.auth.getUser()
-    if (!authUser) return { success: false, error: 'Unauthorized' }
-
-    const [currentUser] = await db.select().from(users).where(eq(users.id, authUser.id))
-    if (!currentUser || currentUser.role === 'client') {
-      return { success: false, error: 'Unauthorized' }
-    }
-
-    const [clientData] = await db.select().from(clients).where(eq(clients.id, input.clientId))
-    if (!clientData) return { success: false, error: 'Client tidak ditemukan' }
-
-    let trainerId = clientData.trainerId
-    if (!trainerId && currentUser.role === 'personal_trainer') {
-      const [ptData] = await db.select().from(personalTrainers).where(eq(personalTrainers.userId, currentUser.id))
-      if (ptData) trainerId = ptData.id
-    }
-
-    if (!trainerId) return { success: false, error: 'Trainer tidak ditemukan' }
-
-    const pDate = new Date()
-    const noteText = `Billing Pascabayar: ${input.monthStr}${input.notes ? ` (${input.notes})` : ''}`
-
-    const [newTrx] = await db.insert(ptTransactions).values({
-      packageId: input.packageId,
-      trainerId,
-      clientId: input.clientId,
-      amount: String(input.amount),
-      paymentStatus: 'paid',
-      paymentDate: pDate,
-      createdAt: pDate,
-      notes: noteText,
-    }).returning({ id: ptTransactions.id })
-
-    revalidatePath(`/clients/${input.clientId}`)
-    revalidatePath('/packages')
-    revalidatePath('/dashboard')
-
-    return { success: true, transactionId: newTrx.id }
-  } catch (err: any) {
-    console.error('recordMonthlyBillingPayment error:', err)
-    return { success: false, error: err.message || 'Gagal mencatat pembayaran' }
-  }
+  // PRD v2: hanya Admin yang mencatat pembayaran (nomor kuitansi dibuat otomatis)
+  const res = await recordPayment({
+    packageId: input.packageId,
+    amount: input.amount,
+    notes: input.notes,
+    monthStr: input.monthStr,
+  })
+  if (!res.success) return { success: false, error: res.error }
+  revalidatePath(`/clients/${input.clientId}`)
+  return { success: true, transactionId: res.transactionId, receiptNumber: res.receiptNumber }
 }
 
-export async function deleteMonthlyBillingPayment(transactionId: string, clientId: string) {
-  try {
-    const supabase = await createClient()
-    const { data: { user: authUser } } = await supabase.auth.getUser()
-    if (!authUser) return { success: false, error: 'Unauthorized' }
-
-    const [currentUser] = await db.select().from(users).where(eq(users.id, authUser.id))
-    if (!currentUser || currentUser.role === 'client') {
-      return { success: false, error: 'Unauthorized' }
-    }
-
-    await db.delete(ptTransactions).where(eq(ptTransactions.id, transactionId))
-
-    revalidatePath(`/clients/${clientId}`)
-    revalidatePath('/packages')
-    revalidatePath('/dashboard')
-
-    return { success: true }
-  } catch (err: any) {
-    console.error('deleteMonthlyBillingPayment error:', err)
-    return { success: false, error: err.message || 'Gagal membatalkan pembayaran' }
-  }
+export async function deleteMonthlyBillingPayment(transactionId: string, clientId: string, reason = 'Dibatalkan dari kartu tagihan bulanan') {
+  // PRD v2: transaksi tidak dihapus, hanya di-void dengan alasan
+  const res = await voidTransaction(transactionId, reason)
+  if (!res.success) return { success: false, error: res.error }
+  revalidatePath(`/clients/${clientId}`)
+  return { success: true }
 }
 
 export async function updatePostpaidRate(packageId: string, newRate: number, clientId?: string) {

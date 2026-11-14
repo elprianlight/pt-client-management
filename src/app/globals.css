@@ -1156,3 +1156,35 @@ tr:hover td {
   background: rgba(255, 255, 255, 0.16);
   box-shadow: inset 1px 2px 4px rgba(255, 255, 255, 0.3), inset -2px -3px 6px rgba(0, 0, 0, 0.25);
 }
+
+/* ─── Dark Performance (PRD v2) ─────────────────────────────────────────────
+   Tema gelap: latar hampir hitam, kartu kaca tipis dengan border terang
+   transparan, aksen merah menyala. Hanya mengganti token, sehingga seluruh
+   komponen yang memakai token ikut berubah. Tema terang tetap Soft Clay. */
+[data-theme="dark"] {
+  --brand-primary: #ee5a45;
+  --brand-glow: #ff4d3a;
+
+  --bg-base: #0e0c0b;
+  --bg-surface: #171413;
+  --bg-elevated: #1e1a18;
+  --bg-overlay: #171413;
+  --bg-subtle: #26211f;
+
+  --text-primary: #f5efeb;
+  --text-secondary: #a89f99;
+
+  --border-default: rgba(255, 255, 255, 0.1);
+  --border-hover: rgba(255, 255, 255, 0.18);
+  --border-brand: rgba(255, 77, 58, 0.55);
+
+  --clay-out: 0 12px 32px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 0 28px rgba(255, 77, 58, 0.06);
+  --clay-out-sm: 0 6px 18px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  --clay-in: inset 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 -2px 8px rgba(0, 0, 0, 0.35);
+  --clay-press: inset 0 3px 10px rgba(0, 0, 0, 0.6);
+
+  --gradient-brand: linear-gradient(145deg, #ff5a45 0%, #e8402f 55%, #b82a1c 100%);
+  --gradient-glow:
+    radial-gradient(760px 480px at 0% 0%, rgba(255, 77, 58, 0.18), transparent 60%),
+    radial-gradient(640px 460px at 100% 100%, rgba(255, 77, 58, 0.08), transparent 60%);
+}
