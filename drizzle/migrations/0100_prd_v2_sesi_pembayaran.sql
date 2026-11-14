@@ -5,7 +5,8 @@
 ALTER TABLE workout_sessions ADD COLUMN IF NOT EXISTS counts_toward_balance boolean NOT NULL DEFAULT false;
 ALTER TABLE workout_sessions ADD COLUMN IF NOT EXISTS count_reason text;
 
--- 2. Paket tidak kedaluwarsa
+-- 2. Paket tidak kedaluwarsa (billing_type sudah ada di database produksi; dipastikan untuk database baru)
+ALTER TABLE pt_packages ADD COLUMN IF NOT EXISTS billing_type varchar(20) NOT NULL DEFAULT 'prepaid';
 ALTER TABLE pt_packages ALTER COLUMN expires_at DROP NOT NULL;
 
 -- 3. Transaksi: jenis dan void
