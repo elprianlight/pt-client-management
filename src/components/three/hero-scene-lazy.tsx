@@ -2,36 +2,18 @@
 
 import dynamic from 'next/dynamic'
 import { useEffect, useState } from 'react'
+import { ScenePoster, useTier } from './quality'
 
-const HeroScene = dynamic(() => import('./hero-scene'), {
-  ssr: false,
-  loading: () => null,
-})
+const HeroScene = dynamic(() => import('./hero-scene'), { ssr: false, loading: () => null })
 
-/**
- * Pembungkus aman untuk scene 3D:
- * - dimuat hanya di browser (tanpa SSR)
- * - dilewati bila pengguna memilih "kurangi gerakan"
- * - dilewati bila WebGL tidak tersedia (UI tetap tampil normal)
- */
+/** Pembungkus scene hero dengan tiga tingkat kualitas; Hemat = poster statis. */
 export function HeroSceneLazy({ className, aside = false }: { className?: string; aside?: boolean }) {
-  const [enabled, setEnabled] = useState(false)
+  const { cfg } = useTier()
   const [wide, setWide] = useState(false)
+  useEffect(() => setWide(window.innerWidth >= 900), [])
 
-  useEffect(() => {
-    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    let webgl = false
-    try {
-      const c = document.createElement('canvas')
-      webgl = !!(c.getContext('webgl2') || c.getContext('webgl'))
-    } catch {
-      webgl = false
-    }
-    setEnabled(!reduce && webgl)
-    setWide(window.innerWidth >= 900)
-  }, [])
-
-  if (!enabled) return null
+  if (!cfg) return null
+  if (!cfg.webgl) return <ScenePoster className={className} />
   // 'aside': geser barbel ke kiri agar tidak tertutup kartu di tengah layar
   const shifted = aside && wide
   return <HeroScene className={className} offset={shifted ? [-2.7, 0.1] : [0, 0]} scale={shifted ? 0.55 : 1} />

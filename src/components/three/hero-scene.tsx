@@ -4,6 +4,7 @@ import { useMemo, useRef } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { Float, Sparkles } from '@react-three/drei'
 import * as THREE from 'three'
+import { PerfMonitor, Phys, useSceneActive, useTierConfig } from './quality'
 
 /**
  * Scene 3D dekoratif (barbel + cincin orbit + partikel).
@@ -19,7 +20,7 @@ function Plate({ x, r, h, color }: { x: number; r: number; h: number; color: str
   return (
     <mesh position={[x, 0, 0]} rotation={[0, 0, Math.PI / 2]}>
       <cylinderGeometry args={[r, r, h, 48]} />
-      <meshPhysicalMaterial
+      <Phys
         color={color}
         metalness={0.55}
         roughness={0.25}
@@ -48,7 +49,7 @@ function Dumbbell() {
       {/* Bar */}
       <mesh rotation={[0, 0, Math.PI / 2]}>
         <cylinderGeometry args={[0.09, 0.09, 3.6, 32]} />
-        <meshPhysicalMaterial color="#e5e7eb" metalness={0.9} roughness={0.2} clearcoat={1} />
+        <Phys color="#e5e7eb" metalness={0.9} roughness={0.2} clearcoat={1} />
       </mesh>
       {/* Grip */}
       <mesh rotation={[0, 0, Math.PI / 2]}>
@@ -124,13 +125,18 @@ export default function HeroScene({
   offset?: [number, number]
   scale?: number
 }) {
+  const cfg = useTierConfig()
+  const ref = useRef<HTMLDivElement>(null)
+  const active = useSceneActive(ref)
   return (
-    <div className={className} aria-hidden="true">
+    <div ref={ref} className={className} aria-hidden="true">
       <Canvas
-        dpr={[1, 1.75]}
+        dpr={cfg.dpr}
+        frameloop={active ? 'always' : 'never'}
         camera={{ position: [0, 0, 6.2], fov: 42 }}
-        gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
+        gl={{ antialias: cfg.antialias, alpha: true, powerPreference: cfg.physical ? 'high-performance' : 'default' }}
       >
+        <PerfMonitor />
         <ambientLight intensity={0.7} />
         <directionalLight position={[4, 5, 5]} intensity={2.2} color="#ffffff" />
         <pointLight position={[-4, -2, 3]} intensity={18} color={ACCENT_2} />
@@ -141,9 +147,15 @@ export default function HeroScene({
             <Dumbbell />
           </Float>
         </group>
-        <Rings />
-        <Orbs />
-        <Sparkles count={60} scale={[8, 5, 4]} size={2.2} speed={0.4} color="#ffffff" opacity={0.6} />
+        {cfg.extras && (
+          <>
+            <Rings />
+            <Orbs />
+          </>
+        )}
+        {cfg.sparkles > 0 && (
+          <Sparkles count={cfg.sparkles + 10} scale={[8, 5, 4]} size={2.2} speed={0.4} color="#ffffff" opacity={0.6} />
+        )}
       </Canvas>
     </div>
   )

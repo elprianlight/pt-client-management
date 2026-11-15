@@ -5,6 +5,8 @@ import { createPortal } from 'react-dom'
 import { useAuthStore } from '@/store/auth-store'
 import { createClient } from '@/lib/supabase/client'
 import { GymSceneLazy } from '@/components/three/gym-scene-lazy'
+import { QualityPicker } from '@/components/three/quality-picker'
+import { useThemeStore } from '@/store/theme-store'
 import { updateUserProfile } from '@/lib/actions/client'
 import {
   User,
@@ -41,6 +43,8 @@ import Link from 'next/link'
 export default function SettingsPage() {
   const { user, role, clearAuth, setUser } = useAuthStore()
   const isClient = role === 'client'
+  const theme = useThemeStore((s) => s.theme)
+  const followSystem = useThemeStore((s) => s.followSystem)
 
   const [mounted, setMounted] = useState(false)
   const supabase = createClient()
@@ -454,7 +458,15 @@ export default function SettingsPage() {
                 <Moon size={16} className="pref-icon" />
                 <span>Tema Tampilan</span>
               </div>
-              <span className="pref-val">Dark Mode Premium</span>
+              <span className="pref-val">{followSystem ? 'Ikuti pengaturan HP' : theme === 'dark' ? 'Gelap' : 'Terang'}</span>
+            </div>
+
+            <div className="pref-row" style={{ flexDirection: 'column', alignItems: 'stretch', gap: 10 }}>
+              <div className="pref-left">
+                <Sparkles size={16} className="pref-icon" />
+                <span>Kualitas 3D</span>
+              </div>
+              <QualityPicker />
             </div>
           </div>
         </div>

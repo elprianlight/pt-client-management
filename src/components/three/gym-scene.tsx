@@ -4,6 +4,7 @@ import { useRef } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { Float, Sparkles } from '@react-three/drei'
 import * as THREE from 'three'
+import { PerfMonitor, Phys, useSceneActive, useTierConfig } from './quality'
 
 /**
  * Scene 3D bertema gym & wellness: kettlebell, cincin detak jantung,
@@ -18,6 +19,7 @@ const MINT = '#4ade80'
 
 function Kettlebell() {
   const g = useRef<THREE.Group>(null)
+  const seg = Math.max(16, Math.round(64 * useTierConfig().detail))
   useFrame((state, delta) => {
     if (!g.current) return
     g.current.rotation.y = THREE.MathUtils.damp(
@@ -32,8 +34,8 @@ function Kettlebell() {
     <group ref={g} scale={1.05}>
       {/* Badan */}
       <mesh position={[0, -0.2, 0]}>
-        <sphereGeometry args={[1, 64, 64]} />
-        <meshPhysicalMaterial color="#2a2421" metalness={0.75} roughness={0.28} clearcoat={1} clearcoatRoughness={0.12} />
+        <sphereGeometry args={[1, seg, seg]} />
+        <Phys color="#2a2421" metalness={0.75} roughness={0.28} clearcoat={1} clearcoatRoughness={0.12} />
       </mesh>
       {/* Pita aksen di badan */}
       <mesh position={[0, -0.2, 0]} rotation={[Math.PI / 2, 0, 0]}>
@@ -43,7 +45,7 @@ function Kettlebell() {
       {/* Pegangan */}
       <mesh position={[0, 0.98, 0]}>
         <torusGeometry args={[0.55, 0.13, 24, 64, Math.PI * 1.0]} />
-        <meshPhysicalMaterial color="#eadbd3" metalness={0.9} roughness={0.2} clearcoat={1} />
+        <Phys color="#eadbd3" metalness={0.9} roughness={0.2} clearcoat={1} />
       </mesh>
       {/* Bobot (label) */}
       <mesh position={[0, -0.2, 1]} rotation={[Math.PI / 2, 0, 0]}>
@@ -93,7 +95,7 @@ function MiniDumbbell({ position, rotation }: { position: [number, number, numbe
         {[-0.8, 0.8].map((x) => (
           <mesh key={x} position={[x, 0, 0]} rotation={[0, 0, Math.PI / 2]}>
             <cylinderGeometry args={[0.38, 0.38, 0.28, 32]} />
-            <meshPhysicalMaterial color={BLUE} metalness={0.5} roughness={0.25} clearcoat={1} />
+            <Phys color={BLUE} metalness={0.5} roughness={0.25} clearcoat={1} />
           </mesh>
         ))}
       </group>
@@ -143,7 +145,7 @@ function BigDumbbell() {
       <group rotation={[0.2, 0, 0.4]} scale={0.95}>
         <mesh rotation={[0, 0, Math.PI / 2]}>
           <cylinderGeometry args={[0.1, 0.1, 3.4, 32]} />
-          <meshPhysicalMaterial color="#e5e7eb" metalness={0.9} roughness={0.2} clearcoat={1} />
+          <Phys color="#e5e7eb" metalness={0.9} roughness={0.2} clearcoat={1} />
         </mesh>
         {[-1, 1].map((sx) => (
           <group key={sx}>
@@ -154,7 +156,7 @@ function BigDumbbell() {
             ].map((pl) => (
               <mesh key={pl.x} position={[sx * pl.x, 0, 0]} rotation={[0, 0, Math.PI / 2]}>
                 <cylinderGeometry args={[pl.r, pl.r, 0.2, 48]} />
-                <meshPhysicalMaterial color={pl.c} metalness={0.55} roughness={0.25} clearcoat={1} />
+                <Phys color={pl.c} metalness={0.55} roughness={0.25} clearcoat={1} />
               </mesh>
             ))}
           </group>
@@ -175,7 +177,7 @@ function Capsules() {
             {/* Tabung kaca */}
             <mesh>
               <capsuleGeometry args={[0.42, 1.7, 12, 32]} />
-              <meshPhysicalMaterial color="#ffe3dc" transparent opacity={0.22} roughness={0.05} transmission={0.6} thickness={0.4} clearcoat={1} />
+              <Phys color="#ffe3dc" transparent opacity={0.22} roughness={0.05} transmission={0.6} thickness={0.4} clearcoat={1} />
             </mesh>
             {/* Cairan = sisa sesi */}
             <mesh position={[0, -0.85 + lv * 0.85, 0]} scale={[1, lv, 1]}>
@@ -200,7 +202,7 @@ function AppleScene() {
       <Float speed={1.5} floatIntensity={0.8}>
         <mesh>
           <sphereGeometry args={[1.05, 64, 64]} />
-          <meshPhysicalMaterial color="#ef4d6a" metalness={0.15} roughness={0.28} clearcoat={1} clearcoatRoughness={0.1} />
+          <Phys color="#ef4d6a" metalness={0.15} roughness={0.28} clearcoat={1} clearcoatRoughness={0.1} />
         </mesh>
         <mesh position={[0, 1.12, 0]} rotation={[0, 0, 0.2]}>
           <cylinderGeometry args={[0.05, 0.07, 0.38, 12]} />
@@ -219,7 +221,7 @@ function AppleScene() {
         <Float key={i} speed={1.8 + i * 0.4} floatIntensity={1.6}>
           <mesh position={p as [number, number, number]} scale={[0.5, 0.7, 0.5]}>
             <sphereGeometry args={[0.32, 24, 24]} />
-            <meshPhysicalMaterial color={CYAN} transmission={0.7} roughness={0.05} thickness={0.5} emissive={CYAN} emissiveIntensity={0.25} />
+            <Phys color={CYAN} transmission={0.7} roughness={0.05} thickness={0.5} emissive={CYAN} emissiveIntensity={0.25} />
           </mesh>
         </Float>
       ))}
@@ -235,7 +237,7 @@ function Bars() {
         {heights.map((h, i) => (
           <mesh key={i} position={[(i - 2) * 0.82, h / 2, 0]}>
             <boxGeometry args={[0.56, h, 0.56]} />
-            <meshPhysicalMaterial
+            <Phys
               color={i === heights.length - 1 ? CYAN : BLUE}
               emissive={i === heights.length - 1 ? CYAN : BLUE}
               emissiveIntensity={0.35 + i * 0.1}
@@ -267,7 +269,7 @@ function Donut() {
         {arcs.map((a, i) => (
           <mesh key={i} rotation={[0, 0, a.r]}>
             <torusGeometry args={[1.25, 0.38, 28, 80, a.a - 0.06]} />
-            <meshPhysicalMaterial color={a.c} emissive={a.c} emissiveIntensity={0.4} metalness={0.3} roughness={0.25} clearcoat={1} />
+            <Phys color={a.c} emissive={a.c} emissiveIntensity={0.4} metalness={0.3} roughness={0.25} clearcoat={1} />
           </mesh>
         ))}
       </group>
@@ -286,14 +288,14 @@ function Gear() {
       <group ref={ref}>
         <mesh>
           <torusGeometry args={[1, 0.34, 24, 64]} />
-          <meshPhysicalMaterial color="#eadbd3" metalness={0.85} roughness={0.25} clearcoat={1} />
+          <Phys color="#eadbd3" metalness={0.85} roughness={0.25} clearcoat={1} />
         </mesh>
         {Array.from({ length: teeth }).map((_, i) => {
           const a = (i / teeth) * Math.PI * 2
           return (
             <mesh key={i} position={[Math.cos(a) * 1.42, Math.sin(a) * 1.42, 0]} rotation={[0, 0, a]}>
               <boxGeometry args={[0.36, 0.34, 0.6]} />
-              <meshPhysicalMaterial color={BLUE} metalness={0.7} roughness={0.25} />
+              <Phys color={BLUE} metalness={0.7} roughness={0.25} />
             </mesh>
           )
         })}
@@ -330,20 +332,35 @@ function Main({ variant }: { variant: GymVariant }) {
 }
 
 export default function GymScene({ className, variant = 'kettlebell' }: { className?: string; variant?: GymVariant }) {
+  const cfg = useTierConfig()
+  const ref = useRef<HTMLDivElement>(null)
+  const active = useSceneActive(ref)
   return (
-    <div className={className} aria-hidden="true">
-      <Canvas dpr={[1, 1.6]} camera={{ position: [0, 0.2, 6.4], fov: 40 }} gl={{ antialias: true, alpha: true }}>
+    <div ref={ref} className={className} aria-hidden="true">
+      <Canvas
+        dpr={cfg.dpr}
+        frameloop={active ? 'always' : 'never'}
+        camera={{ position: [0, 0.2, 6.4], fov: 40 }}
+        gl={{ antialias: cfg.antialias, alpha: true }}
+      >
+        <PerfMonitor />
         <ambientLight intensity={0.8} />
         <directionalLight position={[4, 5, 5]} intensity={2.4} />
         <pointLight position={[-4, -1, 3]} intensity={20} color={CYAN} />
         <pointLight position={[4, -3, 2]} intensity={14} color={VIOLET} />
 
         <Main variant={variant} />
-        <PulseRing />
-        <MiniDumbbell position={[-2.9, 1.5, -0.6]} rotation={[0.3, 0.4, 0.6]} />
-        <Leaf position={[2.7, 1.6, -0.8]} color={MINT} scale={0.7} />
-        <Leaf position={[-2.5, -1.7, -0.5]} color={MINT} scale={0.55} />
-        <Sparkles count={50} scale={[8, 5, 4]} size={2} speed={0.35} color="#ffd2c6" opacity={0.6} />
+        {cfg.extras && (
+          <>
+            <PulseRing />
+            <MiniDumbbell position={[-2.9, 1.5, -0.6]} rotation={[0.3, 0.4, 0.6]} />
+            <Leaf position={[2.7, 1.6, -0.8]} color={MINT} scale={0.7} />
+            <Leaf position={[-2.5, -1.7, -0.5]} color={MINT} scale={0.55} />
+          </>
+        )}
+        {cfg.sparkles > 0 && (
+          <Sparkles count={cfg.sparkles} scale={[8, 5, 4]} size={2} speed={0.35} color="#ffd2c6" opacity={0.6} />
+        )}
       </Canvas>
     </div>
   )
