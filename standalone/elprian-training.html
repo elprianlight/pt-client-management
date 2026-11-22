@@ -288,11 +288,21 @@ function toast(msg, kind = 'ok') {
   t.innerHTML = (kind === 'err' ? ic('alert', 'sm') : ic('check', 'sm')) + `<span>${esc(msg)}</span>`;
   box.appendChild(t); setTimeout(() => t.remove(), kind === 'err' ? 5200 : 2800);
 }
+/** Hubungkan <label> dengan kontrolnya (aksesibilitas) di dalam root. */
+let _lid = 0;
+function linkLabels(root) {
+  (root || document).querySelectorAll('.fld').forEach(f => {
+    const l = f.querySelector(':scope > label'); const ctl = f.querySelector('input:not([type=hidden]),select,textarea');
+    if (!l || !ctl || l.htmlFor || l.contains(ctl)) return;
+    if (!ctl.id) ctl.id = 'f' + (++_lid); l.htmlFor = ctl.id;
+  });
+  (root || document).querySelectorAll('.seg').forEach(g => { if (!g.getAttribute('role')) g.setAttribute('role', 'group'); });
+}
 /** Sheet modal. body: string HTML. Mengembalikan {el, close}. */
 function openSheet({ title, body, footer = '', onMount, wide }) {
   const ov = document.createElement('div'); ov.className = 'overlay'; ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-modal', 'true');
   ov.innerHTML = `<div class="sheet"${wide ? ' style="max-width:680px"' : ''}><div class="sheet-h"><h3>${esc(title)}</h3><button class="icon-btn" data-close aria-label="Tutup">${ic('x')}</button></div><div class="sheet-b">${body}</div>${footer ? `<div class="sheet-f">${footer}</div>` : ''}</div>`;
-  document.body.appendChild(ov); document.body.style.overflow = 'hidden';
+  document.body.appendChild(ov); document.body.style.overflow = 'hidden'; linkLabels(ov);
   const close = () => { ov.remove(); if (!$('.overlay')) document.body.style.overflow = ''; };
   ov.addEventListener('mousedown', e => { if (e.target === ov) close(); });
   ov.addEventListener('click', e => { if (e.target.closest('[data-close]')) close(); });
@@ -853,6 +863,7 @@ function renderPage(page, key, bare) {
   document.title = (page.title ? page.title + ' · ' : '') + 'Elprian Training';
   if (page.fab) view.insertAdjacentHTML('beforeend', page.fab);
   if (page.mount) page.mount(view);
+  linkLabels(view);
   window.scrollTo(0, 0);
 }
 async function rerender(keepScroll = true) { const y = window.scrollY; await route(); if (keepScroll) window.scrollTo(0, y); }
@@ -883,11 +894,14 @@ async function pgLogin() {
       <div class="fld"><label for="p">Password</label><input id="p" name="password" type="password" autocomplete="current-password" required></div>
       <label class="check"><input type="checkbox" id="rem" ${saved ? 'checked' : ''}> Ingat username</label>
       <div class="err" id="lerr" role="alert"></div><button class="btn primary block" id="lbtn">Masuk</button></form>
+      ${window.ELP_DEMO ? `<div class="card" style="margin-top:14px"><b class="small">Mode demo · data contoh</b><p class="muted small" style="margin:4px 0 10px">Pilih peran untuk masuk. Password semua akun: <b>demo</b>. Perubahan tersimpan di browser ini saja.</p><div class="chips" style="margin:0">${[['admin', 'Admin'], ['pt', 'PT Rani'], ['pt2', 'PT Dimas'], ['budi', 'Klien Budi']].map(([u, l]) => `<button type="button" class="chip" data-demo="${u}">${l}</button>`).join('')}</div><button type="button" class="btn sm" style="margin-top:10px" data-demo-reset>Reset data demo</button></div>` : ''}
       <p class="faint small">${VERSION}</p></div>`,
     mount(el) {
       FX.attach($('#loginfx', el), 'dumbbell');
       const f = $('#lf', el);
       (saved ? $('#p', el) : $('#u', el)).focus();
+      $$('[data-demo]', el).forEach(b => b.addEventListener('click', () => { $('#u', el).value = b.dataset.demo; $('#p', el).value = 'demo'; f.requestSubmit(); }));
+      const rs = $('[data-demo-reset]', el); if (rs) rs.addEventListener('click', () => window.ELP_DEMO_RESET());
       f.addEventListener('submit', async e => {
         e.preventDefault(); const b = $('#lbtn', el), er = $('#lerr', el); er.textContent = ''; b.disabled = true; b.textContent = 'Memeriksa…';
         try {
