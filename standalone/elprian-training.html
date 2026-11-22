@@ -13,8 +13,8 @@
 <script>
 /* ============ KONFIGURASI — ISI DUA BARIS INI ============ */
 window.ELP_CONFIG = {
-  SUPABASE_URL: 'ISI_URL_SUPABASE',        // mis. https://abcdxyz.supabase.co
-  SUPABASE_ANON_KEY: 'ISI_ANON_KEY'        // kunci publishable / anon (BUKAN service_role)
+  SUPABASE_URL: 'https://bsfabwvabyxtiztxvyqx.supabase.co',        // mis. https://abcdxyz.supabase.co
+  SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJzZmFid3ZhYnl4dGl6dHh2eXF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ5MDA2OTYsImV4cCI6MjEwMDQ3NjY5Nn0.0oQLn-0nSbP81bN5AS4jIubej4dAgoyJzPhEvr_aWok'        // kunci publishable / anon (BUKAN service_role)
 };
 /* ========================================================= */
 (function(){try{var p=localStorage.getItem('elp.theme')||'auto';var d=p==='auto'?matchMedia('(prefers-color-scheme: dark)').matches:p==='dark';document.documentElement.setAttribute('data-theme',d?'dark':'light')}catch(e){document.documentElement.setAttribute('data-theme','light')}})();
@@ -312,7 +312,9 @@ async function act(btn, fn, okMsg) {
   catch (e) { toast(errMsg(e), 'err'); return { ok: false, error: e }; }
   finally { if (btn) btn.disabled = false; }
 }
-const rpc = async (fn, args) => { const { data, error } = await sb.rpc(fn, args); if (error) throw error; return data; };
+const rpcRemote = async (fn, args) => { const { data, error } = await sb.rpc(fn, args); if (error) throw error; return data; };
+/** Mode langsung: operasi tabel (tanpa fungsi database app_*). Lihat direct.js */
+const rpc = (fn, args) => (typeof DIRECT !== 'undefined' && DIRECT[fn]) ? DIRECT[fn](args || {}) : rpcRemote(fn, args);
 
 /* ---------- tema ---------- */
 const THEME_KEY = 'elp.theme';
@@ -325,6 +327,150 @@ function applyTheme() {
 function setThemePref(p) { try { localStorage.setItem(THEME_KEY, p); } catch { } applyTheme(); }
 matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme);
 applyTheme();
+
+'use strict';
+/* ======================= Mode langsung: operasi tabel tanpa fungsi database =======================
+   Dipakai bila database belum memiliki fungsi app_* (migrasi 0200). Nomor kuitansi, status bayar, dan
+   used_sessions diisi oleh trigger yang sudah ada di database. Aturan peran dijaga di aplikasi. */
+const need = r => { if (r.error) throw r.error; return r.data; };
+const one = r => { const d = need(r); if (!d || !d.length) throw new Error('Data tidak ditemukan atau tidak bisa diubah'); return d[0]; };
+const nowIso = () => new Date().toISOString();
+const need_admin = m => { if (!isAdmin()) throw new Error(m || 'Hanya Admin yang dapat melakukan ini'); };
+const need_writer = () => { if (!canWrite()) throw new Error('Hanya Admin atau PT yang dapat melakukan ini'); };
+const monthTag = m => `Billing Pascabayar: ${m}`;
+const rpFmt = n => 'Rp ' + Math.round(num(n)).toLocaleString('id-ID');
+const nn = v => (v === '' || v === undefined) ? null : v;
+const ownSession = async id => {
+  const s = one(await sb.from('workout_sessions').select('*').eq('id', id).limit(1));
+  if (isPT() && s.trainer_id !== S.trainerId) throw new Error('Sesi ini bukan milik Anda');
+  return s;
+};
+async function freshPaid(pkgId, month) {
+  const t = need(await sb.from('pt_transactions').select('amount,kind,payment_status,voided_at,notes').eq('package_id', pkgId));
+  const live = t.filter(x => !x.voided_at && (x.payment_status === 'paid' || x.payment_status === 'partial'));
+  if (month) return live.filter(x => (x.notes || '').includes(monthTag(month))).reduce((a, x) => a + num(x.amount), 0);
+  return live.reduce((a, x) => a + (x.kind === 'refund' ? -num(x.amount) : num(x.amount)), 0);
+}
+async function insertPayment(pkgId, amount, notes, month) {
+  const p = one(await sb.from('pt_packages').select('*').eq('id', pkgId).limit(1));
+  const post = isPostpaid(p);
+  if (!(amount > 0)) throw new Error('Jumlah harus lebih dari 0');
+  if (post && !month) throw new Error('Pilih bulan tagihan pascabayar');
+  if (!post) {
+    const out = Math.max(num(p.total_price) - await freshPaid(pkgId), 0);
+    if (amount > out) throw new Error(`Pembayaran melebihi sisa tagihan (sisa ${rpFmt(out)})`);
+  } else {
+    const ses = need(await sb.from('workout_sessions').select('scheduled_at,status,counts_toward_balance').eq('package_id', pkgId));
+    const n = ses.filter(s => ym(s.scheduled_at) === month && isCounted(s)).length;
+    const out = Math.max(n * num(p.price_per_session) - await freshPaid(pkgId, month), 0);
+    if (amount > out) throw new Error(`Pembayaran melebihi tagihan bulan ini (sisa ${rpFmt(out)})`);
+  }
+  const noteTxt = [post ? monthTag(month) : null, nn(notes)].filter(Boolean).join(' · ') || null;
+  const row = one(await sb.from('pt_transactions').insert({ package_id: p.id, trainer_id: p.trainer_id, client_id: p.client_id, amount, payment_status: 'paid', payment_date: nowIso(), notes: noteTxt, kind: 'payment', created_by: S.me.id }).select('id,receipt_number'));
+  return { transaction_id: row.id, receipt_number: row.receipt_number };
+}
+
+const DIRECT = {
+  async app_check_in_session({ p_session }) {
+    need_writer(); const s = await ownSession(p_session);
+    if (s.status !== 'scheduled') throw new Error('Hanya sesi terjadwal yang bisa dimulai');
+    one(await sb.from('workout_sessions').update({ status: 'check_in', check_in_at: nowIso(), updated_at: nowIso() }).eq('id', p_session).select('id'));
+  },
+  async app_complete_session({ p_session, p_rpe, p_notes }) {
+    need_writer(); const s = await ownSession(p_session);
+    if (s.status !== 'check_in') throw new Error('Sesi belum dimulai');
+    one(await sb.from('workout_sessions').update({ status: 'completed', completed_at: nowIso(), rpe: nn(p_rpe), session_notes: nn(p_notes), pt_notes: nn(p_notes), updated_at: nowIso() }).eq('id', p_session).select('id'));
+  },
+  async app_set_session_status({ p_session, p_status, p_counts, p_reason }) {
+    need_writer(); await ownSession(p_session);
+    const cancel = p_status === 'cancelled' || p_status === 'no_show';
+    if (cancel && !String(p_reason || '').trim()) throw new Error('Alasan wajib diisi untuk sesi batal atau no-show');
+    one(await sb.from('workout_sessions').update({ status: p_status, counts_toward_balance: cancel ? !!p_counts : false, count_reason: cancel ? String(p_reason).trim() : null, updated_at: nowIso() }).eq('id', p_session).select('id'));
+  },
+  async app_schedule_session({ p_package, p_scheduled_at, p_program_type, p_location, p_notes, p_status }) {
+    need_writer(); const p = one(await sb.from('pt_packages').select('*').eq('id', p_package).limit(1));
+    if (isPT() && p.trainer_id !== S.trainerId) throw new Error('Paket bukan milik klien Anda');
+    if (!isPostpaid(p) && p.used_sessions >= p.total_sessions) throw new Error('Kuota sesi paket ini sudah habis');
+    if (!String(p_program_type || '').trim()) throw new Error('Pilih program latihan');
+    const row = one(await sb.from('workout_sessions').insert({ package_id: p.id, trainer_id: p.trainer_id, client_id: p.client_id, scheduled_at: p_scheduled_at, program_type: p_program_type, location: nn(p_location), session_notes: nn(p_notes), duration: 60, status: p_status || 'scheduled' }).select('id'));
+    return row.id;
+  },
+  async app_update_session({ p_session, p_scheduled_at, p_program_type, p_location, p_notes }) {
+    need_writer(); await ownSession(p_session);
+    one(await sb.from('workout_sessions').update({ scheduled_at: p_scheduled_at, program_type: p_program_type, location: nn(p_location), session_notes: nn(p_notes), updated_at: nowIso() }).eq('id', p_session).select('id'));
+  },
+  async app_delete_session({ p_session }) {
+    need_admin('Hanya Admin yang dapat menghapus sesi'); one(await sb.from('workout_sessions').delete().eq('id', p_session).select('id'));
+  },
+  async app_sell_package({ p_client, p_name, p_total_sessions, p_price_per_session, p_start, p_notes, p_billing, p_paid_now }) {
+    need_writer(); const c = M.client[p_client]; if (!c) throw new Error('Klien tidak ditemukan');
+    const post = p_billing === 'postpaid'; if (!(p_price_per_session > 0)) throw new Error('Harga per sesi wajib diisi');
+    if (!post && !(p_total_sessions >= 1)) throw new Error('Jumlah sesi minimal 1');
+    const total = post ? 0 : p_total_sessions * p_price_per_session;
+    const row = one(await sb.from('pt_packages').insert({ trainer_id: c.trainer_id, client_id: c.id, package_name: String(p_name).trim(), total_sessions: post ? 999 : p_total_sessions, used_sessions: 0, price_per_session: p_price_per_session, total_price: total, payment_status: 'pending', start_date: p_start || todayYmd(), is_active: true, notes: nn(p_notes), billing_type: post ? 'postpaid' : 'prepaid' }).select('id'));
+    if (p_paid_now && !post && isAdmin()) await insertPayment(row.id, total, 'Lunas saat paket dijual', null);
+    return row.id;
+  },
+  async app_update_package({ p_package, p_name, p_total_sessions, p_price_per_session, p_notes, p_is_active }) {
+    need_writer(); const p = M.pkg[p_package]; if (!p) throw new Error('Paket tidak ditemukan');
+    const post = isPostpaid(p); if (!post && p_total_sessions < p.used_sessions) throw new Error('Jumlah sesi tidak boleh di bawah sesi terpakai');
+    const patch = { package_name: String(p_name).trim(), price_per_session: p_price_per_session, notes: nn(p_notes), is_active: !!p_is_active, updated_at: nowIso() };
+    if (!post) { patch.total_sessions = p_total_sessions; patch.total_price = p_total_sessions * p_price_per_session; }
+    one(await sb.from('pt_packages').update(patch).eq('id', p_package).select('id'));
+    if (!post) { // status bayar dihitung ulang oleh trigger saat transaksi berubah; sentuh tidak diperlukan, hitung manual bila perlu
+      const paid = await freshPaid(p_package), st = paid >= patch.total_price && patch.total_price > 0 ? 'paid' : paid > 0 ? 'partial' : 'pending';
+      await sb.from('pt_packages').update({ payment_status: st }).eq('id', p_package);
+    }
+  },
+  async app_delete_package({ p_package }) {
+    need_admin('Hanya Admin yang dapat menghapus paket');
+    const live = need(await sb.from('pt_transactions').select('id').eq('package_id', p_package).is('voided_at', null));
+    if (live.length) throw new Error('Paket punya pembayaran aktif. Void pembayaran terlebih dahulu.');
+    need(await sb.from('payment_reports').delete().eq('package_id', p_package));
+    need(await sb.from('pt_transactions').delete().eq('package_id', p_package));
+    need(await sb.from('workout_sessions').delete().eq('package_id', p_package));
+    need(await sb.from('pt_packages').delete().eq('id', p_package));
+  },
+  async app_record_payment({ p_package, p_amount, p_notes, p_month }) { need_admin('Hanya Admin yang dapat mencatat pembayaran'); return insertPayment(p_package, +p_amount, p_notes, p_month); },
+  async app_void_transaction({ p_id, p_reason }) {
+    need_admin('Hanya Admin yang dapat mem-void transaksi'); if (!String(p_reason || '').trim()) throw new Error('Alasan void wajib diisi');
+    const t = one(await sb.from('pt_transactions').select('id,voided_at').eq('id', p_id).limit(1)); if (t.voided_at) throw new Error('Transaksi sudah di-void');
+    one(await sb.from('pt_transactions').update({ voided_at: nowIso(), void_reason: String(p_reason).trim(), voided_by: S.me.id }).eq('id', p_id).select('id'));
+  },
+  async app_submit_payment_report({ p_package, p_amount, p_proof_path, p_notes, p_period_month }) {
+    if (!isPT()) throw new Error('Hanya PT yang dapat melaporkan pembayaran');
+    const p = one(await sb.from('pt_packages').select('*').eq('id', p_package).limit(1)); if (p.trainer_id !== S.trainerId) throw new Error('Paket bukan milik klien Anda');
+    if (!(p_amount > 0)) throw new Error('Jumlah harus lebih dari 0'); if (!p_proof_path) throw new Error('Foto bukti transfer wajib diunggah');
+    const notes = [isPostpaid(p) && p_period_month ? monthTag(p_period_month) : null, nn(p_notes)].filter(Boolean).join(' ') || null;
+    return one(await sb.from('payment_reports').insert({ trainer_id: p.trainer_id, client_id: p.client_id, package_id: p.id, amount: p_amount, proof_url: p_proof_path, notes, status: 'pending' }).select('id')).id;
+  },
+  async app_confirm_payment_report({ p_id }) {
+    need_admin('Hanya Admin yang dapat mengonfirmasi'); const r = one(await sb.from('payment_reports').select('*').eq('id', p_id).limit(1));
+    if (r.status !== 'pending') throw new Error('Laporan sudah diproses');
+    const month = ((r.notes || '').match(/Billing Pascabayar: (\d{4}-\d{2})/) || [])[1] || null;
+    const clean = (r.notes || '').replace(/Billing Pascabayar: \d{4}-\d{2}\s*/, '').trim();
+    const res = await insertPayment(r.package_id, num(r.amount), 'Laporan PT' + (clean ? ': ' + clean : ''), month);
+    one(await sb.from('payment_reports').update({ status: 'confirmed', transaction_id: res.transaction_id, reviewed_by: S.me.id, reviewed_at: nowIso() }).eq('id', p_id).select('id'));
+    return res;
+  },
+  async app_reject_payment_report({ p_id, p_reason }) {
+    need_admin('Hanya Admin yang dapat menolak laporan'); if (!String(p_reason || '').trim()) throw new Error('Alasan penolakan wajib diisi');
+    one(await sb.from('payment_reports').update({ status: 'rejected', reject_reason: String(p_reason).trim(), reviewed_by: S.me.id, reviewed_at: nowIso() }).eq('id', p_id).eq('status', 'pending').select('id'));
+  },
+  async app_create_pt({ p_auth_id, p_username, p_full_name, p_phone, p_specialization, p_bio, p_years, p_price }) {
+    need_admin('Hanya Admin yang dapat menambah PT');
+    need(await sb.from('users').insert({ id: p_auth_id, email: usernameToEmail(p_username), username: p_username, full_name: p_full_name, phone: nn(p_phone), role: 'personal_trainer', is_active: true }));
+    return one(await sb.from('personal_trainers').insert({ user_id: p_auth_id, specialization: nn(p_specialization), bio: nn(p_bio), years_experience: nn(p_years), price_per_session: nn(p_price), is_active: true }).select('id')).id;
+  },
+  async app_create_client({ p_auth_id, p_username, p_full_name, p_phone, p_trainer, p_gender, p_dob, p_height, p_weight, p_goal, p_notes }) {
+    need_writer(); const trainer = isPT() ? S.trainerId : p_trainer; if (!trainer) throw new Error('Pilih Personal Trainer');
+    need(await sb.from('users').insert({ id: p_auth_id, email: usernameToEmail(p_username), username: p_username, full_name: p_full_name, phone: nn(p_phone), role: 'client', is_active: true }));
+    return one(await sb.from('clients').insert({ user_id: p_auth_id, trainer_id: trainer, gender: nn(p_gender), date_of_birth: nn(p_dob), height: nn(p_height), initial_weight: nn(p_weight), current_weight: nn(p_weight), fitness_goal: nn(p_goal), medical_notes: nn(p_notes), is_active: true }).select('id')).id;
+  },
+  async app_update_my_profile({ p_full_name, p_phone }) {
+    one(await sb.from('users').update({ full_name: String(p_full_name).trim(), phone: nn(p_phone), updated_at: nowIso() }).eq('id', S.me.id).select('id'));
+  },
+};
 
 'use strict';
 /* ======================= 3D: satu kanvas WebGL bersama, tiga tingkat kualitas ======================= */
@@ -521,10 +667,29 @@ function indexAll() {
 /** Muat ulang tabel tertentu (atau semua). */
 async function reload(...keys) {
   const ks = keys.length ? keys : Object.keys(TABLES);
-  await Promise.all(ks.map(async k => {
-    if (k === 'reports' && isClient()) { S.reports = []; return; }
-    S[k] = await fetchAll(TABLES[k], ORDER[k]);
-  }));
+  const raw = {};
+  await Promise.all(ks.map(async k => { raw[k] = (k === 'reports' && isClient()) ? [] : await fetchAll(TABLES[k], ORDER[k]); }));
+  if (S.me) {
+    if (raw.trainers) S.trainerId = (raw.trainers.find(t => t.user_id === S.me.id) || {}).id || null;
+    if (raw.clients) S.clientId = (raw.clients.find(c => c.user_id === S.me.id) || {}).id || null;
+  }
+  const ownTrainer = isClient() && S.clientId && raw.clients ? (raw.clients.find(c => c.id === S.clientId) || {}).trainer_id : (isClient() ? (S.clients.find(c => c.id === S.clientId) || {}).trainer_id : null);
+  // RLS belum aktif di database: batasi data per peran di sisi aplikasi
+  const scope = (k, rows) => {
+    if (isAdmin() || !S.me) return rows;
+    const tid = isPT() ? S.trainerId : ownTrainer;
+    if (k === 'trainers') return rows.filter(r => r.id === tid);
+    if (k === 'clients') return rows.filter(r => isPT() ? r.trainer_id === S.trainerId : r.id === S.clientId);
+    if (k === 'banks') return rows.filter(r => r.trainer_id === tid);
+    if (['packages', 'sessions', 'trx', 'reports'].includes(k)) return rows.filter(r => isPT() ? r.trainer_id === S.trainerId : r.client_id === S.clientId);
+    return rows;
+  };
+  for (const k of ks) S[k] = scope(k, raw[k]);
+  if (raw.reports) S.reports = S.reports.map(r => ({ ...r, proof_path: r.proof_url, period_month: ((r.notes || '').match(/Billing Pascabayar: (\d{4}-\d{2})/) || [])[1] || null, notes: (r.notes || '').replace(/Billing Pascabayar: \d{4}-\d{2}\s*/, '').trim() || null }));
+  if (raw.users && S.me && !isAdmin()) {
+    const ids = new Set([S.me.id, ...S.clients.map(c => c.user_id), ...S.trainers.map(t => t.user_id)]);
+    S.users = S.users.filter(u => ids.has(u.id));
+  }
   indexAll();
 }
 
@@ -544,8 +709,6 @@ async function bootSession() {
   if (!me || !me.is_active) { await sb.auth.signOut(); throw new Error('Akun tidak terdaftar atau tidak aktif. Hubungi Admin.'); }
   S.me = me; S.role = me.role;
   await reload();
-  S.trainerId = (S.trainers.find(t => t.user_id === me.id) || {}).id || null;
-  S.clientId = (S.clients.find(c => c.user_id === me.id) || {}).id || null;
   S.loaded = true;
   return true;
 }
