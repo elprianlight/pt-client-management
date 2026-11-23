@@ -423,11 +423,15 @@ const DIRECT = {
   },
   async app_update_package({ p_package, p_name, p_total_sessions, p_price_per_session, p_notes, p_is_active }) {
     need_writer(); const p = M.pkg[p_package]; if (!p) throw new Error('Paket tidak ditemukan');
-    const post = isPostpaid(p); if (!post && p_total_sessions < p.used_sessions) throw new Error('Jumlah sesi tidak boleh di bawah sesi terpakai');
-    const patch = { package_name: String(p_name).trim(), price_per_session: p_price_per_session, notes: nn(p_notes), is_active: !!p_is_active, updated_at: nowIso() };
-    if (!post) { patch.total_sessions = p_total_sessions; patch.total_price = p_total_sessions * p_price_per_session; }
+    const post = isPostpaid(p);
+    const patch = { package_name: String(p_name).trim(), notes: nn(p_notes), is_active: !!p_is_active, updated_at: nowIso() };
+    if (isAdmin()) { // harga dan kuota hanya Admin (dijaga juga oleh database)
+      if (!post && p_total_sessions < p.used_sessions) throw new Error('Jumlah sesi tidak boleh di bawah sesi terpakai');
+      patch.price_per_session = p_price_per_session;
+      if (!post) { patch.total_sessions = p_total_sessions; patch.total_price = p_total_sessions * p_price_per_session; }
+    }
     one(await sb.from('pt_packages').update(patch).eq('id', p_package).select('id'));
-    if (!post) { // status bayar dihitung ulang oleh trigger saat transaksi berubah; sentuh tidak diperlukan, hitung manual bila perlu
+    if (isAdmin() && !post) {
       const paid = await freshPaid(p_package), st = paid >= patch.total_price && patch.total_price > 0 ? 'paid' : paid > 0 ? 'partial' : 'pending';
       await sb.from('pt_packages').update({ payment_status: st }).eq('id', p_package);
     }
@@ -1294,13 +1298,13 @@ function editPackageSheet(id) {
   openSheet({
     title: 'Ubah paket',
     body: `<form id="ef" class="form"><div class="fld"><label>Nama paket</label><input name="name" required value="${esc(p.package_name)}"></div>
-      ${post ? `<div class="fld"><label>Tarif / sesi (Rp)</label><input name="price" type="number" min="0" value="${num(p.price_per_session)}"></div>` : `<div class="grid2"><div class="fld"><label>Jumlah sesi</label><input name="sessions" type="number" min="${p.used_sessions || 1}" value="${p.total_sessions}"></div><div class="fld"><label>Harga / sesi (Rp)</label><input name="price" type="number" min="0" value="${num(p.price_per_session)}"></div></div>`}
+      ${!isAdmin() ? '<div class="note">Harga dan jumlah sesi hanya dapat diubah Admin.</div>' : post ? `<div class="fld"><label>Tarif / sesi (Rp)</label><input name="price" type="number" min="0" value="${num(p.price_per_session)}"></div>` : `<div class="grid2"><div class="fld"><label>Jumlah sesi</label><input name="sessions" type="number" min="${p.used_sessions || 1}" value="${p.total_sessions}"></div><div class="fld"><label>Harga / sesi (Rp)</label><input name="price" type="number" min="0" value="${num(p.price_per_session)}"></div></div>`}
       <div class="fld"><label>Catatan</label><textarea name="notes">${esc(p.notes || '')}</textarea></div><label class="check"><input type="checkbox" name="active" ${p.is_active !== false ? 'checked' : ''}> Paket aktif</label></form>`,
     footer: '<button class="btn" data-close>Batal</button><button class="btn primary" data-save>Simpan</button>',
     onMount(el, close) {
       $('[data-save]', el).onclick = async ev => {
         const f = $('#ef', el); if (!f.reportValidity()) return;
-        const r = await act(ev.currentTarget, () => rpc('app_update_package', { p_package: id, p_name: f.elements.name.value.trim(), p_total_sessions: post ? p.total_sessions : +f.elements.sessions.value, p_price_per_session: +f.elements.price.value, p_notes: f.elements.notes.value.trim() || null, p_is_active: f.elements.active.checked }), 'Paket diperbarui');
+        const r = await act(ev.currentTarget, () => rpc('app_update_package', { p_package: id, p_name: f.elements.name.value.trim(), p_total_sessions: !isAdmin() || post ? p.total_sessions : +f.elements.sessions.value, p_price_per_session: isAdmin() ? +f.elements.price.value : num(p.price_per_session), p_notes: f.elements.notes.value.trim() || null, p_is_active: f.elements.active.checked }), 'Paket diperbarui');
         if (r.ok) { close(); await reload('packages', 'trx'); rerender(); }
       };
     },
