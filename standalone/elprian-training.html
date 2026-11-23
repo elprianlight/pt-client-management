@@ -14,8 +14,7 @@
 /* ============ KONFIGURASI — ISI DUA BARIS INI ============ */
 window.ELP_CONFIG = {
   SUPABASE_URL: 'https://bsfabwvabyxtiztxvyqx.supabase.co',        // mis. https://abcdxyz.supabase.co
-  SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJzZmFid3ZhYnl4dGl6dHh2eXF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ5MDA2OTYsImV4cCI6MjEwMDQ3NjY5Nn0.0oQLn-0nSbP81bN5AS4jIubej4dAgoyJzPhEvr_aWok
-sb_publishable_…'        // kunci publishable / anon (BUKAN service_role)
+  SUPABASE_ANON_KEY: 'sb_publishable_…'        // kunci publishable / anon (BUKAN service_role)
 };
 /* ========================================================= */
 (function(){try{var p=localStorage.getItem('elp.theme')||'auto';var d=p==='auto'?matchMedia('(prefers-color-scheme: dark)').matches:p==='dark';document.documentElement.setAttribute('data-theme',d?'dark':'light');document.documentElement.setAttribute('data-pal',localStorage.getItem('elp.pal')==='red'?'red':'green')}catch(e){document.documentElement.setAttribute('data-theme','light');document.documentElement.setAttribute('data-pal','green')}})();
@@ -348,6 +347,152 @@ body[data-fx="lite"] .view.enter>*,body[data-fx="lite"] .progress>i::after,body[
 body[data-fx="lite"] .hero{transform:none!important}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 @media(max-width:420px){.hero .fx3d{width:130px;right:-14px}.hero h2{font-size:22px}}
+
+/* ===================================================================
+   Lapisan "Fitness Energik": tipografi tebal, cincin progres, streak, lencana
+   =================================================================== */
+.eyebrow{display:inline-flex;align-items:center;gap:6px;font-family:var(--font-h);font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--brand)}
+.eyebrow.on{color:var(--neon)}
+.eyebrow.on svg{animation:pulse 1.4s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.35;transform:scale(1.2)}}
+.big{font-family:var(--font-h);font-size:19px;font-weight:800;letter-spacing:-.02em;line-height:1.2}
+.big .num{font-size:30px}
+.page-h{align-items:flex-end}
+.page-h h2{font-size:26px;font-weight:800;letter-spacing:-.03em;line-height:1.05}
+.ph-n{display:flex;flex-direction:column;align-items:center;padding:6px 14px;border-radius:16px;background:var(--grad);color:var(--on-grad);text-shadow:var(--on-grad-sh);box-shadow:var(--sh-btn);font-family:var(--font-h)}
+.ph-n b{font-size:22px;font-weight:800;line-height:1}.ph-n small{font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;opacity:.9}
+.sec-h h3{font-size:13px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2)}
+.sec-h a{font-weight:700}
+
+/* tombol besar untuk PT */
+.btn.lg{min-height:50px;padding:0 22px;font-size:14.5px;font-weight:800;border-radius:16px}
+.empty .eico{width:54px;height:54px;border-radius:18px;margin:0 auto 10px;display:grid;place-items:center;background:var(--subtle);color:var(--brand)}
+.empty .eico .ic{width:26px;height:26px}
+
+/* cincin progres */
+.ring{position:relative;flex:none;display:inline-grid;place-items:center}
+.ring svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.ring-bg{stroke:var(--subtle)}
+.ring-v{filter:drop-shadow(0 0 5px var(--glow));animation:ringin 1.1s cubic-bezier(.2,.8,.2,1) both}
+@keyframes ringin{from{stroke-dashoffset:var(--c)}}
+.ring-c{position:relative;display:flex;flex-direction:column;align-items:center;line-height:1;text-align:center}
+.ring-c b{font-family:var(--font-h);font-weight:800;font-size:calc(var(--rs,1) * 15px);letter-spacing:-.03em}
+.ring-c b span{font-size:.62em;font-weight:700;opacity:.55}
+.ring-c small{font-size:8.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);margin-top:2px}
+.ring[style*="96px"] .ring-c b{font-size:24px}.ring[style*="118px"] .ring-c b{font-size:28px}
+.ring[style*="96px"] .ring-c small,.ring[style*="118px"] .ring-c small{font-size:10px;margin-top:4px}
+.ring.warn .ring-v{stroke:#f59e0b;filter:drop-shadow(0 0 5px #f59e0b)}.ring.warn .ring-c b{color:var(--warn)}
+.ring.idle .ring-v{display:none}.ring.idle .ring-c b{color:var(--ink-3)}
+
+/* hero coach */
+.hero.coach{min-height:178px;padding:20px 20px 18px;background:var(--hero);background-image:repeating-linear-gradient(115deg,rgba(255,255,255,.07) 0 2px,transparent 2px 16px),var(--hero)}
+.hero.coach h2{font-size:30px;font-weight:800;line-height:1.05;letter-spacing:-.035em;margin:6px 0 10px;max-width:70%}
+.hero.coach .quote{font-size:12.5px;font-style:italic;font-weight:500;opacity:.94;max-width:72%;line-height:1.4}
+.hero.coach .lbl{font-weight:700;letter-spacing:.14em;font-size:10.5px}
+@media(max-width:420px){.hero.coach h2{font-size:26px}}
+
+/* hari ini */
+.card.today{margin-top:12px;padding:16px;border-radius:22px}
+.card.today .row{align-items:center}
+.nextup{display:flex;align-items:center;gap:12px;margin-top:14px;padding:12px;border-radius:18px;background:var(--subtle);border:1px solid var(--line);box-shadow:var(--press)}
+.nx-time{display:flex;flex-direction:column;align-items:center;min-width:56px;padding:6px 8px;border-radius:13px;background:var(--grad);color:var(--on-grad);text-shadow:var(--on-grad-sh);box-shadow:var(--sh-btn);font-family:var(--font-h)}
+.nx-time b{font-size:17px;font-weight:800;line-height:1.1}.nx-time small{font-size:8px;font-weight:800;letter-spacing:.1em}
+.nextup .t{font-weight:800;font-size:15px;font-family:var(--font-h)}.nextup .d{font-size:12px;color:var(--ink-2);margin-top:2px;display:flex;align-items:center;gap:4px}
+.nextup .btn{flex:none}
+@media(max-width:380px){.nextup{flex-wrap:wrap}.nextup .btn{width:100%}}
+
+/* streak */
+.card.streak{margin-top:12px}
+.flame{width:46px;height:46px;border-radius:15px;display:grid;place-items:center;flex:none;color:#fff;background:linear-gradient(160deg,#fbbf24,#f97316 55%,#e11d48);box-shadow:0 1px 0 rgba(255,255,255,.5) inset,0 -3px 5px rgba(120,20,0,.3) inset,0 10px 18px -8px #f97316}
+.flame .ic{width:26px;height:26px;fill:rgba(255,255,255,.25);filter:drop-shadow(0 2px 2px rgba(120,20,0,.4))}
+.wdots{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:14px}
+.wdots span{display:flex;flex-direction:column;align-items:center;gap:4px}
+.wdots i{width:100%;max-width:38px;aspect-ratio:1;border-radius:50%;display:grid;place-items:center;background:var(--subtle);color:#fff;box-shadow:var(--press)}
+.wdots i .ic{width:15px;height:15px;stroke-width:3}
+.wdots .on i{background:var(--grad);box-shadow:var(--sh-btn);color:var(--on-grad)}
+.wdots .today i{outline:2px solid var(--brand);outline-offset:2px}
+.wdots small{font-size:10px;font-weight:700;color:var(--ink-3)}.wdots .today small{color:var(--brand)}
+a.alertc{margin-top:12px;color:inherit;border-color:color-mix(in srgb,var(--warn) 45%,var(--line))}
+
+/* lencana */
+.medals{display:flex;gap:10px;overflow-x:auto;padding:4px 2px 12px;scrollbar-width:none;margin:0 -16px;padding-left:16px;padding-right:16px}
+.medals::-webkit-scrollbar{display:none}
+.medal{flex:none;width:96px;display:flex;flex-direction:column;align-items:center;gap:5px;text-align:center;padding:12px 6px;border-radius:18px;background:var(--card-bg);border:1px solid var(--line);box-shadow:var(--sh-card)}
+.medal b{font-family:var(--font-h);font-size:11.5px;font-weight:800;line-height:1.2}.medal small{font-size:10px;color:var(--ink-3);font-weight:600}
+.mhex{width:52px;height:56px;display:grid;place-items:center;color:var(--ink-3);clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);background:var(--subtle)}
+.mhex .ic{width:24px;height:24px}
+.medal.on .mhex{color:#fff;background:linear-gradient(160deg,#fde68a,#f59e0b 55%,#d97706);filter:drop-shadow(0 6px 8px rgba(217,119,6,.4))}
+.medal.on .mhex .ic{filter:drop-shadow(0 1px 1px rgba(120,60,0,.5));fill:rgba(255,255,255,.2)}
+.medal.on small{color:var(--ok);font-weight:700}
+.medal:not(.on){opacity:.75}
+
+/* kartu sesi */
+.sx{position:relative;display:grid;grid-template-columns:auto 1fr auto;gap:4px 12px;align-items:center;padding:12px 14px 12px 16px;border-radius:20px;background:var(--card-bg);border:1px solid color-mix(in srgb,var(--brand) 14%,var(--line));box-shadow:var(--sh-card);overflow:hidden}
+.sx::before{content:"";position:absolute;left:0;top:0;bottom:0;width:6px;background:var(--ink-3)}
+.sx.st-completed::before{background:linear-gradient(180deg,#6ee7b7,#059669)}.sx.st-scheduled::before{background:linear-gradient(180deg,#93c5fd,#2563eb)}.sx.st-check_in::before{background:linear-gradient(180deg,#fde68a,#f97316);box-shadow:0 0 14px #f59e0b}
+.sx.st-cancelled::before,.sx.st-no_show::before{background:linear-gradient(180deg,#fda4af,#e11d48)}
+.sx.st-check_in{border-color:color-mix(in srgb,#f59e0b 50%,var(--line))}
+.sx-time{display:flex;flex-direction:column;align-items:center;min-width:52px;padding-left:2px}
+.sx-time b{font-family:var(--font-h);font-size:19px;font-weight:800;letter-spacing:-.03em;line-height:1.1}.sx-time small{font-size:10px;font-weight:700;color:var(--ink-3);margin-top:2px;text-align:center}
+.sx-main{min-width:0}.sx-t{font-family:var(--font-h);font-weight:800;font-size:15px;overflow-wrap:anywhere}
+.sx-d{display:flex;flex-wrap:wrap;gap:4px 10px;font-size:12px;color:var(--ink-2);margin-top:3px}
+.pgm{display:inline-flex;align-items:center;gap:4px;font-weight:700;color:var(--brand)}
+.sx-r{display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+.sx-a{grid-column:1/-1;display:flex;gap:8px;justify-content:flex-end;margin-top:8px;padding-top:10px;border-top:1px dashed var(--line-2)}
+.sx-a .btn.primary{flex:1}.sx-a .btn:not(.primary):not(.icon-btn){flex:1}
+
+/* kartu klien */
+.item.cc{padding:12px 14px}
+.cc-b{margin-top:6px}
+.chip em{font-style:normal;margin-left:4px;padding:1px 7px;border-radius:99px;font-size:10.5px;background:color-mix(in srgb,var(--brand) 14%,transparent)}
+.chip.on em{background:rgba(255,255,255,.3)}
+
+/* detail klien */
+.avatar.big{width:60px;height:60px;font-size:20px;margin:6px 8px 6px 6px}
+.avatar.big::after{transform-origin:50% calc(30px + 10.5px)}
+.card.ch{padding:16px;border-radius:24px}
+.ch-top{display:flex;align-items:center;gap:10px}.ch-top h2{font-size:21px;font-weight:800;letter-spacing:-.03em;line-height:1.1}
+.pill{display:inline-flex;align-items:center;gap:5px;margin-top:6px;padding:4px 10px;border-radius:99px;font-size:11px;font-weight:700;background:var(--info-bg);color:var(--brand);border:1px solid color-mix(in srgb,var(--brand) 25%,transparent)}
+.ch-ring{display:flex;align-items:center;gap:18px;margin-top:14px;padding-top:14px;border-top:1px dashed var(--line-2)}
+.ch-stats{flex:1;display:grid;gap:10px;min-width:0}
+.ch-stats div{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.ch-stats b{font-family:var(--font-h);font-size:18px;font-weight:800;letter-spacing:-.02em}.ch-stats b.bad{color:var(--bad)}.ch-stats b.good{color:var(--ok)}
+.ch-stats small{font-size:11px;font-weight:600;color:var(--ink-2);order:-1}
+.qa{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:10px;margin-top:12px}
+.qa-i{display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 6px;border-radius:18px;background:var(--card-bg);border:1px solid var(--line);box-shadow:var(--sh-card);font-family:var(--font-h);font-weight:700;font-size:12px;color:var(--ink)}
+.qa-i .ic{width:24px;height:24px;color:var(--brand);padding:0}
+.qa-i:active{transform:translateY(2px) scale(.97)}
+
+/* jadwal */
+.weekbar{gap:6px;margin-bottom:14px}
+.weekbar button{padding:10px 0 8px;border-radius:18px}
+.weekbar button b{font-size:17px;font-weight:800}
+.weekbar button.on{transform:translateY(-3px)}
+
+/* sesi berjalan */
+.live2{display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;padding-bottom:110px}
+.lv-head{position:relative;width:100%;padding:18px 16px 16px;border-radius:24px;color:#fff;background:var(--hero);background-image:repeating-linear-gradient(115deg,rgba(255,255,255,.07) 0 2px,transparent 2px 16px),var(--hero);box-shadow:0 24px 50px -18px var(--glow);overflow:hidden;text-align:left}
+.lv-head .fx3d{position:absolute;right:-8px;top:-4px;width:130px;height:100%;pointer-events:none}
+.lv-head .eyebrow{color:#fff;opacity:.9}.lv-head h2{font-size:26px;font-weight:800;letter-spacing:-.03em;margin:6px 0 8px;max-width:68%}
+.lv-head .pgm{color:#fff;background:rgba(255,255,255,.2);padding:4px 10px;border-radius:99px;font-size:11.5px}
+.live2 .timer{width:236px;height:236px}
+.live2 .timer svg{transform:rotate(-90deg)}
+.live2 .timer .tm{font-size:50px;font-weight:800;letter-spacing:-.04em}
+.tmsub{position:absolute;bottom:62px;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)}
+.lvc{width:100%;text-align:left;display:flex;flex-direction:column;gap:16px}
+.qn{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:4px}
+.rpe{gap:6px}
+.rpe button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:62px;padding:6px 2px}
+.rpe button b{font-family:var(--font-h);font-size:20px;font-weight:800}.rpe button small{font-size:9.5px;font-weight:700;opacity:.8;line-height:1.1}
+.lv-bar{position:fixed;left:0;right:0;bottom:0;z-index:35;display:flex;flex-direction:column;gap:8px;padding:12px 16px calc(12px + env(safe-area-inset-bottom));background:color-mix(in srgb,var(--bg) 80%,transparent);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-top:1px solid var(--line)}
+@media(min-width:900px){.lv-bar{left:250px}}
+.lv-bar .btn{max-width:560px;margin:0 auto;width:100%}
+body[data-fx="lite"] .ring-v,body[data-fx="lite"] .eyebrow.on svg{animation:none}
+
+.nextup .btn.lg{min-height:46px;padding:0 16px}
+.nextup .grow{min-width:0}
+.nextup .t{overflow-wrap:anywhere}
+.wdots{max-width:440px}
 
 </style>
 </head>
@@ -916,6 +1061,92 @@ const sessionsOfClient = cid => S.sessions.filter(s => s.client_id === cid);
 function bankFor(trainerId) { return S.banks.filter(b => b.trainer_id === trainerId && b.is_active !== false); }
 
 'use strict';
+/* ======================= Komponen gaya coach: ikon fitness, cincin progres, kutipan, streak, lencana ======================= */
+Object.assign(ICONS, {
+  flame: '<path d="M12 22c4 0 7-2.8 7-6.6 0-3-1.8-4.8-3.2-6.4-.6 1.6-1.6 2.4-2.6 2.6.5-3.6-.9-6.6-4-9.6-.2 3.2-1.8 5.2-3.4 7C4.4 10.8 5 13 5 15.4 5 19.2 8 22 12 22z"/>',
+  bolt: '<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>',
+  trophy: '<path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 01-10 0zM7 6H4v2a3 3 0 003 3M17 6h3v2a3 3 0 01-3 3"/>',
+  medal: '<circle cx="12" cy="15" r="5.5"/><path d="M8.5 10.5L6 3h4l2 4 2-4h4l-2.5 7.5"/>',
+  kettle: '<circle cx="12" cy="15" r="6"/><path d="M8.5 10.5C8 6 10 4 12 4s4 2 3.5 6.5"/>',
+  target: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/>',
+  pulse: '<path d="M3 12h4l2.5-6 4 12 2.5-6H21"/>',
+  timer: '<circle cx="12" cy="14" r="8"/><path d="M12 14V9M9 2h6M12 2v4"/>',
+  chat: '<path d="M21 12a8 8 0 01-11.6 7.1L3 21l1.9-6A8 8 0 1121 12z"/>',
+  stretch: '<circle cx="12" cy="4.5" r="2"/><path d="M12 7v6M12 13l-4 8M12 13l4 8M5 10l7-1 7 1"/>',
+  heart: '<path d="M12 21s-8-5-8-11a4.5 4.5 0 018-2.8A4.5 4.5 0 0120 10c0 6-8 11-8 11z"/>',
+  star: '<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/>',
+  lock: '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/>',
+  next: '<path d="M9 18l6-6-6-6"/>',
+});
+const PROGRAM_ICON = { Strength: 'dumb', Hypertrophy: 'dumb', 'Fat Loss': 'flame', Mobility: 'stretch', Conditioning: 'bolt', Rehabilitasi: 'heart', Lainnya: 'target' };
+const progIcon = p => PROGRAM_ICON[p] || 'target';
+
+/* ---------- cincin progres ---------- */
+let _rg = 0;
+function ring(pct, { size = 64, stroke = 8, center = '', sub = '', cls = '' } = {}) {
+  const r = (size - stroke) / 2, C = 2 * Math.PI * r, p = Math.max(0, Math.min(1, +pct || 0)), id = 'rg' + (++_rg), h = size / 2;
+  return `<div class="ring ${cls}" style="width:${size}px;height:${size}px"><svg viewBox="0 0 ${size} ${size}" aria-hidden="true"><defs><linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:var(--fx1)"/><stop offset="1" style="stop-color:var(--brand)"/></linearGradient></defs>
+    <circle cx="${h}" cy="${h}" r="${r}" fill="none" stroke-width="${stroke}" class="ring-bg"/>
+    <circle cx="${h}" cy="${h}" r="${r}" fill="none" stroke="url(#${id})" stroke-width="${stroke}" stroke-linecap="round" class="ring-v" stroke-dasharray="${C.toFixed(1)}" stroke-dashoffset="${(C * (1 - p)).toFixed(1)}" style="--c:${C.toFixed(1)}" transform="rotate(-90 ${h} ${h})"/></svg>
+    <div class="ring-c"><b>${center}</b>${sub ? `<small>${sub}</small>` : ''}</div></div>`;
+}
+
+/* ---------- kutipan harian ---------- */
+const QUOTES_COACH = [
+  'Satu sesi yang tuntas hari ini lebih berharga dari sepuluh rencana besok.',
+  'Klien tidak butuh pelatih yang sempurna, tapi yang konsisten hadir.',
+  'Teknik dulu, beban menyusul.',
+  'Catat sesinya, rawat progresnya.',
+  'Energi yang kamu bawa ke lantai latihan menular ke klienmu.',
+  'Progres kecil yang rutin mengalahkan lonjakan yang sesekali.',
+  'Pemanasan yang baik adalah janji kepada tubuh klienmu.',
+  'Dengarkan tubuh klien, lalu atur intensitasnya.',
+  'Hari yang berat adalah tempat kebiasaan baik terbentuk.',
+  'Menyapa klien dengan namanya membuat semangatnya naik setengah level.',
+  'Disiplin adalah pilihan kecil yang diulang setiap hari.',
+  'Rayakan setiap sesi ke-10: itu bukti klienmu bertahan.',
+  'Istirahat adalah bagian dari program, bukan lawannya.',
+  'Satu repetisi bersih lebih baik daripada lima yang asal.',
+];
+const QUOTES_CLIENT = [
+  'Hadir hari ini sudah separuh kemenangan.',
+  'Pelan tapi rutin, hasilnya pasti datang.',
+  'Tubuhmu sedang membangun versi terbaiknya.',
+  'Satu sesi lagi, satu langkah lebih kuat.',
+  'Napas teratur, gerakan terkontrol.',
+  'Kamu tidak mulai dari nol, kamu melanjutkan dari kemarin.',
+];
+const quoteOfDay = client => { const q = client ? QUOTES_CLIENT : QUOTES_COACH; return q[Math.floor(Date.now() / 864e5) % q.length]; };
+
+/* ---------- streak & minggu ---------- */
+const doneSet = list => { const s = new Set(); list.forEach(x => { if (x.status === 'completed') s.add(ymd(x.scheduled_at)); }); return s; };
+function dayStreak(list) { const set = doneSet(list); let d = todayYmd(), n = 0; if (!set.has(d)) d = addDays(d, -1); while (set.has(d)) { n++; d = addDays(d, -1); } return n; }
+function weekStreak(list) { const set = doneSet(list); let w = weekStart(todayYmd()), n = 0; const has = ws => Array.from({ length: 7 }, (_, i) => addDays(ws, i)).some(x => set.has(x)); if (!has(w)) w = addDays(w, -7); while (has(w)) { n++; w = addDays(w, -7); } return n; }
+function weekDots(list) {
+  const set = doneSet(list), ws = weekStart(todayYmd()), t = todayYmd(), nm = ['S', 'S', 'R', 'K', 'J', 'S', 'M'];
+  return `<div class="wdots">${Array.from({ length: 7 }, (_, i) => { const x = addDays(ws, i); return `<span class="${set.has(x) ? 'on' : ''} ${x === t ? 'today' : ''}"><i>${set.has(x) ? ic('check', 'sm') : ''}</i><small>${nm[i]}</small></span>`; }).join('')}</div>`;
+}
+
+/* ---------- lencana ---------- */
+function medal(icon, title, sub, got) { return `<div class="medal ${got ? 'on' : ''}"><div class="mhex">${ic(got ? icon : 'lock')}</div><b>${esc(title)}</b><small>${esc(sub)}</small></div>`; }
+function medalsPT(list, extra) {
+  const done = list.filter(s => s.status === 'completed').length, st = dayStreak(list);
+  const out = [[10, 'Sesi 10'], [25, 'Sesi 25'], [50, 'Sesi 50'], [100, 'Sesi 100']].map(([n, t]) => medal('medal', t, done >= n ? 'Tercapai' : `${Math.max(n - done, 0)} lagi`, done >= n));
+  out.push(medal('flame', '3 hari beruntun', st >= 3 ? 'Tercapai' : `Kini ${st} hari`, st >= 3 || extra.bestStreak >= 3));
+  out.push(medal('bolt', 'Bulan produktif', extra.month >= 20 ? 'Tercapai' : `${extra.month}/20 sesi`, extra.month >= 20));
+  out.push(medal('trophy', 'Tagihan nol', extra.clean ? 'Semua lunas' : 'Masih ada tagihan', extra.clean));
+  return `<div class="medals">${out.join('')}</div>`;
+}
+function medalsClient(list, paid) {
+  const done = list.filter(s => s.status === 'completed').length, ws = weekStreak(list);
+  const out = [[1, 'Sesi pertama'], [5, 'Sesi 5'], [10, 'Sesi 10'], [20, 'Sesi 20'], [50, 'Sesi 50']].map(([n, t]) => medal(n === 1 ? 'star' : 'medal', t, done >= n ? 'Tercapai' : `${n - done} lagi`, done >= n));
+  out.push(medal('flame', '4 minggu rutin', ws >= 4 ? 'Tercapai' : `Kini ${ws} minggu`, ws >= 4));
+  out.push(medal('trophy', 'Paket lunas', paid ? 'Tercapai' : 'Belum lunas', paid));
+  return `<div class="medals">${out.join('')}</div>`;
+}
+const waLink = ph => { const d = String(ph || '').replace(/\D/g, ''); if (d.length < 8) return ''; return 'https://wa.me/' + (d.startsWith('0') ? '62' + d.slice(1) : d); };
+
+'use strict';
 /* ======================= Kerangka: router, navigasi, login ======================= */
 const LOGO = window.ELP_LOGO || '';
 const NAVS = {
@@ -1077,19 +1308,29 @@ async function pgDashboard() {
   const piutang = clients.reduce((a, c) => a + clientOutstanding(c.id, month), 0);
   const pending = S.reports.filter(r => r.status === 'pending').length;
   const low = S.packages.filter(p => p.is_active !== false && !isPostpaid(p) && remainingOf(p) <= 2 && M.client[p.client_id] && M.client[p.client_id].is_active !== false).slice(0, 5);
+  const total = todays.length, done = todays.filter(s => s.status === 'completed').length;
+  const next = todays.find(s => s.status === 'check_in') || todays.find(s => s.status === 'scheduled');
+  const streak = dayStreak(S.sessions), first = S.me.full_name.split(' ')[0];
+  const left = total - done;
   return {
     title: 'Beranda',
-    html: `<div class="hero"><div class="fx3d" id="herofx"></div><div class="lbl">${esc(fmtDayLong(new Date()).toUpperCase())}</div><h2>${greeting()}, ${esc(S.me.full_name.split(' ')[0])}</h2><p>${todays.length ? `${todays.length} sesi hari ini` : 'Belum ada sesi hari ini'}${isAdmin() && pending ? ` · ${pending} laporan bayar menunggu` : ''}</p></div>
+    html: `<div class="hero coach"><div class="fx3d" id="herofx"></div><div class="lbl">${esc(fmtDayLong(new Date()).toUpperCase())}</div><h2>${greeting()},<br>${esc(first)}</h2><p class="quote">“${esc(quoteOfDay())}”</p></div>
+    <div class="card today"><div class="row gap-l">${ring(total ? done / total : 0, { size: 96, stroke: 11, center: `${done}<span>/${total}</span>`, sub: 'selesai' })}
+      <div class="grow"><div class="eyebrow">Hari ini</div><div class="big">${total ? (left ? `${left} sesi lagi` : 'Semua sesi selesai') : 'Belum ada sesi'}</div><div class="muted small">${total ? `${done} selesai · ${todays.filter(s => s.status === 'check_in').length} berjalan` : 'Jadwalkan dari menu Jadwal'}${isAdmin() && pending ? ` · ${pending} laporan bayar menunggu` : ''}</div></div></div>
+      ${next ? `<div class="nextup"><div class="nx-time"><b>${esc(fmtTime(next.scheduled_at))}</b><small>${next.status === 'check_in' ? 'BERJALAN' : 'BERIKUTNYA'}</small></div><div class="grow"><div class="t">${esc(clientName(next.client_id))}</div><div class="d">${ic(progIcon(next.program_type), 'sm')} ${esc(next.program_type || 'Sesi PT')}${next.location ? ' · ' + esc(next.location) : ''}</div></div>
+        ${canWrite() ? (next.status === 'check_in' ? `<a class="btn primary lg" href="#/live/${next.id}">Lanjut</a>` : `<button class="btn primary lg" data-act="start" data-id="${next.id}">${ic('play', 'sm')} Mulai</button>`) : ''}</div>` : ''}</div>
+    <div class="card streak"><div class="row"><div class="flame">${ic('flame')}</div><div class="grow"><div class="big"><span class="num">${streak}</span> hari beruntun</div><div class="muted small">${streak ? 'Pertahankan, jangan putus hari ini.' : 'Selesaikan satu sesi untuk memulai runtutan.'}</div></div></div>${weekDots(S.sessions)}</div>
+    ${isAdmin() && pending ? `<a class="card row between alertc" href="#/payments" data-tab="reports"><div class="row">${ic('alert')}<div><b>${pending} laporan pembayaran dari PT</b><div class="muted small">Menunggu konfirmasi Anda</div></div></div>${ic('next')}</a>` : ''}
     <div class="kpis">
       <a class="kpi" href="#/clients"><div class="k">Klien aktif</div><div class="v num">${clients.length}</div><div class="s">${isAdmin() ? S.trainers.length + ' PT' : 'klien Anda'}</div></a>
-      <a class="kpi" href="#/jadwal"><div class="k">Sesi hari ini</div><div class="v num">${todays.length}</div><div class="s">${todays.filter(s => s.status === 'completed').length} selesai</div></a>
-      <a class="kpi" href="#/payments"><div class="k">Sesi dihitung bulan ini</div><div class="v num">${countedMonth}</div><div class="s">${esc(monthLabel(month))}</div></a>
-      <a class="kpi" href="#/payments"><div class="k">Sisa tagihan</div><div class="v num">${rp(piutang)}</div><div class="s">semua klien aktif</div></a></div>
-    ${isAdmin() && pending ? `<a class="card row between" style="margin-top:12px;color:inherit" href="#/payments" data-tab="reports"><div class="row">${ic('alert')}<div><b>${pending} laporan pembayaran dari PT</b><div class="muted small">Menunggu konfirmasi Anda</div></div></div>${ic('back').replace('<svg', '<svg style="transform:rotate(180deg)"')}</a>` : ''}
+      <a class="kpi" href="#/payments"><div class="k">Sesi bulan ini</div><div class="v num">${countedMonth}</div><div class="s">${esc(monthLabel(month))}</div></a>
+      <a class="kpi" href="#/payments"><div class="k">Sisa tagihan</div><div class="v num">${rp(piutang)}</div><div class="s">semua klien aktif</div></a>
+      <a class="kpi" href="#/clients"><div class="k">Paket hampir habis</div><div class="v num">${low.length}</div><div class="s">sisa ≤ 2 sesi</div></a></div>
     <div class="sec-h"><h3>Sesi hari ini</h3><a href="#/jadwal" class="small">Lihat jadwal</a></div>
-    <div class="list" id="todayl">${todays.length ? todays.map(s => sessionRow(s)).join('') : '<div class="empty"><b>Tidak ada sesi hari ini</b>Jadwalkan sesi dari menu Jadwal.</div>'}</div>
+    <div class="list" id="todayl">${todays.length ? todays.map(s => sessionRow(s)).join('') : '<div class="empty"><div class="eico">' + ic('dumb') + '</div><b>Tidak ada sesi hari ini</b>Jadwalkan sesi dari menu Jadwal.</div>'}</div>
+    ${low.length ? `<div class="sec-h"><h3>Perlu perhatian</h3></div><div class="list">${low.map(p => { const tot = p.total_sessions, r = remainingOf(p); return `<a class="item cc" href="#/clients/${p.client_id}"><div class="avatar ${avCls(clientName(p.client_id))}">${esc(initials(clientName(p.client_id)))}</div><div class="grow"><div class="t">${esc(clientName(p.client_id))}</div><div class="d">${esc(p.package_name)} · ${r === 0 ? 'paket habis' : 'hampir habis'}</div></div>${ring(tot ? r / tot : 0, { size: 50, stroke: 6, center: r, sub: 'sisa', cls: 'warn' })}</a>`; }).join('')}</div>` : ''}
     ${upcoming.length ? `<div class="sec-h"><h3>7 hari ke depan</h3></div><div class="list">${upcoming.map(s => sessionRow(s, { date: true })).join('')}</div>` : ''}
-    ${low.length ? `<div class="sec-h"><h3>Paket hampir habis</h3></div><div class="list">${low.map(p => `<a class="item" href="#/clients/${p.client_id}"><div class="avatar mute">${esc(initials(clientName(p.client_id)))}</div><div class="grow"><div class="t">${esc(clientName(p.client_id))}</div><div class="d">${esc(p.package_name)}</div></div><div class="r"><span class="badge ${remainingOf(p) === 0 ? 'bad' : 'warn'}">Sisa ${remainingOf(p)} sesi</span></div></a>`).join('')}</div>` : ''}`,
+    <div class="sec-h"><h3>Pencapaian</h3></div>${medalsPT(S.sessions, { month: countedMonth, clean: clients.length > 0 && piutang === 0, bestStreak: streak })}`,
     mount(v) { FX.attach($('#herofx', v), 'dumbbell'); bindSessionActions(v); const a = $('[data-tab=reports]', v); if (a) a.addEventListener('click', () => { PAYSTATE.tab = 'reports'; }); },
   };
 }
@@ -1097,21 +1338,24 @@ async function dashClient() {
   const c = M.client[S.clientId]; const month = ym(new Date());
   if (!c) return { title: 'Beranda', html: '<div class="note warn">Profil klien Anda belum lengkap. Hubungi PT/Admin.</div>' };
   const pk = activePkgs(c.id), remaining = clientRemainingSessions(c.id);
-  const next = S.sessions.filter(s => s.client_id === c.id && s.status === 'scheduled' && s.scheduled_at >= new Date().toISOString()).sort((a, b) => a.scheduled_at.localeCompare(b.scheduled_at))[0];
-  const hist = S.sessions.filter(s => s.client_id === c.id).sort((a, b) => b.scheduled_at.localeCompare(a.scheduled_at)).slice(0, 5);
+  const mine = S.sessions.filter(s => s.client_id === c.id);
+  const next = mine.filter(s => s.status === 'scheduled' && s.scheduled_at >= new Date().toISOString()).sort((a, b) => a.scheduled_at.localeCompare(b.scheduled_at))[0];
+  const hist = mine.slice().sort((a, b) => b.scheduled_at.localeCompare(a.scheduled_at)).slice(0, 5);
   const out = clientOutstanding(c.id, month);
   const total = pk.filter(p => !isPostpaid(p)).reduce((a, p) => a + p.total_sessions, 0);
   const used = pk.filter(p => !isPostpaid(p)).reduce((a, p) => a + p.used_sessions, 0);
-  const hasPost = pk.some(isPostpaid);
+  const hasPost = pk.some(isPostpaid), ws = weekStreak(mine), first = S.me.full_name.split(' ')[0];
   return {
     title: 'Beranda',
-    html: `<div class="hero"><div class="fx3d" id="herofx"></div><div class="lbl">${esc(fmtDayLong(new Date()).toUpperCase())}</div><h2>${greeting()}, ${esc(S.me.full_name.split(' ')[0])}</h2>
-      <p>${hasPost && !total ? 'Paket pascabayar aktif' : `Sisa <b>${remaining}</b> dari ${total} sesi`}</p></div>
-    <div class="kpis"><div class="kpi"><div class="k">Sesi terpakai</div><div class="v num">${used}</div><div class="s">dari ${total || '–'}</div></div>
-      <div class="kpi"><div class="k">Sesi berikutnya</div><div class="v num" style="font-size:16px">${next ? esc(fmtDate(next.scheduled_at)) : '–'}</div><div class="s">${next ? esc(fmtTime(next.scheduled_at)) : 'belum dijadwalkan'}</div></div>
-      <a class="kpi" href="#/payments"><div class="k">Sisa tagihan</div><div class="v num">${rp(out)}</div><div class="s">${out ? 'lihat rincian' : 'lunas'}</div></a>
-      <div class="kpi"><div class="k">Personal Trainer</div><div class="v" style="font-size:15px">${esc(trainerName(c.trainer_id))}</div><div class="s">&nbsp;</div></div></div>
+    html: `<div class="hero coach"><div class="fx3d" id="herofx"></div><div class="lbl">${esc(fmtDayLong(new Date()).toUpperCase())}</div><h2>${greeting()},<br>${esc(first)}</h2><p class="quote">“${esc(quoteOfDay(true))}”</p></div>
+    <div class="card today"><div class="row gap-l">${ring(total ? used / total : 0, { size: 96, stroke: 11, center: hasPost && !total ? '∞' : `${used}<span>/${total}</span>`, sub: 'sesi terpakai' })}
+      <div class="grow"><div class="eyebrow">Paket saya</div><div class="big">${hasPost && !total ? 'Pascabayar aktif' : `Sisa ${remaining} sesi`}</div><div class="muted small">PT ${esc(trainerName(c.trainer_id))}</div></div></div>
+      ${next ? `<div class="nextup"><div class="nx-time"><b>${esc(fmtTime(next.scheduled_at))}</b><small>${esc(fmtDate(next.scheduled_at))}</small></div><div class="grow"><div class="t">Sesi berikutnya</div><div class="d">${ic(progIcon(next.program_type), 'sm')} ${esc(next.program_type || 'Sesi PT')}${next.location ? ' · ' + esc(next.location) : ''}</div></div></div>` : ''}</div>
+    <div class="card streak"><div class="row"><div class="flame">${ic('flame')}</div><div class="grow"><div class="big"><span class="num">${ws}</span> minggu beruntun</div><div class="muted small">${ws ? 'Konsistensimu terjaga, lanjutkan.' : 'Hadir di sesi untuk memulai runtutan.'}</div></div></div>${weekDots(mine)}</div>
+    <div class="kpis"><a class="kpi" href="#/jadwal"><div class="k">Sesi selesai</div><div class="v num">${mine.filter(s => s.status === 'completed').length}</div><div class="s">seluruhnya</div></a>
+      <a class="kpi" href="#/payments"><div class="k">Sisa tagihan</div><div class="v num">${rp(out)}</div><div class="s">${out ? 'lihat rincian' : 'lunas'}</div></a></div>
     <div class="sec-h"><h3>Paket saya</h3></div><div class="list">${pk.length ? pk.map(pkgCard).join('') : '<div class="empty"><b>Belum ada paket aktif</b></div>'}</div>
+    <div class="sec-h"><h3>Pencapaian</h3></div>${medalsClient(mine, out === 0 && pk.length > 0)}
     <div class="sec-h"><h3>Riwayat terakhir</h3><a href="#/jadwal" class="small">Semua</a></div><div class="list">${hist.length ? hist.map(s => sessionRow(s, { date: true })).join('') : '<div class="empty">Belum ada sesi.</div>'}</div>`,
     mount(v) { FX.attach($('#herofx', v), 'dumbbell'); },
   };
@@ -1119,21 +1363,30 @@ async function dashClient() {
 
 /* ---------------- Klien ---------------- */
 const CLSTATE = { q: '', f: 'active' };
-function clientRow(c) {
-  const name = clientName(c.id), rem = clientRemainingSessions(c.id), out = clientOutstanding(c.id, ym(new Date()));
-  const pk = activePkgs(c.id), post = pk.some(isPostpaid);
-  return `<a class="item" href="#/clients/${c.id}"><div class="avatar ${avCls(name)}">${esc(initials(name))}</div><div class="grow"><div class="t">${esc(name)}${c.is_active === false ? ' <span class="badge">Nonaktif</span>' : ''}</div>
-    <div class="d">${isAdmin() ? 'PT ' + esc(trainerName(c.trainer_id)) + ' · ' : ''}${pk.length ? (post && !pk.some(p => !isPostpaid(p)) ? 'Pascabayar' : `Sisa ${rem} sesi`) : 'Belum ada paket'}</div></div>
-    <div class="r">${out > 0 ? `<span class="badge bad">${rp(out)}</span>` : (pk.length ? '<span class="badge ok">Lunas</span>' : '')}</div></a>`;
+function clientRingFor(c) {
+  const pk = activePkgs(c.id), pre = pk.filter(p => !isPostpaid(p)), tot = pre.reduce((a, p) => a + p.total_sessions, 0), rem = clientRemainingSessions(c.id);
+  if (pre.length) return ring(tot ? rem / tot : 0, { size: 52, stroke: 6, center: rem, sub: 'sisa', cls: rem <= 2 ? 'warn' : '' });
+  if (pk.length) return ring(1, { size: 52, stroke: 6, center: '∞', sub: 'pasca' });
+  return ring(0, { size: 52, stroke: 6, center: '–', sub: 'paket', cls: 'idle' });
 }
+function clientRow(c) {
+  const name = clientName(c.id), out = clientOutstanding(c.id, ym(new Date())), pk = activePkgs(c.id);
+  return `<a class="item cc" href="#/clients/${c.id}"><div class="avatar ${avCls(name)}">${esc(initials(name))}</div><div class="grow"><div class="t">${esc(name)}${c.is_active === false ? ' <span class="badge">Nonaktif</span>' : ''}</div>
+    <div class="d">${isAdmin() ? 'PT ' + esc(trainerName(c.trainer_id)) + ' · ' : ''}${esc(c.fitness_goal || (pk.length ? 'Klien aktif' : 'Belum ada paket'))}</div>
+    <div class="cc-b">${out > 0 ? `<span class="badge bad">Tagihan ${rp(out)}</span>` : (pk.length ? '<span class="badge ok">Lunas</span>' : '')}</div></div>${clientRingFor(c)}</a>`;
+}
+const clientLowOrDue = (c, f) => { const pk = activePkgs(c.id), pre = pk.filter(p => !isPostpaid(p)); if (f === 'low') return pre.length > 0 && clientRemainingSessions(c.id) <= 2; if (f === 'due') return clientOutstanding(c.id, ym(new Date())) > 0; return true; };
 async function pgClients() {
-  const list = () => S.clients.filter(c => (CLSTATE.f === 'all' || c.is_active !== false) && clientName(c.id).toLowerCase().includes(CLSTATE.q.toLowerCase())).sort((a, b) => clientName(a.id).localeCompare(clientName(b.id)));
-  const draw = () => { const l = list(); return l.length ? l.map(clientRow).join('') : '<div class="empty"><b>Tidak ada klien</b>Ubah pencarian atau tambah klien baru.</div>'; };
+  const base = () => S.clients.filter(c => CLSTATE.f === 'all' || c.is_active !== false);
+  const list = () => base().filter(c => clientName(c.id).toLowerCase().includes(CLSTATE.q.toLowerCase()) && clientLowOrDue(c, CLSTATE.f)).sort((a, b) => clientName(a.id).localeCompare(clientName(b.id)));
+  const draw = () => { const l = list(); return l.length ? l.map(clientRow).join('') : '<div class="empty"><div class="eico">' + ic('users') + '</div><b>Tidak ada klien</b>Ubah pencarian atau tambah klien baru.</div>'; };
+  const actv = S.clients.filter(c => c.is_active !== false);
+  const cnt = { active: actv.length, low: actv.filter(c => clientLowOrDue(c, 'low')).length, due: actv.filter(c => clientLowOrDue(c, 'due')).length, all: S.clients.length };
   return {
     title: 'Klien',
-    html: `<div class="page-h"><div><h2>Klien</h2><p>${S.clients.filter(c => c.is_active !== false).length} aktif</p></div></div>
+    html: `<div class="page-h"><div><div class="eyebrow">Daftar</div><h2>Klien</h2></div><div class="ph-n"><b class="num">${actv.length}</b><small>aktif</small></div></div>
       <div class="search">${ic('search')}<input class="inp" id="cq" type="search" placeholder="Cari nama klien…" value="${esc(CLSTATE.q)}" aria-label="Cari klien"></div>
-      <div class="chips"><button class="chip ${CLSTATE.f === 'active' ? 'on' : ''}" data-f="active">Aktif</button><button class="chip ${CLSTATE.f === 'all' ? 'on' : ''}" data-f="all">Semua</button></div>
+      <div class="chips">${[['active', 'Aktif'], ['low', 'Hampir habis'], ['due', 'Ada tagihan'], ['all', 'Semua']].map(([k, l]) => `<button class="chip ${CLSTATE.f === k ? 'on' : ''}" data-f="${k}">${l} <em>${cnt[k]}</em></button>`).join('')}</div>
       <div class="list" id="cl">${draw()}</div>`,
     fab: canWrite() ? `<a class="fab" href="#/clients/new">${ic('plus')} Klien</a>` : '',
     mount(v) {
@@ -1153,14 +1406,20 @@ async function pgClient(id) {
   const pk = pkgOfClient(id).sort((a, b) => (b.is_active === false) - (a.is_active === false) || b.created_at.localeCompare(a.created_at));
   const posts = pk.filter(p => isPostpaid(p) && p.is_active !== false);
   const sess = sessionsOfClient(id).sort((a, b) => b.scheduled_at.localeCompare(a.scheduled_at)).slice(0, 15);
+  const sessAll = sessionsOfClient(id), doneN = sessAll.filter(x => x.status === 'completed').length, monthN = sessAll.filter(x => ym(x.scheduled_at) === ym(new Date()) && isCounted(x)).length;
+  const prePk = pk.filter(p => p.is_active !== false && !isPostpaid(p)), preTot = prePk.reduce((a, p) => a + p.total_sessions, 0), preUsed = prePk.reduce((a, p) => a + p.used_sessions, 0);
+  const outAll = clientOutstanding(id, ym(new Date())), wa = waLink(u.phone);
   const age = c.date_of_birth ? Math.floor((Date.now() - new Date(c.date_of_birth)) / 31557600000) : null;
   return {
     title: u.full_name || 'Klien',
     html: `<a href="#/clients" class="small muted row gap-s" style="margin-bottom:8px">${ic('back', 'sm')} Semua klien</a>
-      <div class="card"><div class="row"><div class="avatar ${avCls(u.full_name)}" style="width:56px;height:56px;font-size:19px">${esc(initials(u.full_name))}</div><div class="grow"><h2 style="font-size:20px">${esc(u.full_name || '—')}</h2><div class="muted small">${c.is_active === false ? 'Nonaktif · ' : ''}PT ${esc(trainerName(c.trainer_id))}</div></div>
+      <div class="card ch"><div class="ch-top"><div class="avatar big ${avCls(u.full_name)}">${esc(initials(u.full_name))}</div><div class="grow"><h2>${esc(u.full_name || '—')}</h2><div class="muted small">${c.is_active === false ? 'Nonaktif · ' : ''}PT ${esc(trainerName(c.trainer_id))}</div>${c.fitness_goal ? `<span class="pill">${ic('target', 'sm')} ${esc(c.fitness_goal)}</span>` : ''}</div>
         ${canWrite() ? `<button class="icon-btn" data-edit aria-label="Ubah data klien">${ic('edit')}</button>` : ''}</div>
-        <hr class="sep"><dl class="kv"><dt>Telepon</dt><dd>${esc(u.phone || '–')}</dd><dt>Tujuan</dt><dd>${esc(c.fitness_goal || '–')}</dd><dt>Tinggi / Berat</dt><dd>${c.height ? num(c.height) + ' cm' : '–'} / ${c.current_weight ? num(c.current_weight) + ' kg' : '–'}</dd>${age !== null ? `<dt>Usia</dt><dd>${age} th</dd>` : ''}${c.medical_notes ? `<dt>Catatan</dt><dd style="text-align:left;grid-column:1/-1;font-weight:500">${esc(c.medical_notes)}</dd>` : ''}</dl></div>
-      ${canWrite() ? `<div class="btn-row" style="margin-top:12px"><button class="btn primary" data-sell>${ic('box', 'sm')} Jual paket</button><button class="btn" data-sched>${ic('cal', 'sm')} Jadwalkan sesi</button></div>` : ''}
+        <div class="ch-ring">${ring(preTot ? preUsed / preTot : Math.min(monthN / 12, 1), { size: 118, stroke: 13, center: preTot ? `${preUsed}<span>/${preTot}</span>` : `${monthN}`, sub: preTot ? 'terpakai' : 'bulan ini' })}
+          <div class="ch-stats"><div><b class="num">${doneN}</b><small>Sesi selesai</small></div><div><b class="num">${preTot ? preTot - preUsed : '∞'}</b><small>Sisa sesi</small></div><div><b class="num ${outAll ? 'bad' : 'good'}">${outAll ? rp(outAll) : 'Lunas'}</b><small>Tagihan</small></div></div></div></div>
+      <div class="qa">${canWrite() ? `<button class="qa-i" data-sched>${ic('cal')}<span>Jadwalkan</span></button><button class="qa-i" data-sell>${ic('box')}<span>Jual paket</span></button>` : ''}${wa ? `<a class="qa-i" href="${wa}" target="_blank" rel="noopener">${ic('chat')}<span>WhatsApp</span></a>` : ''}</div>
+      <div class="sec-h"><h3>Pencapaian</h3></div>${medalsClient(sessionsOfClient(id), outAll === 0 && pk.some(p => p.is_active !== false))}
+      <div class="sec-h"><h3>Data klien</h3></div><div class="card"><dl class="kv"><dt>Telepon</dt><dd>${esc(u.phone || '–')}</dd><dt>Tinggi / Berat</dt><dd>${c.height ? num(c.height) + ' cm' : '–'} / ${c.current_weight ? num(c.current_weight) + ' kg' : '–'}</dd>${age !== null ? `<dt>Usia</dt><dd>${age} th</dd>` : ''}${c.medical_notes ? `<dt>Catatan</dt><dd style="text-align:left;grid-column:1/-1;font-weight:500">${esc(c.medical_notes)}</dd>` : ''}</dl></div>
       <div class="sec-h"><h3>Paket</h3></div><div class="list">${pk.length ? pk.map(p => `<div>${pkgCard(p)}${canWrite() ? `<div class="btn-row" style="margin-top:6px"><button class="btn sm" data-editpkg="${p.id}">${ic('edit', 'sm')} Ubah</button>${isAdmin() ? `<a class="btn sm" href="#/payments" data-pay="${p.id}">${ic('wallet', 'sm')} Catat bayar</a><button class="btn sm danger" data-delpkg="${p.id}">${ic('trash', 'sm')}</button>` : ''}</div>` : ''}</div>`).join('') : '<div class="empty"><b>Belum ada paket</b>Jual paket untuk mulai mencatat sesi.</div>'}</div>
       ${posts.length ? `<div class="sec-h"><h3>Tagihan bulanan (pascabayar)</h3><div class="row gap-s"><button class="icon-btn" data-mm="-1" aria-label="Bulan sebelumnya">${ic('back')}</button><b class="small">${esc(monthLabel(month))}</b><button class="icon-btn" data-mm="1" aria-label="Bulan berikutnya">${ic('back').replace('<svg', '<svg style="transform:rotate(180deg)"')}</button></div></div>
         ${posts.map(p => { const b = monthBilling(p, month); return `<div class="card"><dl class="kv"><dt>Sesi dihitung</dt><dd>${b.sessions} × ${rp(p.price_per_session)}</dd><dt>Nilai</dt><dd>${rp(b.value)}</dd><dt>Dibayar</dt><dd>${rp(b.paid)}</dd><dt>Sisa</dt><dd style="color:${b.outstanding ? 'var(--bad)' : 'var(--ok)'}">${rp(b.outstanding)}</dd></dl></div>`; }).join('')}` : ''}
@@ -1283,19 +1542,18 @@ const clientOptions = sel => myClientsList().map(c => `<option value="${c.id}" $
 
 /* ---------------- Baris sesi + aksi bersama ---------------- */
 function sessionRow(s, o = {}) {
-  const when = o.date ? `${fmtDate(s.scheduled_at)} · ${fmtTime(s.scheduled_at)}` : fmtTime(s.scheduled_at);
-  const counted = isCounted(s);
   const note = (s.status === 'cancelled' || s.status === 'no_show') ? `<span class="badge ${s.counts_toward_balance ? 'warn' : ''}">${s.counts_toward_balance ? 'Dihitung' : 'Tidak dihitung'}</span>` : '';
   const acts = [];
   if (canWrite()) {
-    if (s.status === 'scheduled') acts.push(`<button class="btn sm primary" data-act="start" data-id="${s.id}">${ic('play', 'sm')} Mulai</button>`, `<button class="btn sm" data-act="decide" data-id="${s.id}">Batal / No-show</button>`, `<button class="icon-btn" data-act="edit" data-id="${s.id}" aria-label="Ubah sesi">${ic('edit')}</button>`);
-    else if (s.status === 'check_in') acts.push(`<a class="btn sm primary" href="#/live/${s.id}">${ic('play', 'sm')} Lanjutkan</a>`);
+    if (s.status === 'scheduled') acts.push(`<button class="btn primary lg" data-act="start" data-id="${s.id}">${ic('play', 'sm')} Mulai</button>`, `<button class="btn" data-act="decide" data-id="${s.id}">Batal / No-show</button>`, `<button class="icon-btn" data-act="edit" data-id="${s.id}" aria-label="Ubah sesi">${ic('edit')}</button>`);
+    else if (s.status === 'check_in') acts.push(`<a class="btn primary lg" href="#/live/${s.id}">${ic('play', 'sm')} Lanjutkan</a>`);
     else if (isAdmin()) acts.push(`<button class="icon-btn" data-act="del" data-id="${s.id}" aria-label="Hapus sesi">${ic('trash')}</button>`);
   }
-  return `<div class="item" style="flex-wrap:wrap"><div class="dot ${s.status}"></div><div class="grow"><div class="t">${o.noClient ? esc(s.program_type || 'Sesi PT') : esc(clientName(s.client_id))}</div>
-    <div class="d">${esc(when)}${o.noClient || !s.program_type ? '' : ' · ' + esc(s.program_type)}${s.location ? ' · ' + esc(s.location) : ''}${o.noClient ? '' : ''}</div>${s.count_reason ? `<div class="d">Alasan: ${esc(s.count_reason)}</div>` : ''}</div>
-    <div class="r row gap-s" style="flex-wrap:wrap;justify-content:flex-end">${statusBadge(s.status)}${note}${counted && s.status === 'completed' ? '' : ''}</div>
-    ${acts.length ? `<div class="row gap-s" style="width:100%;justify-content:flex-end">${acts.join('')}</div>` : ''}</div>`;
+  const title = o.noClient ? (s.program_type || 'Sesi PT') : clientName(s.client_id);
+  return `<div class="sx st-${s.status}"><div class="sx-time"><b>${esc(fmtTime(s.scheduled_at))}</b>${o.date ? `<small>${esc(fmtDate(s.scheduled_at))}</small>` : ''}</div>
+    <div class="sx-main"><div class="sx-t">${esc(title)}</div><div class="sx-d"><span class="pgm">${ic(progIcon(s.program_type), 'sm')} ${esc(o.noClient ? 'Sesi PT' : (s.program_type || 'Sesi PT'))}</span>${s.location ? `<span>${esc(s.location)}</span>` : ''}</div>${s.count_reason ? `<div class="sx-d">Alasan: ${esc(s.count_reason)}</div>` : ''}</div>
+    <div class="sx-r">${statusBadge(s.status)}${note}</div>
+    ${acts.length ? `<div class="sx-a">${acts.join('')}</div>` : ''}</div>`;
 }
 function bindSessionActions(root) {
   root.addEventListener('click', async e => {
@@ -1372,7 +1630,7 @@ async function pgJadwal(d) {
   const hist = isClient() ? mine.filter(s => ymd(s.scheduled_at) < todayYmd()).sort((a, b) => b.scheduled_at.localeCompare(a.scheduled_at)).slice(0, 12) : [];
   return {
     title: isClient() ? 'Sesi' : 'Jadwal',
-    html: `<div class="page-h"><div><h2>${isClient() ? 'Sesi saya' : 'Jadwal'}</h2><p>${esc(fmtDayLong(day))}</p></div><div class="row gap-s"><button class="icon-btn" data-wk="-7" aria-label="Minggu lalu">${ic('back')}</button><button class="btn sm" data-wk="today">Hari ini</button><button class="icon-btn" data-wk="7" aria-label="Minggu depan">${ic('back').replace('<svg', '<svg style="transform:rotate(180deg)"')}</button></div></div>
+    html: `<div class="page-h"><div><h2>${isClient() ? 'Sesi saya' : 'Jadwal'}</h2><p>${esc(fmtDayLong(day))} · ${list.length} sesi${list.length ? ', ' + list.filter(x => x.status === 'completed').length + ' selesai' : ''}</p></div><div class="row gap-s"><button class="icon-btn" data-wk="-7" aria-label="Minggu lalu">${ic('back')}</button><button class="btn sm" data-wk="today">Hari ini</button><button class="icon-btn" data-wk="7" aria-label="Minggu depan">${ic('back').replace('<svg', '<svg style="transform:rotate(180deg)"')}</button></div></div>
       <div class="weekbar">${days.map((x, i) => `<button class="${x === day ? 'on' : ''}" data-day="${x}"><small>${names[i]}</small><b>${+x.slice(8)}</b>${byDay(x).length ? '<i></i>' : '<i style="opacity:0"></i>'}</button>`).join('')}</div>
       <div class="list" id="dl">${list.length ? list.map(s => sessionRow(s, { noClient: isClient() })).join('') : '<div class="empty"><b>Tidak ada sesi</b>Pilih hari lain atau jadwalkan sesi baru.</div>'}</div>
       ${hist.length ? `<div class="sec-h"><h3>Riwayat</h3></div><div class="list">${hist.map(s => sessionRow(s, { date: true, noClient: true })).join('')}</div>` : ''}`,
@@ -1451,18 +1709,21 @@ async function pgLive(id) {
   if (s.status !== 'check_in') return { title: 'Sesi', html: `<div class="empty"><b>Sesi ini ${s.status === 'completed' ? 'sudah selesai' : 'tidak sedang berjalan'}</b><a class="btn" href="#/jadwal">Ke jadwal</a></div>` };
   const started = new Date(s.check_in_at || s.updated_at || Date.now()).getTime();
   const C = 2 * Math.PI * 105;
+  const RPE = [[1, 'Ringan'], [2, 'Sedang'], [3, 'Berat'], [4, 'Sangat berat'], [5, 'Maksimal']];
+  const QN = ['Beban naik', 'Teknik perlu koreksi', 'Tenaga bagus', 'Cepat lelah', 'Ada keluhan sendi'];
   return {
     title: 'Sesi berjalan',
-    html: `<div class="live"><div class="fx3d" id="kb" style="width:200px;height:150px"></div><div><b style="font-size:18px">${esc(clientName(s.client_id))}</b><div class="muted small">${esc(s.program_type || 'Sesi PT')}${s.location ? ' · ' + esc(s.location) : ''}</div></div>
-      <div class="timer"><svg viewBox="0 0 230 230"><circle cx="115" cy="115" r="105" fill="none" stroke="var(--line)" stroke-width="10"/><circle id="ring" cx="115" cy="115" r="105" fill="none" stroke="var(--brand)" stroke-width="10" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C}"/></svg><div class="tm" id="tm">00:00</div></div>
-      <div class="fld" style="width:100%;text-align:left"><label>RPE (1–5)</label><div class="rpe" id="rpe">${[1, 2, 3, 4, 5].map(n => `<button type="button" data-v="${n}">${n}</button>`).join('')}</div></div>
-      <div class="fld" style="width:100%;text-align:left"><label>Catatan sesi</label><textarea id="ln" placeholder="Beban, progres, catatan teknik…">${esc(s.session_notes || '')}</textarea></div>
-      <button class="btn primary block" id="fin">Selesaikan sesi</button><a class="btn block" href="#/jadwal">Kembali (sesi tetap berjalan)</a></div>`,
+    html: `<div class="live2"><div class="lv-head"><div class="fx3d" id="kb"></div><div class="eyebrow on">${ic('pulse', 'sm')} Sesi berjalan</div><h2>${esc(clientName(s.client_id))}</h2><span class="pgm">${ic(progIcon(s.program_type), 'sm')} ${esc(s.program_type || 'Sesi PT')}${s.location ? ' · ' + esc(s.location) : ''}</span></div>
+      <div class="timer"><svg viewBox="0 0 230 230"><defs><linearGradient id="tg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:var(--fx1)"/><stop offset="1" style="stop-color:var(--brand)"/></linearGradient></defs><circle cx="115" cy="115" r="105" fill="none" stroke="var(--line)" stroke-width="12"/><circle id="ring" cx="115" cy="115" r="105" fill="none" stroke="url(#tg)" stroke-width="12" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C}"/></svg><div class="tm" id="tm">00:00</div><small class="tmsub">dari 60 menit</small></div>
+      <div class="card lvc"><div class="fld"><label>Catatan sesi</label><div class="qn" id="qn">${QN.map(q => `<button type="button" class="chip" data-q="${esc(q)}">${esc(q)}</button>`).join('')}</div><textarea id="ln" placeholder="Beban, progres, catatan teknik…">${esc(s.session_notes || '')}</textarea></div>
+        <div class="fld"><label>Seberapa berat sesinya? (RPE)</label><div class="rpe" id="rpe">${RPE.map(([n, l]) => `<button type="button" data-v="${n}"><b>${n}</b><small>${l}</small></button>`).join('')}</div></div></div>
+      <div class="lv-bar"><button class="btn primary lg block" id="fin">${ic('check')} Selesaikan sesi</button><a class="btn block" href="#/jadwal">Kembali (sesi tetap berjalan)</a></div></div>`,
     mount(v) {
       FX.attach($('#kb', v), 'kettlebell');
       let rpeV = null; const tm = $('#tm', v), ring = $('#ring', v);
       const tick = () => { if (!tm.isConnected) return; const sec = Math.max(0, Math.floor((Date.now() - started) / 1000)); tm.textContent = `${String(Math.floor(sec / 3600) ? Math.floor(sec / 3600) + ':' : '')}${String(Math.floor(sec % 3600 / 60)).padStart(2, '0')}:${String(sec % 60).padStart(2, '0')}`; ring.style.strokeDashoffset = C * (1 - Math.min(sec / 3600, 1)); setTimeout(tick, 1000); };
       tick();
+      $('#qn', v).addEventListener('click', e => { const b = e.target.closest('[data-q]'); if (!b) return; const t = $('#ln', v); t.value = (t.value.trim() ? t.value.trim() + '. ' : '') + b.dataset.q; t.focus(); });
       $('#rpe', v).addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; rpeV = +b.dataset.v; $$('#rpe button', v).forEach(x => x.classList.toggle('on', x === b)); });
       $('#fin', v).onclick = async ev => {
         if (!rpeV) { toast('Pilih RPE dahulu', 'err'); return; }
