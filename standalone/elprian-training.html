@@ -584,6 +584,9 @@ body[data-fx="lite"] .bnav .cfab::after{animation:none;display:none}
 .avatar.c4{--a:#555;--b:#222;--d:#000;--o:#ff2a3c}
 .avatar.c5{--a:#ffb3ba;--b:#e11d2e;--d:#6d0813;--o:#fff}
 .avatar.c6{--a:#e6e6e6;--b:#8a8a8a;--d:#2a2a2a;--o:#ff2a3c}
+@media(max-width:899px){.fab:not(.keep){display:none!important}}
+.kpis .kpi:nth-child(n){--ka:#ff9aa4;--kb:#ff2a3c;--kd:#8f0c18}
+.kpis .kpi:nth-child(2n){--ka:#ffffff;--kb:#d9d9d9;--kd:#777}
 
 </style>
 </head>
@@ -1580,7 +1583,7 @@ function clientRow(c) {
   const name = clientName(c.id), out = clientOutstanding(c.id, ym(new Date())), pk = activePkgs(c.id);
   return `<a class="item cc" href="#/clients/${c.id}"><div class="avatar ${avCls(name)}">${esc(initials(name))}</div><div class="grow"><div class="t">${esc(name)}${c.is_active === false ? ' <span class="badge">Nonaktif</span>' : ''}</div>
     <div class="d">${isAdmin() ? 'PT ' + esc(trainerName(c.trainer_id)) + ' · ' : ''}${esc(c.fitness_goal || (pk.length ? 'Klien aktif' : 'Belum ada paket'))}</div>
-    <div class="cc-b">${out > 0 ? `<span class="badge bad">Tagihan ${rp(out)}</span>` : (pk.length ? '<span class="badge ok">Lunas</span>' : '')}</div></div>${clientRingFor(c)}</a>`;
+    <div class="d muted small">Aktivitas: ${esc(agoLabel(lastActivity(c.id)).t)}</div><div class="cc-b">${out > 0 ? `<span class="badge bad">Tagihan ${rp(out)}</span>` : (pk.length ? '<span class="badge ok">Lunas</span>' : '')}</div></div>${clientRingFor(c)}</a>`;
 }
 const clientLowOrDue = (c, f) => { const pk = activePkgs(c.id), pre = pk.filter(p => !isPostpaid(p)); if (f === 'low') return pre.length > 0 && clientRemainingSessions(c.id) <= 2; if (f === 'due') return clientOutstanding(c.id, ym(new Date())) > 0; return true; };
 async function pgClients() {
@@ -1707,7 +1710,7 @@ async function pgPTs() {
   return {
     title: 'Personal Trainer',
     html: `<div class="page-h"><div><h2>Personal Trainer</h2><p>${S.trainers.length} PT terdaftar</p></div></div><div class="list">${rows || '<div class="empty"><b>Belum ada PT</b></div>'}</div>`,
-    fab: `<button class="fab" data-newpt>${ic('plus')} PT</button>`,
+    fab: `<button class="fab keep" data-newpt>${ic('plus')} PT</button>`,
     mount(v) {
       $('[data-newpt]', v).onclick = newPTSheet;
       $$('[data-tog]', v).forEach(b => b.onclick = async () => {
