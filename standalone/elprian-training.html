@@ -648,6 +648,35 @@ input,select,textarea,.inp,.fld input,.fld select,.fld textarea,.search input{fo
 @keyframes lpFloat{0%,100%{transform:translateY(-4px) rotateY(-12deg)}50%{transform:translateY(5px) rotateY(12deg)}}
 @media(prefers-reduced-motion:reduce){.holo-svg *,.fx-logo-poster *{animation:none!important}}
 
+/* ===== Jadwal mingguan ===== */
+.jv-seg{margin:2px 0 12px}
+.wk-sum{display:flex;align-items:center;gap:14px;padding:14px;border-radius:20px;margin-bottom:12px;background:linear-gradient(145deg,#000,#1a0508 60%,#3a0710);border:1px solid rgba(255,42,60,.3);color:#fff}
+.wk-chips{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;flex:1;min-width:0}
+.wk-chips div{display:flex;flex-direction:column;gap:2px;min-width:0}
+.wk-chips b{font-family:var(--font-h);font-size:22px;line-height:1}
+.wk-chips small{font-size:10.5px;opacity:.75;line-height:1.2}
+.wk-sum .ring-bg{stroke:rgba(255,255,255,.14)}.wk-sum .ring-c{color:#fff}
+.wk-day{margin-bottom:10px;border-radius:18px;background:var(--surface);border:1px solid var(--line);overflow:hidden}
+.wk-day.today{border-color:var(--neon);box-shadow:0 0 0 1px var(--neon) inset,0 0 20px -8px var(--glow)}
+.wk-h{display:flex;align-items:center;gap:8px;width:100%;padding:11px 14px;background:none;border:0;font:inherit;color:inherit;cursor:pointer;text-align:left}
+.wk-h .dn{font-family:var(--font-h);font-weight:700;font-size:15px}
+.wk-h .dd{color:var(--ink-2);font-size:13px}
+.wk-h em{font-style:normal;font-size:10.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:2px 8px;border-radius:99px;background:var(--neon);color:#fff}
+.wk-h .cnt{margin-left:auto;font-size:12px;color:var(--ink-3);font-weight:600}
+.wk-day.empty-day .wk-h{opacity:.62;padding:9px 14px}
+.wk-list{display:grid;gap:6px;padding:0 10px 10px}
+.wk-s{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:14px;background:var(--elev);border:1px solid var(--line);color:inherit;text-decoration:none;border-left:3px solid var(--ink-3)}
+.wk-s.completed{border-left-color:var(--ok,#22c55e)}.wk-s.scheduled{border-left-color:var(--neon)}.wk-s.check_in{border-left-color:#fff}
+.wk-s.cancelled,.wk-s.no_show{border-left-color:var(--bad,#ef4444);opacity:.8}
+.wk-s .tm{font-family:var(--font-h);font-size:15px;min-width:46px}
+.wk-s .t{font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wk-s .d{font-size:12px;color:var(--ink-2);display:flex;align-items:center;gap:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wk-s .grow{min-width:0}
+.wk-ok{display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:rgba(34,197,94,.16);color:var(--ok,#22c55e);flex:none}
+.wk-s .badge{flex:none;white-space:nowrap}
+.wk-s .grow{flex:1 1 0}
+.page-h .btn.sm,.page-h .icon-btn{white-space:nowrap;flex:none}
+
 </style>
 </head>
 <body>
@@ -1995,25 +2024,53 @@ function sessionFormSheet({ session, clientId, date }) {
 }
 
 /* ---------------- Jadwal ---------------- */
+const JV = { mode: (() => { try { return localStorage.getItem('elp.jv') === 'day' ? 'day' : 'week'; } catch { return 'week'; } })() };
+const setJV = m => { JV.mode = m; try { localStorage.setItem('elp.jv', m); } catch { } };
 async function pgJadwal(d) {
-  const day = d || todayYmd(), ws = weekStart(day), days = Array.from({ length: 7 }, (_, i) => addDays(ws, i));
-  const names = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
+  const day = d || todayYmd(), ws = weekStart(day), days = Array.from({ length: 7 }, (_, i) => addDays(ws, i)), today = todayYmd();
+  const names = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'], long = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
   const mine = isClient() ? S.sessions.filter(s => s.client_id === S.clientId) : S.sessions;
   const byDay = x => mine.filter(s => ymd(s.scheduled_at) === x).sort((a, b) => a.scheduled_at.localeCompare(b.scheduled_at));
+  const back = ic('back'), fwd = ic('back').replace('<svg', '<svg style="transform:rotate(180deg)"');
+  const modeSeg = `<div class="seg jv-seg" id="jvm"><button type="button" data-m="week" class="${JV.mode === 'week' ? 'on' : ''}">Mingguan</button><button type="button" data-m="day" class="${JV.mode === 'day' ? 'on' : ''}">Harian</button></div>`;
+  const nav = (unit, label) => `<div class="row gap-s"><button class="icon-btn" data-wk="-${unit}" aria-label="${label} sebelumnya">${back}</button><button class="btn sm" data-wk="today">${unit === 7 ? 'Minggu ini' : 'Hari ini'}</button><button class="icon-btn" data-wk="${unit}" aria-label="${label} berikutnya">${fwd}</button></div>`;
+  const common = v => {
+    $$('#jvm button', v).forEach(b => b.onclick = () => { setJV(b.dataset.m); rerender(false); });
+    $$('[data-wk]', v).forEach(b => b.onclick = () => go('#/jadwal/' + (b.dataset.wk === 'today' ? today : addDays(day, +b.dataset.wk))));
+    const n = $('[data-new]', v); if (n) n.onclick = () => sessionFormSheet({ date: JV.mode === 'week' ? (days.includes(today) ? today : ws) : day });
+  };
+  const fab = canWrite() ? `<button class="fab" data-new>${ic('plus')} Sesi</button>` : '';
+  if (JV.mode === 'week') {
+    const all = days.flatMap(byDay), done = all.filter(x => x.status === 'completed').length, plan = all.filter(x => x.status === 'scheduled' || x.status === 'check_in').length, miss = all.filter(x => x.status === 'cancelled' || x.status === 'no_show').length;
+    const range = `${+ws.slice(8)} ${MON[+ws.slice(5, 7) - 1]} – ${+days[6].slice(8)} ${MON[+days[6].slice(5, 7) - 1]} ${days[6].slice(0, 4)}`, isThis = ws === weekStart(today);
+    const cell = x => `<a class="wk-s ${x.status}" href="#/jadwal/${ymd(x.scheduled_at)}" data-d="${ymd(x.scheduled_at)}"><b class="tm">${esc(fmtTime(x.scheduled_at))}</b><div class="grow"><div class="t">${esc(isClient() ? (x.program_type || 'Sesi PT') : clientName(x.client_id))}</div><div class="d">${ic(progIcon(x.program_type), 'sm')} ${esc(x.program_type || 'Sesi PT')}</div></div>${x.status === 'completed' ? `<span class="wk-ok">${ic('check', 'sm')}</span>` : statusBadge(x.status)}</a>`;
+    return {
+      title: isClient() ? 'Sesi' : 'Jadwal',
+      html: `<div class="page-h"><div><h2>${isClient() ? 'Sesi saya' : 'Jadwal'}</h2><p>${esc(range)}${isThis ? ' · minggu ini' : ''}</p></div>${nav(7, 'Minggu')}</div>${modeSeg}
+      <div class="wk-sum"><div class="wk-ring">${ring(all.length ? done / all.length : 0, { size: 76, stroke: 9, center: `${done}<span>/${all.length}</span>`, sub: 'selesai' })}</div>
+        <div class="wk-chips"><div><b>${plan}</b><small>Terjadwal</small></div><div><b>${done}</b><small>Sudah latihan</small></div><div><b>${miss}</b><small>Batal / no-show</small></div></div></div>
+      ${days.map((x, i) => { const l = byDay(x), t = x === today; return `<section class="wk-day ${t ? 'today' : ''} ${l.length ? '' : 'empty-day'}"><button class="wk-h" data-pick="${x}"><span class="dn">${long[i]}</span><span class="dd">${+x.slice(8)} ${MON[+x.slice(5, 7) - 1]}</span>${t ? '<em>Hari ini</em>' : ''}<span class="cnt">${l.length ? l.length + ' sesi' : 'Kosong'}</span></button>${l.length ? `<div class="wk-list">${l.map(cell).join('')}</div>` : ''}</section>`; }).join('')}`,
+      fab,
+      mount(v) {
+        common(v); bindSessionActions(v);
+        $$('[data-pick]', v).forEach(b => b.onclick = () => { setJV('day'); go('#/jadwal/' + b.dataset.pick); });
+        $$('.wk-s', v).forEach(a => a.addEventListener('click', e => { e.preventDefault(); setJV('day'); go('#/jadwal/' + a.dataset.d); }));
+        const t = $('.wk-day.today', v); if (t && !history.state) setTimeout(() => t.scrollIntoView({ block: 'center', behavior: 'smooth' }), 350);
+      },
+    };
+  }
   const list = byDay(day);
-  const hist = isClient() ? mine.filter(s => ymd(s.scheduled_at) < todayYmd()).sort((a, b) => b.scheduled_at.localeCompare(a.scheduled_at)).slice(0, 12) : [];
+  const hist = isClient() ? mine.filter(s => ymd(s.scheduled_at) < today).sort((a, b) => b.scheduled_at.localeCompare(a.scheduled_at)).slice(0, 12) : [];
   return {
     title: isClient() ? 'Sesi' : 'Jadwal',
-    html: `<div class="page-h"><div><h2>${isClient() ? 'Sesi saya' : 'Jadwal'}</h2><p>${esc(fmtDayLong(day))} · ${list.length} sesi${list.length ? ', ' + list.filter(x => x.status === 'completed').length + ' selesai' : ''}</p></div><div class="row gap-s"><button class="icon-btn" data-wk="-7" aria-label="Minggu lalu">${ic('back')}</button><button class="btn sm" data-wk="today">Hari ini</button><button class="icon-btn" data-wk="7" aria-label="Minggu depan">${ic('back').replace('<svg', '<svg style="transform:rotate(180deg)"')}</button></div></div>
+    html: `<div class="page-h"><div><h2>${isClient() ? 'Sesi saya' : 'Jadwal'}</h2><p>${esc(fmtDayLong(day))} · ${list.length} sesi${list.length ? ', ' + list.filter(x => x.status === 'completed').length + ' selesai' : ''}</p></div>${nav(1, 'Hari')}</div>${modeSeg}
       <div class="weekbar">${days.map((x, i) => `<button class="${x === day ? 'on' : ''}" data-day="${x}"><small>${names[i]}</small><b>${+x.slice(8)}</b>${byDay(x).length ? '<i></i>' : '<i style="opacity:0"></i>'}</button>`).join('')}</div>
       <div class="list" id="dl">${list.length ? list.map(s => sessionRow(s, { noClient: isClient() })).join('') : '<div class="empty"><b>Tidak ada sesi</b>Pilih hari lain atau jadwalkan sesi baru.</div>'}</div>
       ${hist.length ? `<div class="sec-h"><h3>Riwayat</h3></div><div class="list">${hist.map(s => sessionRow(s, { date: true, noClient: true })).join('')}</div>` : ''}`,
-    fab: canWrite() ? `<button class="fab" data-new>${ic('plus')} Sesi</button>` : '',
+    fab,
     mount(v) {
-      bindSessionActions(v);
+      common(v); bindSessionActions(v);
       $$('[data-day]', v).forEach(b => b.onclick = () => go('#/jadwal/' + b.dataset.day));
-      $$('[data-wk]', v).forEach(b => b.onclick = () => go('#/jadwal/' + (b.dataset.wk === 'today' ? todayYmd() : addDays(day, +b.dataset.wk))));
-      const n = $('[data-new]', v); if (n) n.onclick = () => sessionFormSheet({ date: day });
     },
   };
 }
