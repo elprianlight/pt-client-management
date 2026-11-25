@@ -677,6 +677,30 @@ input,select,textarea,.inp,.fld input,.fld select,.fld textarea,.search input{fo
 .wk-s .grow{flex:1 1 0}
 .page-h .btn.sm,.page-h .icon-btn{white-space:nowrap;flex:none}
 
+/* ===== Jadwal berulang, RPE, versi ===== */
+.rec-box{padding:12px;border-radius:16px;background:var(--elev);border:1px dashed var(--line-2)}
+.rec-sw{display:flex;align-items:center;gap:10px;font-weight:700;cursor:pointer;margin:0}
+.rec-sw input{width:20px;height:20px;accent-color:var(--neon)}
+.rec-sw span{display:inline-flex;align-items:center;gap:6px}
+.rec-body{margin-top:12px;display:grid;gap:8px}
+.rec-l{font-size:12px;font-weight:700;color:var(--ink-2);margin-top:4px}
+.dchips{display:flex;flex-wrap:wrap;gap:6px}
+.dchips button{min-width:44px;height:40px;padding:0 12px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-weight:700;font-size:13px}
+.dchips button.on{background:var(--grad);color:var(--on-grad);border-color:transparent;box-shadow:var(--sh-btn)}
+.dchips.rate button{font-size:12px;letter-spacing:-1px;color:#e5a400}
+.dchips.rate button.on{color:#fff}
+.badge.rpe-t{background:rgba(255,42,60,.14);color:var(--neon);border:1px solid rgba(255,42,60,.3)}
+.ser-tag{display:inline-flex;align-items:center;color:var(--neon)}
+.ser-i{align-items:center}
+.ver-pill{font-family:var(--font-h);font-weight:800;font-size:13px;padding:4px 12px;border-radius:99px;background:var(--grad);color:var(--on-grad);box-shadow:var(--sh-btn)}
+.chlog{list-style:none;margin:0;padding:0;display:grid;gap:10px;max-height:300px;overflow:auto}
+.chlog li{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;padding:10px 12px;border-radius:14px;background:var(--elev);border:1px solid var(--line)}
+.chlog li.cur{border-color:var(--neon)}
+.chlog li b{font-family:var(--font-h)}.chlog li small{color:var(--ink-3);align-self:center;text-align:right}
+.chlog li span{grid-column:1/-1;font-size:12.5px;color:var(--ink-2)}
+.ver-foot{text-align:center;font-size:11.5px;color:var(--ink-3);margin:14px 0 0;letter-spacing:.06em}
+.rec-sw{border:0!important;background:none!important;box-shadow:none!important}.rec-sw::after,.rec-sw::before{display:none!important}
+
 </style>
 </head>
 <body>
@@ -799,6 +823,18 @@ matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme
 applyTheme();
 
 'use strict';
+/* ======================= Versi aplikasi & riwayat pembaruan ======================= */
+const APP_VERSION = '1.4.0';
+const APP_DATE = '2026-11-25';
+const CHANGELOG = [
+  ['1.4.0', '2026-11-25', 'Jadwal berulang (mingguan, otomatis terisi), Konfirmasi latihan cepat dengan indikator, Target RPE di Jadwalkan sesi, penomoran versi'],
+  ['1.3.0', '2026-11-25', 'Jadwal tampilan Mingguan (default) dan Harian'],
+  ['1.2.0', '2026-11-25', 'Animasi logo pemuatan, ikon dan manifest PWA tertanam, perbaikan zoom iOS, 3D login baru (Logo/Barbel/Tubuh)'],
+  ['1.1.0', '2026-11-24', 'Desain neon merah-hitam-putih, hologram tubuh 3D, Beranda baru (pendapatan, aktivitas klien), menu bawah dengan tombol aksi cepat'],
+  ['1.0.0', '2026-11-20', 'Rilis awal: Login, Beranda, Klien, Paket, Jadwal & Sesi berjalan, Pembayaran + kuitansi, Pengaturan, RLS penuh (migrasi 0400)'],
+];
+
+'use strict';
 /* ======================= Mode langsung: operasi tabel tanpa fungsi database =======================
    Dipakai bila database belum memiliki fungsi app_* (migrasi 0200). Nomor kuitansi, status bayar, dan
    used_sessions diisi oleh trigger yang sudah ada di database. Aturan peran dijaga di aplikasi. */
@@ -846,10 +882,10 @@ const DIRECT = {
     if (s.status !== 'scheduled') throw new Error('Hanya sesi terjadwal yang bisa dimulai');
     one(await sb.from('workout_sessions').update({ status: 'check_in', check_in_at: nowIso(), updated_at: nowIso() }).eq('id', p_session).select('id'));
   },
-  async app_complete_session({ p_session, p_rpe, p_notes }) {
+  async app_complete_session({ p_session, p_rpe, p_notes, p_duration, p_rating }) {
     need_writer(); const s = await ownSession(p_session);
     if (s.status !== 'check_in') throw new Error('Sesi belum dimulai');
-    one(await sb.from('workout_sessions').update({ status: 'completed', completed_at: nowIso(), rpe: nn(p_rpe), session_notes: nn(p_notes), pt_notes: nn(p_notes), updated_at: nowIso() }).eq('id', p_session).select('id'));
+    one(await sb.from('workout_sessions').update({ status: 'completed', completed_at: nowIso(), rpe: nn(p_rpe), session_notes: nn(p_notes), pt_notes: nn(p_notes), ...(p_duration ? { duration: +p_duration } : {}), ...(p_rating ? { rating: +p_rating } : {}), updated_at: nowIso() }).eq('id', p_session).select('id'));
   },
   async app_set_session_status({ p_session, p_status, p_counts, p_reason }) {
     need_writer(); await ownSession(p_session);
@@ -857,17 +893,17 @@ const DIRECT = {
     if (cancel && !String(p_reason || '').trim()) throw new Error('Alasan wajib diisi untuk sesi batal atau no-show');
     one(await sb.from('workout_sessions').update({ status: p_status, counts_toward_balance: cancel ? !!p_counts : false, count_reason: cancel ? String(p_reason).trim() : null, updated_at: nowIso() }).eq('id', p_session).select('id'));
   },
-  async app_schedule_session({ p_package, p_scheduled_at, p_program_type, p_location, p_notes, p_status }) {
+  async app_schedule_session({ p_package, p_scheduled_at, p_program_type, p_location, p_notes, p_status, p_target_rpe }) {
     need_writer(); const p = one(await sb.from('pt_packages').select('*').eq('id', p_package).limit(1));
     if (isPT() && p.trainer_id !== S.trainerId) throw new Error('Paket bukan milik klien Anda');
     if (!isPostpaid(p) && p.used_sessions >= p.total_sessions) throw new Error('Kuota sesi paket ini sudah habis');
     if (!String(p_program_type || '').trim()) throw new Error('Pilih program latihan');
-    const row = one(await sb.from('workout_sessions').insert({ package_id: p.id, trainer_id: p.trainer_id, client_id: p.client_id, scheduled_at: p_scheduled_at, program_type: p_program_type, location: nn(p_location), session_notes: nn(p_notes), duration: 60, status: p_status || 'scheduled' }).select('id'));
+    const row = one(await sb.from('workout_sessions').insert({ package_id: p.id, trainer_id: p.trainer_id, client_id: p.client_id, scheduled_at: p_scheduled_at, program_type: p_program_type, location: nn(p_location), session_notes: nn(p_notes), duration: 60, status: p_status || 'scheduled', ...(p_target_rpe ? { target_rpe: +p_target_rpe } : {}) }).select('id'));
     return row.id;
   },
-  async app_update_session({ p_session, p_scheduled_at, p_program_type, p_location, p_notes }) {
+  async app_update_session({ p_session, p_scheduled_at, p_program_type, p_location, p_notes, p_target_rpe }) {
     need_writer(); await ownSession(p_session);
-    one(await sb.from('workout_sessions').update({ scheduled_at: p_scheduled_at, program_type: p_program_type, location: nn(p_location), session_notes: nn(p_notes), updated_at: nowIso() }).eq('id', p_session).select('id'));
+    one(await sb.from('workout_sessions').update({ scheduled_at: p_scheduled_at, program_type: p_program_type, location: nn(p_location), session_notes: nn(p_notes), target_rpe: p_target_rpe ? +p_target_rpe : null, updated_at: nowIso() }).eq('id', p_session).select('id'));
   },
   async app_delete_session({ p_session }) {
     need_admin('Hanya Admin yang dapat menghapus sesi'); one(await sb.from('workout_sessions').delete().eq('id', p_session).select('id'));
@@ -1248,10 +1284,10 @@ const FX = (() => {
 
 'use strict';
 /* ======================= Data: autentikasi, pemuatan tabel, aturan bisnis ======================= */
-const S = { me: null, role: null, trainerId: null, clientId: null, users: [], trainers: [], clients: [], packages: [], sessions: [], trx: [], banks: [], reports: [], loaded: false };
+const S = { me: null, role: null, trainerId: null, clientId: null, users: [], trainers: [], clients: [], packages: [], sessions: [], trx: [], banks: [], reports: [], series: [], loaded: false };
 const M = { user: {}, trainer: {}, client: {}, pkg: {}, trxById: {}, sessById: {} };
-const TABLES = { users: 'users', trainers: 'personal_trainers', clients: 'clients', packages: 'pt_packages', sessions: 'workout_sessions', trx: 'pt_transactions', banks: 'pt_bank_accounts', reports: 'payment_reports' };
-const ORDER = { users: 'created_at', trainers: 'created_at', clients: 'created_at', packages: 'created_at', sessions: 'scheduled_at', trx: 'created_at', banks: 'created_at', reports: 'created_at' };
+const TABLES = { users: 'users', trainers: 'personal_trainers', clients: 'clients', packages: 'pt_packages', sessions: 'workout_sessions', trx: 'pt_transactions', banks: 'pt_bank_accounts', reports: 'payment_reports', series: 'session_series' };
+const ORDER = { users: 'created_at', trainers: 'created_at', clients: 'created_at', packages: 'created_at', sessions: 'scheduled_at', trx: 'created_at', banks: 'created_at', reports: 'created_at', series: 'created_at' };
 const isAdmin = () => S.role === 'super_admin';
 const isPT = () => S.role === 'personal_trainer';
 const isClient = () => S.role === 'client';
@@ -1281,7 +1317,7 @@ function indexAll() {
 async function reload(...keys) {
   const ks = keys.length ? keys : Object.keys(TABLES);
   const raw = {};
-  await Promise.all(ks.map(async k => { raw[k] = (k === 'reports' && isClient()) ? [] : await fetchAll(TABLES[k], ORDER[k]); }));
+  await Promise.all(ks.map(async k => { raw[k] = (k === 'reports' && isClient()) ? [] : k === 'series' ? await fetchAll(TABLES[k], ORDER[k]).catch(() => []) : await fetchAll(TABLES[k], ORDER[k]); }));
   if (S.me) {
     if (raw.trainers) S.trainerId = (raw.trainers.find(t => t.user_id === S.me.id) || {}).id || null;
     if (raw.clients) S.clientId = (raw.clients.find(c => c.user_id === S.me.id) || {}).id || null;
@@ -1294,7 +1330,7 @@ async function reload(...keys) {
     if (k === 'trainers') return rows.filter(r => r.id === tid);
     if (k === 'clients') return rows.filter(r => isPT() ? r.trainer_id === S.trainerId : r.id === S.clientId);
     if (k === 'banks') return rows.filter(r => r.trainer_id === tid);
-    if (['packages', 'sessions', 'trx', 'reports'].includes(k)) return rows.filter(r => isPT() ? r.trainer_id === S.trainerId : r.client_id === S.clientId);
+    if (['packages', 'sessions', 'trx', 'reports', 'series'].includes(k)) return rows.filter(r => isPT() ? r.trainer_id === S.trainerId : r.client_id === S.clientId);
     return rows;
   };
   for (const k of ks) S[k] = scope(k, raw[k]);
@@ -1323,6 +1359,7 @@ async function bootSession() {
   S.me = me; S.role = me.role;
   await reload();
   S.loaded = true;
+  try { if (typeof ensureSeries === 'function') await ensureSeries(true); } catch { }
   return true;
 }
 /** Buat akun login baru memakai klien sementara (tidak mengganti sesi Admin/PT yang aktif). */
@@ -1398,6 +1435,7 @@ Object.assign(ICONS, {
   star: '<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/>',
   lock: '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/>',
   next: '<path d="M9 18l6-6-6-6"/>',
+  repeat: '<path d="M17 2l4 4-4 4M3 11V9a3 3 0 013-3h15M7 22l-4-4 4-4M21 13v2a3 3 0 01-3 3H3"/>',
 });
 const PROGRAM_ICON = { Strength: 'dumb', Hypertrophy: 'dumb', 'Fat Loss': 'flame', Mobility: 'stretch', Conditioning: 'bolt', Rehabilitasi: 'heart', Lainnya: 'target' };
 const progIcon = p => PROGRAM_ICON[p] || 'target';
@@ -1484,6 +1522,155 @@ function agoLabel(iso) {
   if (!iso) return { t: 'Belum ada sesi', k: 'cold' };
   const d = Math.round((new Date(todayYmd() + 'T00:00:00Z') - new Date(ymd(iso) + 'T00:00:00Z')) / 864e5);
   return d <= 0 ? { t: 'Hari ini', k: 'hot' } : d === 1 ? { t: 'Kemarin', k: 'hot' } : d <= 14 ? { t: d + ' hari lalu', k: '' } : { t: d + ' hari lalu', k: 'cold' };
+}
+
+'use strict';
+/* ======================= Jadwal berulang, target RPE, konfirmasi latihan ======================= */
+const RPE_LEVELS = [[1, 'Ringan'], [2, 'Sedang'], [3, 'Berat'], [4, 'Sangat berat'], [5, 'Maksimal']];
+const rpeLabel = n => (RPE_LEVELS.find(x => x[0] === +n) || [])[1] || '';
+const DAYS_S = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
+const INDICATORS = [['rpe', 'RPE'], ['durasi', 'Durasi'], ['rating', 'Kepuasan klien'], ['catatan', 'Catatan']];
+const DEFAULT_IND = ['rpe', 'durasi', 'catatan'];
+const dowOf = y => ((new Date(y + 'T00:00:00Z').getUTCDay() + 6) % 7) + 1;
+const seriesDays = sr => (sr.weekdays || []).slice().sort((a, b) => a - b).map(d => DAYS_S[d - 1]).join(' · ');
+const seriesTime = sr => String(sr.start_time || '').slice(0, 5);
+const seriesOf = s => s && s.series_id ? (S.series || []).find(x => x.id === s.series_id) : null;
+const indicatorsOf = s => { const sr = seriesOf(s); return sr && sr.indicators && sr.indicators.length ? sr.indicators : DEFAULT_IND; };
+const rpeBadge = n => n ? `<span class="badge rpe-t" title="Target RPE">RPE ${n} · ${esc(rpeLabel(n))}</span>` : '';
+
+/** Tombol RPE 1-5. selected boleh null. */
+function rpeButtons(id, selected) { return `<div class="rpe" id="${id}">${RPE_LEVELS.map(([n, l]) => `<button type="button" data-v="${n}" class="${+selected === n ? 'on' : ''}"><b>${n}</b><small>${l}</small></button>`).join('')}</div>`; }
+function bindRpe(root, id, onPick, allowClear) {
+  const box = $('#' + id, root); const st = { v: (($('.on', box) || {}).dataset || {}).v ? +$('.on', box).dataset.v : null };
+  box.addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; const n = +b.dataset.v; st.v = (allowClear && st.v === n) ? null : n; $$('button', box).forEach(x => x.classList.toggle('on', +x.dataset.v === st.v)); if (onPick) onPick(st.v); });
+  return st;
+}
+
+/* ---------- pembuatan sesi dari jadwal berulang ---------- */
+let _ens = false, _ensAt = 0;
+async function ensureSeries(force) {
+  if (_ens || !canWrite() || !(S.series || []).length) return 0;
+  if (!force && Date.now() - _ensAt < 60000) return 0;
+  _ens = true; _ensAt = Date.now(); let made = 0;
+  try {
+    const today = todayYmd(), horizon = addDays(today, 28), now = Date.now(), rows = [];
+    for (const sr of S.series) {
+      sr._warn = false;
+      if (!sr.is_active) continue;
+      if (isPT() && sr.trainer_id !== S.trainerId) continue;
+      const c = M.client[sr.client_id]; if (!c || c.is_active === false) continue;
+      const have = new Set(S.sessions.filter(s => s.series_id === sr.id).map(s => new Date(s.scheduled_at).getTime()));
+      const pk = activePkgs(sr.client_id).filter(p => isPostpaid(p) || remainingOf(p) > 0);
+      const cap = new Map(pk.map(p => [p.id, isPostpaid(p) ? Infinity : remainingOf(p) - S.sessions.filter(s => s.package_id === p.id && (s.status === 'scheduled' || s.status === 'check_in')).length]));
+      for (let d = sr.start_date > today ? sr.start_date : today; d <= horizon && (!sr.end_date || d <= sr.end_date); d = addDays(d, 1)) {
+        if (!sr.weekdays.includes(dowOf(d))) continue;
+        const iso = toIsoJakarta(d + 'T' + seriesTime(sr)), t = new Date(iso).getTime();
+        if (t < now || have.has(t)) continue;
+        const p = pk.find(x => cap.get(x.id) > 0);
+        if (!p) { sr._warn = true; break; }
+        cap.set(p.id, cap.get(p.id) - 1);
+        rows.push({ package_id: p.id, trainer_id: sr.trainer_id, client_id: sr.client_id, scheduled_at: iso, program_type: sr.program_type || 'Strength', location: sr.location || null, session_notes: sr.notes || null, duration: 60, status: 'scheduled', target_rpe: sr.target_rpe || null, series_id: sr.id });
+      }
+    }
+    if (rows.length) {
+      const { error } = await sb.from('workout_sessions').upsert(rows, { onConflict: 'series_id,scheduled_at', ignoreDuplicates: true });
+      if (error) throw error;
+      made = rows.length; await reload('sessions', 'packages');
+    }
+  } catch (e) { console.warn('Jadwal berulang:', e.message || e); }
+  _ens = false; return made;
+}
+document.addEventListener('visibilitychange', () => { if (!document.hidden && S.loaded) ensureSeries().then(n => { if (n) rerender(); }); });
+
+/* ---------- bagian formulir: ulangi mingguan + indikator ---------- */
+function recurFields(dateYmd) {
+  const dw = dowOf(dateYmd);
+  return `<div class="fld rec-box"><label class="rec-sw"><input type="checkbox" id="rec" name="rec"><span>${ic('repeat', 'sm')} Ulangi setiap minggu</span></label>
+    <div class="rec-body" id="recb" hidden>
+      <label class="rec-l">Hari latihan</label><div class="dchips" id="rdays">${DAYS_S.map((n, i) => `<button type="button" data-d="${i + 1}" class="${i + 1 === dw ? 'on' : ''}">${n}</button>`).join('')}</div>
+      <label class="rec-l">Berakhir</label><div class="seg" id="rend"><button type="button" class="on" data-v="never">Tanpa batas</button><button type="button" data-v="date">Sampai tanggal</button></div>
+      <input type="date" name="enddate" id="rdate" hidden min="${dateYmd}">
+      <label class="rec-l">Indikator yang dicatat saat konfirmasi</label><div class="dchips ind" id="rind">${INDICATORS.map(([k, l]) => `<button type="button" data-k="${k}" class="${DEFAULT_IND.includes(k) ? 'on' : ''}">${l}</button>`).join('')}</div>
+      <span class="hint">Sesi dibuat otomatis 4 minggu ke depan dan terus diperbarui. Anda tinggal konfirmasi latihan dan isi indikator.</span>
+    </div></div>`;
+}
+function bindRecur(el) {
+  const cb = $('#rec', el), body = $('#recb', el); if (!cb) return () => null;
+  cb.addEventListener('change', () => { body.hidden = !cb.checked; });
+  let touched = false; const at = $('[name=at]', el);
+  if (at) at.addEventListener('change', () => { if (touched || !at.value) return; const d = dowOf(at.value.slice(0, 10)); $$('#rdays button', el).forEach(b => b.classList.toggle('on', +b.dataset.d === d)); });
+  $('#rdays', el).addEventListener('click', e => { const b = e.target.closest('button'); if (b) { touched = true; b.classList.toggle('on'); } });
+  $('#rind', el).addEventListener('click', e => { const b = e.target.closest('button'); if (b) b.classList.toggle('on'); });
+  let endMode = 'never';
+  $('#rend', el).addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; endMode = b.dataset.v; $$('#rend button', el).forEach(x => x.classList.toggle('on', x === b)); $('#rdate', el).hidden = endMode !== 'date'; });
+  return () => cb.checked ? {
+    weekdays: $$('#rdays .on', el).map(b => +b.dataset.d), indicators: $$('#rind .on', el).map(b => b.dataset.k),
+    end_date: endMode === 'date' ? ($('#rdate', el).value || null) : null, endMode,
+  } : null;
+}
+async function createSeries({ clientId, startAt, prog, loc, notes, targetRpe, rec }) {
+  const c = M.client[clientId], trainerId = isPT() ? S.trainerId : c.trainer_id;
+  if (!rec.weekdays.length) throw new Error('Pilih minimal satu hari latihan');
+  if (rec.endMode === 'date' && !rec.end_date) throw new Error('Isi tanggal berakhir');
+  const local = toLocalJakarta(startAt);
+  const row = { trainer_id: trainerId, client_id: clientId, weekdays: rec.weekdays, start_time: local.slice(11, 16), start_date: local.slice(0, 10), end_date: rec.end_date, program_type: prog, location: loc || null, target_rpe: targetRpe || null, indicators: rec.indicators.length ? rec.indicators : DEFAULT_IND, notes: notes || null, is_active: true };
+  const { data, error } = await sb.from('session_series').insert(row).select('*');
+  if (error) throw new Error(/session_series|relation/i.test(error.message) ? 'Fitur jadwal berulang belum aktif di database (migrasi 0500)' : error.message);
+  await reload('series'); await ensureSeries(true); return data[0];
+}
+
+/* ---------- kartu daftar jadwal berulang (halaman Jadwal) ---------- */
+function seriesSection() {
+  if (!canWrite()) return '';
+  const list = (S.series || []).filter(sr => sr.is_active !== false || sr.paused).sort((a, b) => clientName(a.client_id).localeCompare(clientName(b.client_id)));
+  const off = (S.series || []).filter(sr => sr.is_active === false);
+  return `<div class="sec-h"><h3>Jadwal berulang</h3><span class="muted small">${list.length} aktif</span></div>
+    <div class="list" id="serl">${list.length ? list.map(sr => `<div class="item ser-i"><div class="avatar ${avCls(clientName(sr.client_id))}">${esc(initials(clientName(sr.client_id)))}</div>
+      <div class="grow"><div class="t">${esc(clientName(sr.client_id))}</div><div class="d">${ic('repeat', 'sm')} ${esc(seriesDays(sr))} · ${esc(seriesTime(sr))}</div>
+      <div class="d muted small">${esc(sr.program_type || 'Sesi PT')}${sr.target_rpe ? ' · RPE ' + sr.target_rpe : ''}${sr.end_date ? ' · sampai ' + esc(fmtDate(sr.end_date + 'T00:00:00+07:00')) : ' · tanpa batas'}</div>
+      ${sr._warn ? `<div class="d" style="color:var(--bad)">Paket habis — jual paket baru agar jadwal berlanjut</div>` : ''}</div>
+      <button class="btn sm" data-ser="stop" data-id="${sr.id}">Hentikan</button></div>`).join('') : `<div class="empty"><div class="eico">${ic('repeat')}</div><b>Belum ada jadwal berulang</b>Aktifkan "Ulangi setiap minggu" saat menjadwalkan sesi.</div>`}</div>
+    ${off.length ? `<p class="muted small" style="margin-top:6px">${off.length} jadwal berulang sudah dihentikan.</p>` : ''}`;
+}
+function bindSeries(root) {
+  root.addEventListener('click', async e => {
+    const b = e.target.closest('[data-ser=stop]'); if (!b) return; const sr = (S.series || []).find(x => x.id === b.dataset.id); if (!sr) return;
+    const fut = S.sessions.filter(s => s.series_id === sr.id && s.status === 'scheduled' && new Date(s.scheduled_at) > new Date());
+    if (!await confirmDlg({ title: 'Hentikan jadwal berulang?', message: `${clientName(sr.client_id)} · ${seriesDays(sr)} ${seriesTime(sr)}. ${fut.length} sesi mendatang yang belum dimulai akan dihapus. Riwayat sesi tetap tersimpan.`, okText: 'Hentikan', danger: true })) return;
+    const r = await act(b, async () => {
+      const u = await sb.from('session_series').update({ is_active: false, updated_at: new Date().toISOString() }).eq('id', sr.id).select('id'); if (u.error) throw u.error;
+      if (fut.length) { const d = await sb.from('workout_sessions').delete().eq('series_id', sr.id).eq('status', 'scheduled').gt('scheduled_at', new Date().toISOString()); if (d.error) throw d.error; }
+    }, 'Jadwal berulang dihentikan');
+    if (r.ok) { await reload('series', 'sessions', 'packages'); rerender(); }
+  });
+}
+
+/* ---------- Konfirmasi latihan (cepat) ---------- */
+function confirmSheet(s) {
+  const ind = indicatorsOf(s), has = k => ind.includes(k);
+  openSheet({
+    title: 'Konfirmasi latihan',
+    body: `<p class="muted small" style="margin-bottom:10px">${esc(clientName(s.client_id))} · ${esc(fmtDT(s.scheduled_at))} ${rpeBadge(s.target_rpe)}</p>
+    <form id="cf" class="form">
+      ${has('rpe') ? `<div class="fld"><label>RPE aktual${s.target_rpe ? ` <span class="muted small">(target ${s.target_rpe})</span>` : ''}</label>${rpeButtons('crpe', s.target_rpe)}</div>` : ''}
+      ${has('durasi') ? `<div class="fld"><label>Durasi (menit)</label><input name="dur" type="number" inputmode="numeric" min="5" max="240" value="${s.duration || 60}"></div>` : ''}
+      ${has('rating') ? `<div class="fld"><label>Kepuasan klien</label><div class="dchips rate" id="crate">${[1, 2, 3, 4, 5].map(n => `<button type="button" data-v="${n}">${'★'.repeat(n)}</button>`).join('')}</div></div>` : ''}
+      ${has('catatan') ? `<div class="fld"><label>Catatan</label><textarea name="notes" placeholder="Beban, progres, catatan teknik" >${esc(s.session_notes || '')}</textarea></div>` : ''}
+    </form>`,
+    footer: '<button class="btn" data-close>Tutup</button><button class="btn primary" data-save>Konfirmasi selesai</button>',
+    onMount(el, close) {
+      const f = $('#cf', el); const rp = has('rpe') ? bindRpe(el, 'crpe') : { v: null }; let rate = null;
+      const cr = $('#crate', el); if (cr) cr.addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; rate = +b.dataset.v; $$('button', cr).forEach(x => x.classList.toggle('on', +x.dataset.v <= rate)); });
+      $('[data-save]', el).onclick = async ev => {
+        if (has('rpe') && !rp.v) { toast('Pilih RPE dahulu', 'err'); return; }
+        const r = await act(ev.currentTarget, async () => {
+          if (s.status === 'scheduled') await rpc('app_check_in_session', { p_session: s.id });
+          await rpc('app_complete_session', { p_session: s.id, p_rpe: rp.v || null, p_notes: f.elements.notes ? (f.elements.notes.value.trim() || null) : null, p_duration: f.elements.dur ? (+f.elements.dur.value || null) : null, p_rating: rate });
+        }, 'Latihan terkonfirmasi');
+        if (r.ok) { close(); await reload('sessions', 'packages'); await ensureSeries(true); rerender(); }
+      };
+    },
+  });
 }
 
 'use strict';
@@ -1644,7 +1831,7 @@ async function pgLogin() {
       <form id="lf" class="form" autocomplete="on"><div class="fld"><label for="u">Username</label><input id="u" name="username" autocomplete="username" autocapitalize="none" required value="${esc(saved)}"></div>
       <div class="fld"><label for="p">Password</label><input id="p" name="password" type="password" autocomplete="current-password" required></div>
       <label class="check"><input type="checkbox" id="rem" ${saved ? 'checked' : ''}> Ingat username</label>
-      <div class="err" id="lerr" role="alert"></div><button class="btn primary block" id="lbtn">Masuk</button></form>
+      <div class="err" id="lerr" role="alert"></div><button class="btn primary block" id="lbtn">Masuk</button></form><p class="ver-foot">Elprian Training · v${APP_VERSION}</p>
       ${window.ELP_DEMO ? `<div class="card" style="margin-top:14px"><b class="small">Mode demo · data contoh</b><p class="muted small" style="margin:4px 0 10px">Pilih peran untuk masuk. Password semua akun: <b>demo</b>. Perubahan tersimpan di browser ini saja.</p><div class="chips" style="margin:0">${[['admin', 'Admin'], ['pt', 'PT Rani'], ['pt2', 'PT Dimas'], ['budi', 'Klien Budi']].map(([u, l]) => `<button type="button" class="chip" data-demo="${u}">${l}</button>`).join('')}</div><button type="button" class="btn sm" style="margin-top:10px" data-demo-reset>Reset data demo</button></div>` : ''}
       <p class="faint small">${VERSION}</p></div>`,
     mount(el) {
@@ -1948,13 +2135,13 @@ function sessionRow(s, o = {}) {
   const note = (s.status === 'cancelled' || s.status === 'no_show') ? `<span class="badge ${s.counts_toward_balance ? 'warn' : ''}">${s.counts_toward_balance ? 'Dihitung' : 'Tidak dihitung'}</span>` : '';
   const acts = [];
   if (canWrite()) {
-    if (s.status === 'scheduled') acts.push(`<button class="btn primary lg" data-act="start" data-id="${s.id}">${ic('play', 'sm')} Mulai</button>`, `<button class="btn" data-act="decide" data-id="${s.id}">Batal / No-show</button>`, `<button class="icon-btn" data-act="edit" data-id="${s.id}" aria-label="Ubah sesi">${ic('edit')}</button>`);
+    if (s.status === 'scheduled') acts.push(`<button class="btn primary lg" data-act="start" data-id="${s.id}">${ic('play', 'sm')} Mulai</button>`, `<button class="btn" data-act="confirm" data-id="${s.id}">${ic('check', 'sm')} Konfirmasi</button>`, `<button class="btn" data-act="decide" data-id="${s.id}">Batal / No-show</button>`, `<button class="icon-btn" data-act="edit" data-id="${s.id}" aria-label="Ubah sesi">${ic('edit')}</button>`);
     else if (s.status === 'check_in') acts.push(`<a class="btn primary lg" href="#/live/${s.id}">${ic('play', 'sm')} Lanjutkan</a>`);
     else if (isAdmin()) acts.push(`<button class="icon-btn" data-act="del" data-id="${s.id}" aria-label="Hapus sesi">${ic('trash')}</button>`);
   }
   const title = o.noClient ? (s.program_type || 'Sesi PT') : clientName(s.client_id);
   return `<div class="sx st-${s.status}"><div class="sx-time"><b>${esc(fmtTime(s.scheduled_at))}</b>${o.date ? `<small>${esc(fmtDate(s.scheduled_at))}</small>` : ''}</div>
-    <div class="sx-main"><div class="sx-t">${esc(title)}</div><div class="sx-d"><span class="pgm">${ic(progIcon(s.program_type), 'sm')} ${esc(o.noClient ? 'Sesi PT' : (s.program_type || 'Sesi PT'))}</span>${s.location ? `<span>${esc(s.location)}</span>` : ''}</div>${s.count_reason ? `<div class="sx-d">Alasan: ${esc(s.count_reason)}</div>` : ''}</div>
+    <div class="sx-main"><div class="sx-t">${esc(title)}</div><div class="sx-d"><span class="pgm">${ic(progIcon(s.program_type), 'sm')} ${esc(o.noClient ? 'Sesi PT' : (s.program_type || 'Sesi PT'))}</span>${s.location ? `<span>${esc(s.location)}</span>` : ''}${s.series_id ? `<span class="ser-tag" title="Jadwal berulang">${ic('repeat', 'sm')}</span>` : ''}${s.status === 'completed' && s.rpe ? `<span class="badge rpe-t">RPE ${s.rpe}</span>` : rpeBadge(s.target_rpe)}</div>${s.count_reason ? `<div class="sx-d">Alasan: ${esc(s.count_reason)}</div>` : ''}</div>
     <div class="sx-r">${statusBadge(s.status)}${note}</div>
     ${acts.length ? `<div class="sx-a">${acts.join('')}</div>` : ''}</div>`;
 }
@@ -1966,7 +2153,8 @@ function bindSessionActions(root) {
     if (a === 'start') {
       const r = await act(b, () => rpc('app_check_in_session', { p_session: id }), 'Sesi dimulai');
       if (r.ok) { await reload('sessions', 'packages'); go('#/live/' + id); }
-    } else if (a === 'decide') decisionSheet(s);
+    } else if (a === 'confirm') confirmSheet(s);
+    else if (a === 'decide') decisionSheet(s);
     else if (a === 'edit') sessionFormSheet({ session: s });
     else if (a === 'del') {
       if (!await confirmDlg({ title: 'Hapus sesi?', message: 'Sesi dihapus permanen dan saldo paket dihitung ulang.', okText: 'Hapus', danger: true })) return;
@@ -2004,19 +2192,23 @@ function sessionFormSheet({ session, clientId, date }) {
       <div class="fld"><label>Paket</label><select name="pkg" required></select></div>
       <div class="fld"><label>Waktu (WIB)</label><input name="at" type="datetime-local" required value="${dt}"></div>
       <div class="grid2"><div class="fld"><label>Program</label><select name="prog">${PROGRAMS.map(p => `<option ${edit && session.program_type === p ? 'selected' : ''}>${p}</option>`).join('')}</select></div><div class="fld"><label>Lokasi</label><input name="loc" value="${esc(edit ? session.location || '' : '')}" placeholder="Gym / rumah"></div></div>
-      <div class="fld"><label>Catatan</label><textarea name="notes">${esc(edit ? session.session_notes || '' : '')}</textarea></div></form>`,
+      <div class="fld"><label>Target RPE <span class="muted small">(opsional)</span></label>${rpeButtons('trpe', edit ? session.target_rpe : null)}<span class="hint">Seberapa berat sesi ini direncanakan. Ketuk lagi untuk mengosongkan.</span></div>
+      <div class="fld"><label>Catatan</label><textarea name="notes">${esc(edit ? session.session_notes || '' : '')}</textarea></div>
+      ${edit ? (session.series_id ? `<p class="muted small">${ic('repeat', 'sm')} Bagian dari jadwal berulang. Perubahan di sini hanya berlaku untuk sesi ini.</p>` : '') : recurFields(date || todayYmd())}</form>`,
     footer: '<button class="btn" data-close>Batal</button><button class="btn primary" data-save>Simpan</button>',
     onMount(el, close) {
       const f = $('#sf', el), selC = f.elements.client, selP = f.elements.pkg;
       const fill = () => { const list = activePkgs(selC.value).filter(p => isPostpaid(p) || remainingOf(p) > 0 || (edit && p.id === session.package_id)); selP.innerHTML = list.length ? list.map(p => `<option value="${p.id}" ${edit && p.id === session.package_id ? 'selected' : ''}>${esc(p.package_name)}${isPostpaid(p) ? ' (pascabayar)' : ' · sisa ' + remainingOf(p)}</option>`).join('') : '<option value="">Klien belum punya paket aktif</option>'; };
       selC.addEventListener('change', fill); fill();
+      const trpe = bindRpe(el, 'trpe', null, true); const getRec = edit ? (() => null) : bindRecur(el);
       $('[data-save]', el).onclick = async ev => {
         if (!f.reportValidity() || !selP.value) { toast('Lengkapi klien, paket, dan waktu', 'err'); return; }
-        const at = toIsoJakarta(f.elements.at.value);
-        const r = await act(ev.currentTarget, () => edit
-          ? rpc('app_update_session', { p_session: session.id, p_scheduled_at: at, p_program_type: f.elements.prog.value, p_location: f.elements.loc.value.trim() || null, p_notes: f.elements.notes.value.trim() || null })
-          : rpc('app_schedule_session', { p_package: selP.value, p_scheduled_at: at, p_program_type: f.elements.prog.value, p_location: f.elements.loc.value.trim() || null, p_notes: f.elements.notes.value.trim() || null, p_status: 'scheduled' }),
-          edit ? 'Sesi diperbarui' : 'Sesi dijadwalkan');
+        const at = toIsoJakarta(f.elements.at.value), rec = getRec();
+        const r = await act(ev.currentTarget, async () => {
+          if (edit) return rpc('app_update_session', { p_session: session.id, p_scheduled_at: at, p_program_type: f.elements.prog.value, p_location: f.elements.loc.value.trim() || null, p_notes: f.elements.notes.value.trim() || null, p_target_rpe: trpe.v });
+          if (rec) return createSeries({ clientId: selC.value, startAt: at, prog: f.elements.prog.value, loc: f.elements.loc.value.trim(), notes: f.elements.notes.value.trim(), targetRpe: trpe.v, rec });
+          return rpc('app_schedule_session', { p_package: selP.value, p_scheduled_at: at, p_program_type: f.elements.prog.value, p_location: f.elements.loc.value.trim() || null, p_notes: f.elements.notes.value.trim() || null, p_status: 'scheduled', p_target_rpe: trpe.v });
+        }, edit ? 'Sesi diperbarui' : (rec ? 'Jadwal berulang dibuat' : 'Sesi dijadwalkan'));
         if (r.ok) { close(); await reload('sessions', 'packages'); rerender(); }
       };
     },
@@ -2043,16 +2235,16 @@ async function pgJadwal(d) {
   if (JV.mode === 'week') {
     const all = days.flatMap(byDay), done = all.filter(x => x.status === 'completed').length, plan = all.filter(x => x.status === 'scheduled' || x.status === 'check_in').length, miss = all.filter(x => x.status === 'cancelled' || x.status === 'no_show').length;
     const range = `${+ws.slice(8)} ${MON[+ws.slice(5, 7) - 1]} – ${+days[6].slice(8)} ${MON[+days[6].slice(5, 7) - 1]} ${days[6].slice(0, 4)}`, isThis = ws === weekStart(today);
-    const cell = x => `<a class="wk-s ${x.status}" href="#/jadwal/${ymd(x.scheduled_at)}" data-d="${ymd(x.scheduled_at)}"><b class="tm">${esc(fmtTime(x.scheduled_at))}</b><div class="grow"><div class="t">${esc(isClient() ? (x.program_type || 'Sesi PT') : clientName(x.client_id))}</div><div class="d">${ic(progIcon(x.program_type), 'sm')} ${esc(x.program_type || 'Sesi PT')}</div></div>${x.status === 'completed' ? `<span class="wk-ok">${ic('check', 'sm')}</span>` : statusBadge(x.status)}</a>`;
+    const cell = x => `<a class="wk-s ${x.status}" href="#/jadwal/${ymd(x.scheduled_at)}" data-d="${ymd(x.scheduled_at)}"><b class="tm">${esc(fmtTime(x.scheduled_at))}</b><div class="grow"><div class="t">${esc(isClient() ? (x.program_type || 'Sesi PT') : clientName(x.client_id))}</div><div class="d">${ic(progIcon(x.program_type), 'sm')} ${esc(x.program_type || 'Sesi PT')}${x.series_id ? ' ' + ic('repeat', 'sm') : ''}${x.status === 'completed' && x.rpe ? ' · RPE ' + x.rpe : (x.target_rpe ? ' · target RPE ' + x.target_rpe : '')}</div></div>${x.status === 'completed' ? `<span class="wk-ok">${ic('check', 'sm')}</span>` : statusBadge(x.status)}</a>`;
     return {
       title: isClient() ? 'Sesi' : 'Jadwal',
       html: `<div class="page-h"><div><h2>${isClient() ? 'Sesi saya' : 'Jadwal'}</h2><p>${esc(range)}${isThis ? ' · minggu ini' : ''}</p></div>${nav(7, 'Minggu')}</div>${modeSeg}
       <div class="wk-sum"><div class="wk-ring">${ring(all.length ? done / all.length : 0, { size: 76, stroke: 9, center: `${done}<span>/${all.length}</span>`, sub: 'selesai' })}</div>
         <div class="wk-chips"><div><b>${plan}</b><small>Terjadwal</small></div><div><b>${done}</b><small>Sudah latihan</small></div><div><b>${miss}</b><small>Batal / no-show</small></div></div></div>
-      ${days.map((x, i) => { const l = byDay(x), t = x === today; return `<section class="wk-day ${t ? 'today' : ''} ${l.length ? '' : 'empty-day'}"><button class="wk-h" data-pick="${x}"><span class="dn">${long[i]}</span><span class="dd">${+x.slice(8)} ${MON[+x.slice(5, 7) - 1]}</span>${t ? '<em>Hari ini</em>' : ''}<span class="cnt">${l.length ? l.length + ' sesi' : 'Kosong'}</span></button>${l.length ? `<div class="wk-list">${l.map(cell).join('')}</div>` : ''}</section>`; }).join('')}`,
+      ${days.map((x, i) => { const l = byDay(x), t = x === today; return `<section class="wk-day ${t ? 'today' : ''} ${l.length ? '' : 'empty-day'}"><button class="wk-h" data-pick="${x}"><span class="dn">${long[i]}</span><span class="dd">${+x.slice(8)} ${MON[+x.slice(5, 7) - 1]}</span>${t ? '<em>Hari ini</em>' : ''}<span class="cnt">${l.length ? l.length + ' sesi' : 'Kosong'}</span></button>${l.length ? `<div class="wk-list">${l.map(cell).join('')}</div>` : ''}</section>`; }).join('')}${seriesSection()}`,
       fab,
       mount(v) {
-        common(v); bindSessionActions(v);
+        common(v); bindSessionActions(v); bindSeries(v);
         $$('[data-pick]', v).forEach(b => b.onclick = () => { setJV('day'); go('#/jadwal/' + b.dataset.pick); });
         $$('.wk-s', v).forEach(a => a.addEventListener('click', e => { e.preventDefault(); setJV('day'); go('#/jadwal/' + a.dataset.d); }));
         const t = $('.wk-day.today', v); if (t && !history.state) setTimeout(() => t.scrollIntoView({ block: 'center', behavior: 'smooth' }), 350);
@@ -2066,10 +2258,10 @@ async function pgJadwal(d) {
     html: `<div class="page-h"><div><h2>${isClient() ? 'Sesi saya' : 'Jadwal'}</h2><p>${esc(fmtDayLong(day))} · ${list.length} sesi${list.length ? ', ' + list.filter(x => x.status === 'completed').length + ' selesai' : ''}</p></div>${nav(1, 'Hari')}</div>${modeSeg}
       <div class="weekbar">${days.map((x, i) => `<button class="${x === day ? 'on' : ''}" data-day="${x}"><small>${names[i]}</small><b>${+x.slice(8)}</b>${byDay(x).length ? '<i></i>' : '<i style="opacity:0"></i>'}</button>`).join('')}</div>
       <div class="list" id="dl">${list.length ? list.map(s => sessionRow(s, { noClient: isClient() })).join('') : '<div class="empty"><b>Tidak ada sesi</b>Pilih hari lain atau jadwalkan sesi baru.</div>'}</div>
-      ${hist.length ? `<div class="sec-h"><h3>Riwayat</h3></div><div class="list">${hist.map(s => sessionRow(s, { date: true, noClient: true })).join('')}</div>` : ''}`,
+      ${hist.length ? `<div class="sec-h"><h3>Riwayat</h3></div><div class="list">${hist.map(s => sessionRow(s, { date: true, noClient: true })).join('')}</div>` : ''}${seriesSection()}`,
     fab,
     mount(v) {
-      common(v); bindSessionActions(v);
+      common(v); bindSessionActions(v); bindSeries(v);
       $$('[data-day]', v).forEach(b => b.onclick = () => go('#/jadwal/' + b.dataset.day));
     },
   };
@@ -2140,18 +2332,18 @@ async function pgLive(id) {
   if (s.status !== 'check_in') return { title: 'Sesi', html: `<div class="empty"><b>Sesi ini ${s.status === 'completed' ? 'sudah selesai' : 'tidak sedang berjalan'}</b><a class="btn" href="#/jadwal">Ke jadwal</a></div>` };
   const started = new Date(s.check_in_at || s.updated_at || Date.now()).getTime();
   const C = 2 * Math.PI * 105;
-  const RPE = [[1, 'Ringan'], [2, 'Sedang'], [3, 'Berat'], [4, 'Sangat berat'], [5, 'Maksimal']];
+  const RPE = RPE_LEVELS;
   const QN = ['Beban naik', 'Teknik perlu koreksi', 'Tenaga bagus', 'Cepat lelah', 'Ada keluhan sendi'];
   return {
     title: 'Sesi berjalan',
     html: `<div class="live2"><div class="lv-head"><div class="fx3d" id="kb"></div><div class="eyebrow on">${ic('pulse', 'sm')} Sesi berjalan</div><h2>${esc(clientName(s.client_id))}</h2><span class="pgm">${ic(progIcon(s.program_type), 'sm')} ${esc(s.program_type || 'Sesi PT')}${s.location ? ' · ' + esc(s.location) : ''}</span></div>
       <div class="timer"><svg viewBox="0 0 230 230"><defs><linearGradient id="tg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:var(--fx1)"/><stop offset="1" style="stop-color:var(--brand)"/></linearGradient></defs><circle cx="115" cy="115" r="105" fill="none" stroke="var(--line)" stroke-width="12"/><circle id="ring" cx="115" cy="115" r="105" fill="none" stroke="url(#tg)" stroke-width="12" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C}"/></svg><div class="tm" id="tm">00:00</div><small class="tmsub">dari 60 menit</small></div>
       <div class="card lvc"><div class="fld"><label>Catatan sesi</label><div class="qn" id="qn">${QN.map(q => `<button type="button" class="chip" data-q="${esc(q)}">${esc(q)}</button>`).join('')}</div><textarea id="ln" placeholder="Beban, progres, catatan teknik…">${esc(s.session_notes || '')}</textarea></div>
-        <div class="fld"><label>Seberapa berat sesinya? (RPE)</label><div class="rpe" id="rpe">${RPE.map(([n, l]) => `<button type="button" data-v="${n}"><b>${n}</b><small>${l}</small></button>`).join('')}</div></div></div>
+        <div class="fld"><label>Seberapa berat sesinya? (RPE)${s.target_rpe ? ` <span class="muted small">target ${s.target_rpe} · ${esc(rpeLabel(s.target_rpe))}</span>` : ''}</label>${rpeButtons('rpe', s.target_rpe)}</div></div>
       <div class="lv-bar"><button class="btn primary lg block" id="fin">${ic('check')} Selesaikan sesi</button><a class="btn block" href="#/jadwal">Kembali (sesi tetap berjalan)</a></div></div>`,
     mount(v) {
       FX.attach($('#kb', v), 'body-live');
-      let rpeV = null; const tm = $('#tm', v), ring = $('#ring', v);
+      let rpeV = s.target_rpe || null; const tm = $('#tm', v), ring = $('#ring', v);
       const tick = () => { if (!tm.isConnected) return; const sec = Math.max(0, Math.floor((Date.now() - started) / 1000)); tm.textContent = `${String(Math.floor(sec / 3600) ? Math.floor(sec / 3600) + ':' : '')}${String(Math.floor(sec % 3600 / 60)).padStart(2, '0')}:${String(sec % 60).padStart(2, '0')}`; ring.style.strokeDashoffset = C * (1 - Math.min(sec / 3600, 1)); setTimeout(tick, 1000); };
       tick();
       $('#qn', v).addEventListener('click', e => { const b = e.target.closest('[data-q]'); if (!b) return; const t = $('#ln', v); t.value = (t.value.trim() ? t.value.trim() + '. ' : '') + b.dataset.q; t.focus(); });
@@ -2351,6 +2543,8 @@ async function pgSettings() {
       <div class="fld"><label>Gaya tampilan 3D</label>${seg('s3', [['auto', 'Otomatis'], ['body', 'Tubuh'], ['logo', 'Logo'], ['barbell', 'Barbel']], FX.style())}<span class="hint">Berlaku di halaman login dan Beranda. Otomatis: Logo di login, Tubuh di Beranda.</span><div class="fx3d fxprev" id="fxprev"></div></div>
       <div class="fld"><label>Kualitas 3D <span class="muted small">(aktif: ${FX.label()})</span></label>${seg('q3', [['auto', 'Otomatis'], ['high', 'Tinggi'], ['medium', 'Sedang'], ['low', 'Hemat']], q)}${FX.reason() ? `<span class="hint">Mode Hemat aktif otomatis karena: ${esc(FX.reason())}. Pilih Sedang atau Tinggi untuk memaksa 3D.</span>` : ''}<span class="hint">Hemat = tanpa animasi 3D, paling ringan untuk baterai.</span></div></div>
     <form id="pw" class="form card" style="margin-top:12px" autocomplete="off"><h3>Ganti password</h3><div class="fld"><label>Password baru</label><input name="p1" type="password" minlength="6" required autocomplete="new-password"></div><div class="fld"><label>Ulangi password</label><input name="p2" type="password" minlength="6" required autocomplete="new-password"></div><button class="btn">Ganti password</button></form>
+    <div class="card ver-card" style="margin-top:12px"><div class="row between"><h3 style="margin:0">Tentang aplikasi</h3><span class="ver-pill">v${APP_VERSION}</span></div><p class="muted small" style="margin:4px 0 10px">Elprian Training · dirilis ${esc(APP_DATE)}</p>
+      <ol class="chlog">${CHANGELOG.map(([v, d, t], i) => `<li class="${i === 0 ? 'cur' : ''}"><b>v${v}</b><small>${esc(d)}</small><span>${esc(t)}</span></li>`).join('')}</ol></div>
     <button class="btn danger block" style="margin-top:12px" data-logout>${ic('logout', 'sm')} Keluar</button><p class="faint small" style="text-align:center;margin-top:14px">Elprian Training ${VERSION}</p>`,
     mount(v) {
       $('#pf', v).addEventListener('submit', async e => { e.preventDefault(); const f = e.target; const r = await act($('button', f), async () => { await rpc('app_update_my_profile', { p_full_name: f.elements.full_name.value.trim(), p_phone: f.elements.phone.value.trim() || null }); await reload('users'); S.me = M.user[S.me.id] || S.me; }, 'Profil disimpan'); if (r.ok) rerender(); });
