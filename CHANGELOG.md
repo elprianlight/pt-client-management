@@ -1,5 +1,8 @@
 # Riwayat versi — Elprian Training
 
+## v1.4.1 — 25 Nov 2026
+- Perbaikan: "Paket hampir habis" di Beranda sekarang dihitung per klien (total sisa semua paket aktif), sama dengan Daftar Klien. Paket lama yang sudah habis tidak lagi muncul bila klien sudah punya paket baru.
+
 ## v1.4.0 — 25 Nov 2026
 - Jadwal berulang mingguan: pilih hari, jam, dan batas akhir; sesi dibuat otomatis 4 minggu ke depan.
 - Konfirmasi latihan cepat dengan indikator (RPE, durasi, kepuasan klien, catatan).
