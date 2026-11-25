@@ -1,5 +1,10 @@
 # Riwayat versi — Elprian Training
 
+## v1.4.2 — 25 Nov 2026
+- Beranda: jarak antara kartu hero, kartu angka (Klien aktif dst.), dan bagian bawah dibuat lebih lega.
+- Streak dan Pencapaian: ikon api, lencana, dan titik hari kini berwarna neon merah dengan ikon putih yang jelas; lencana belum tercapai tampil abu dengan gembok.
+- Perbaikan halaman Beranda yang bisa tergeser ke samping.
+
 ## v1.4.1 — 25 Nov 2026
 - Perbaikan: "Paket hampir habis" di Beranda sekarang dihitung per klien (total sisa semua paket aktif), sama dengan Daftar Klien. Paket lama yang sudah habis tidak lagi muncul bila klien sudah punya paket baru.
 
