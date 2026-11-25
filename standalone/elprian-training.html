@@ -732,6 +732,34 @@ input,select,textarea,.inp,.fld input,.fld select,.fld textarea,.search input{fo
 .medal:not(.on) b{color:var(--ink-2)}
 .medal.on small{color:var(--ok)}
 
+/* ===== v1.5.0: api 3D hari beruntun + karusel lencana 3D ===== */
+.flamefx{position:relative;width:84px;height:92px;flex:none;margin:-10px -4px -8px -10px;pointer-events:none}
+.flamefx canvas{display:block;width:100%!important;height:100%!important}
+.card.streak .row{align-items:center;gap:6px}
+.medalfx{height:190px;margin:0 -6px 2px;border-radius:22px;overflow:hidden;background:radial-gradient(70% 80% at 50% 70%,rgba(255,42,60,.16),transparent 70%)}
+.medalfx canvas{touch-action:pan-y}
+/* poster hemat: api CSS */
+.fl-poster{position:absolute;inset:0;transform:scale(1.15);transform-origin:50% 100%;display:grid;place-items:end center;padding-bottom:10px}
+.fl-poster i{position:absolute;bottom:14px;left:50%;width:44px;height:62px;margin-left:-22px;border-radius:50% 50% 50% 50%/62% 62% 38% 38%;transform-origin:50% 100%;animation:flk 1.1s ease-in-out infinite;filter:blur(.4px)}
+.fl-poster .f3{background:radial-gradient(circle at 50% 70%,#ff2a3c,#8f0c18);height:70px;box-shadow:0 0 26px 6px rgba(255,42,60,.55)}
+.fl-poster .f2{background:radial-gradient(circle at 50% 70%,#ff9a3c,#ff3b2a);width:30px;margin-left:-15px;height:50px;animation-delay:-.35s}
+.fl-poster .f1{background:radial-gradient(circle at 50% 70%,#fff6c8,#ffd35a);width:16px;margin-left:-8px;height:30px;animation-delay:-.7s}
+.fl-poster.dim i{transform:scale(.45);animation:none;opacity:.55}
+.fl-poster .em{position:absolute;bottom:30px;width:4px;height:4px;border-radius:50%;background:#ffb36b;box-shadow:0 0 6px #ff6a3c;animation:emr 2s linear infinite}
+.fl-poster .e1{left:36%}.fl-poster .e2{left:56%;animation-delay:-.7s}.fl-poster .e3{left:46%;animation-delay:-1.3s}
+.fl-poster.dim .em{opacity:.5}
+@keyframes flk{0%,100%{transform:scale(1,1) rotate(-2deg)}30%{transform:scale(.94,1.08) rotate(2.5deg)}60%{transform:scale(1.05,.95) rotate(-1.5deg)}}
+@keyframes emr{0%{transform:translateY(0);opacity:1}100%{transform:translateY(-52px);opacity:0}}
+/* poster hemat: koin CSS berputar */
+.mc-poster{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:8px;perspective:600px}
+.mc{width:44px;height:48px;display:grid;place-items:center;animation:mcspin 3.6s linear infinite;animation-delay:var(--d);transform-style:preserve-3d}
+.mc i{display:grid;place-items:center;width:100%;height:100%;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);background:var(--subtle);color:var(--ink-3)}
+.mc.on i{background:linear-gradient(160deg,#ff7a80,#ff2a3c 50%,#8f0c18);color:#fff}
+.mc .ic{width:20px;height:20px;stroke-width:2.3}
+.mc:not(.on){animation:none}
+@keyframes mcspin{0%{transform:rotateY(0)}100%{transform:rotateY(360deg)}}
+@media(prefers-reduced-motion:reduce){.fl-poster *,.mc{animation:none!important}}
+
 </style>
 </head>
 <body>
@@ -855,9 +883,10 @@ applyTheme();
 
 'use strict';
 /* ======================= Versi aplikasi & riwayat pembaruan ======================= */
-const APP_VERSION = '1.4.2';
+const APP_VERSION = '1.5.0';
 const APP_DATE = '2026-11-25';
 const CHANGELOG = [
+  ['1.5.0', '2026-11-26', 'Animasi 3D: api hari beruntun (partikel, makin besar sesuai runtutan) dan karusel lencana 3D yang bisa diputar; skala RPE 1–10'],
   ['1.4.2', '2026-11-25', 'Beranda: jarak antar bagian lebih lega, lencana dan streak neon yang jelas terlihat, perbaikan geser samping'],
   ['1.4.1', '2026-11-25', 'Perbaikan: Paket hampir habis di Beranda kini per klien (selaras dengan Daftar Klien), tidak lagi menampilkan paket lama yang sudah habis'],
   ['1.4.0', '2026-11-25', 'Jadwal berulang (mingguan, otomatis terisi), Konfirmasi latihan cepat dengan indikator, Target RPE di Jadwalkan sesi, penomoran versi'],
@@ -1233,6 +1262,92 @@ const FX = (() => {
     };
   }
 
+  /* ---------- api hari beruntun (partikel, makin besar makin panjang runtutan) ---------- */
+  function buildStreak(inst, data) {
+    const T = THREE, k = cfg(), n = (data && data.n) || 0;
+    inst.camera.position.set(0, .15, 6.2); inst.camera.lookAt(0, .25, 0);
+    const lit = n > 0, inten = lit ? .6 + .4 * Math.min(n, 14) / 14 : .28;
+    const N = lit ? (tier() === 'high' ? 120 : 70) : 14;
+    const fa = new Float32Array(N), pos = new Float32Array(N * 3), col = new Float32Array(N * 3), siz = new Float32Array(N), life = new Float32Array(N), age = new Float32Array(N), sd = new Float32Array(N);
+    const geo = new T.BufferGeometry();
+    geo.setAttribute('position', new T.BufferAttribute(pos, 3)); geo.setAttribute('color', new T.BufferAttribute(col, 3)); geo.setAttribute('size', new T.BufferAttribute(siz, 1)); geo.setAttribute('fa', new T.BufferAttribute(fa, 1));
+    const mat = new T.ShaderMaterial({
+      transparent: true, depthWrite: false, uniforms: { sc: { value: 1 } },
+      vertexShader: 'attribute float size; attribute float fa; attribute vec3 color; varying vec3 vC; varying float vF; uniform float sc; void main(){ vC=color; vF=fa; vec4 mv=modelViewMatrix*vec4(position,1.0); gl_PointSize=size*sc/(-mv.z); gl_Position=projectionMatrix*mv; }',
+      fragmentShader: 'varying vec3 vC; varying float vF; void main(){ float d=length(gl_PointCoord-vec2(.5)); float a=smoothstep(.5,.0,d); gl_FragColor=vec4(vC,a*a*vF); }',
+    });
+    const pts = new T.Points(geo, mat); pts.frustumCulled = false; inst.scene.add(pts); inst.mat = mat;
+    const glow = new T.Sprite(new T.SpriteMaterial({ map: glowTex(), transparent: true, blending: T.AdditiveBlending, depthWrite: false, opacity: lit ? .8 : .3 })); glow.scale.set(4.6 * inten, 4.6 * inten, 1); glow.position.set(0, -.2, -.5); inst.scene.add(glow);
+    const ring = new T.Mesh(new T.TorusGeometry(1.0, .035, 6, 48), new T.MeshBasicMaterial({ color: cssHex('--glow-solid', 0xff2a3c), transparent: true, opacity: lit ? .8 : .35 }));
+    ring.rotation.x = Math.PI / 2.4; ring.position.y = -1.25; inst.scene.add(ring);
+    const ring2 = ring.clone(); ring2.scale.set(1.35, 1.35, 1.35); ring2.material = ring.material.clone(); ring2.material.opacity *= .45; inst.scene.add(ring2);
+    const reset = (i, spread) => { age[i] = spread ? Math.random() * 1.2 : 0; life[i] = (.8 + Math.random() * .7) * (.8 + inten * .5); sd[i] = Math.random() * 6.28; pos[i * 3] = (Math.random() - .5) * .62 * inten; pos[i * 3 + 1] = -1.1 + Math.random() * .15; pos[i * 3 + 2] = (Math.random() - .5) * .5; };
+    for (let i = 0; i < N; i++) reset(i, true);
+    inst.anim = dt => {
+      for (let i = 0; i < N; i++) {
+        age[i] += dt; if (age[i] > life[i]) reset(i, false);
+        const f = age[i] / life[i], rise = (1.1 + inten * .7) * dt;
+        pos[i * 3 + 1] += rise * (1 - f * .35); pos[i * 3] += Math.sin(tNow * 4 + sd[i]) * .6 * dt * (.3 + f) - pos[i * 3] * 2.6 * dt * f; pos[i * 3 + 2] += Math.cos(tNow * 3 + sd[i]) * .3 * dt;
+        let r, g, b; if (f < .22) { r = 1; g = .93; b = .55; } else if (f < .55) { r = 1; g = .42 + (.55 - f) * .6; b = .1; } else { r = .95; g = .12; b = .1; }
+        const fade = Math.pow(1 - f, 1.3) * (lit ? 1 : .55);
+        col[i * 3] = r; col[i * 3 + 1] = g; col[i * 3 + 2] = b; fa[i] = Math.min(1, fade * 1.15);
+        siz[i] = (lit ? 1.1 : .5) * inten * (1 - f * .75) * (.55 + .45 * Math.min(1, f * 4)) * (i % 5 === 0 ? .4 : 1);
+      }
+      geo.attributes.position.needsUpdate = geo.attributes.color.needsUpdate = geo.attributes.size.needsUpdate = geo.attributes.fa.needsUpdate = true;
+      glow.material.opacity = (lit ? .7 : .28) + Math.sin(tNow * 9) * .07 + Math.sin(tNow * 5.3) * .05;
+      ring.rotation.z += dt * .9; ring2.rotation.z -= dt * .6;
+      const pr = (inst.renderer.getPixelRatio ? inst.renderer.getPixelRatio() : 1); mat.uniforms.sc.value = inst.host.clientHeight * pr * 1.54;
+    };
+  }
+
+  /* ---------- lencana 3D: karusel koin segi enam yang berputar, tarik untuk memutar ---------- */
+  function iconTex(name, got) {
+    const c = document.createElement('canvas'); c.width = c.height = 256; const x = c.getContext('2d'), tex = new THREE.CanvasTexture(c);
+    const hex = (r, w, a) => { x.beginPath(); for (let i = 0; i < 6; i++) { const t = Math.PI / 6 + i * Math.PI / 3 + Math.PI / 6; x[i ? 'lineTo' : 'moveTo'](128 + Math.cos(t - Math.PI / 6) * r, 128 + Math.sin(t - Math.PI / 6) * r); } x.closePath(); x.lineWidth = w; x.strokeStyle = `rgba(255,255,255,${a})`; x.stroke(); };
+    hex(104, 5, got ? .55 : .18); hex(86, 2, got ? .3 : .1);
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="256" height="256" fill="${name === 'flame' || name === 'medal' ? 'rgba(255,255,255,.25)' : 'none'}" stroke="${got ? '#fff' : '#9a9a9f'}" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${(typeof ICONS !== 'undefined' ? ICONS : {})[name] || ''}</svg>`;
+    const im = new Image(); im.onload = () => { x.drawImage(im, 66, 66, 124, 124); tex.needsUpdate = true; }; im.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+    tex.needsUpdate = true; return tex;
+  }
+  function buildMedals(inst, items) {
+    const T = THREE, k = cfg(), list = (items && items.length ? items : []).slice(0, 8), n = Math.max(list.length, 1);
+    if (!list.length) { return; }
+    const red = cssHex('--glow-solid', 0xff2a3c), dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    inst.camera.position.set(0, 1.3, 7.6); inst.camera.lookAt(0, -.05, 0);
+    inst.scene.add(new T.AmbientLight(0xffffff, .72)); const dl = new T.DirectionalLight(0xffffff, .95); dl.position.set(2.5, 4, 7); inst.scene.add(dl);
+    const pl = new T.PointLight(red, .8, 14); pl.position.set(0, -1, 4); inst.scene.add(pl);
+    const sh = new T.Shape(); for (let i = 0; i < 6; i++) { const a = Math.PI / 2 + i * Math.PI / 3; sh[i ? 'lineTo' : 'moveTo'](Math.cos(a) * .78, Math.sin(a) * .78); } sh.closePath();
+    const geo = new T.ExtrudeGeometry(sh, { depth: .2, bevelEnabled: true, bevelThickness: .05, bevelSize: .05, bevelSegments: 2, steps: 1 }); geo.translate(0, 0, -.1);
+    const R = 2.3, RX = Math.min(3.5, 1.4 + n * .42), step = Math.PI * 2 / n, coins = [];
+    list.forEach((m, i) => {
+      const got = m.got, g = new T.Group();
+      const body = new T.Mesh(geo, new T.MeshStandardMaterial({ color: got ? 0xe3152a : (dark ? 0x35353a : 0xb9b4b6), metalness: got ? .45 : .15, roughness: got ? .32 : .6, emissive: got ? 0x4a0008 : 0x000000 })); g.add(body);
+      const tex = iconTex(m.icon, got), face = new T.Mesh(new T.PlaneGeometry(1.3, 1.3), new T.MeshBasicMaterial({ map: tex, transparent: true })); face.position.z = .16; g.add(face);
+      const back = face.clone(); back.position.z = -.16; back.rotation.y = Math.PI; g.add(back);
+      let halo = null; if (got) { halo = new T.Sprite(new T.SpriteMaterial({ map: glowTex(), transparent: true, blending: T.AdditiveBlending, depthWrite: false, opacity: .55 })); halo.scale.set(3.1, 3.1, 1); inst.scene.add(halo); }
+      const lb = k.extras ? label(m.t, got ? (dark ? '#ffffff' : '#1a1012') : '#8d8588', 1.8, .45) : null; if (lb) inst.scene.add(lb);
+      inst.scene.add(g); coins.push({ g, halo, lb, got, i });
+    });
+    let spin = 0, vel = .35, drag = false, lx = 0, hold = 0;
+    const host = inst.host; host.style.touchAction = 'pan-y'; host.style.cursor = 'grab';
+    const dn = e => { drag = true; lx = e.clientX; hold = 0; host.style.cursor = 'grabbing'; }, up = () => { drag = false; host.style.cursor = 'grab'; };
+    const mv = e => { if (!drag) return; const d = e.clientX - lx; lx = e.clientX; spin += d * .012; vel = d * .012 / Math.max(.016, 1 / 60) * .9; };
+    host.addEventListener('pointerdown', dn); window.addEventListener('pointerup', up); window.addEventListener('pointermove', mv, { passive: true });
+    inst.cleanup = () => { host.removeEventListener('pointerdown', dn); window.removeEventListener('pointerup', up); window.removeEventListener('pointermove', mv); };
+    let t0 = tNow;
+    inst.anim = dt => {
+      if (!drag) { spin += vel * dt; vel += (.35 - vel) * Math.min(1, dt * .8); }
+      const intro = Math.min(1, (tNow - t0) / 1.1), ease = 1 - Math.pow(1 - intro, 3);
+      coins.forEach(c => {
+        const a = c.i * step + spin * ease, front = Math.cos(a), x = Math.sin(a) * RX, z = Math.cos(a) * R - R * .55, sc = (.8 + .32 * Math.max(0, front)) * ease;
+        c.g.position.set(x, Math.sin(tNow * 1.5 + c.i) * .09 + .15, z); c.g.rotation.y = a * .16 + Math.sin(tNow * .9 + c.i) * .3; c.g.scale.setScalar(Math.max(.01, sc));
+        if (c.got) c.g.rotation.y += Math.sin(tNow * 2 + c.i) * .12;
+        if (c.halo) { c.halo.position.set(x, c.g.position.y, z - .5); c.halo.material.opacity = (.25 + .4 * Math.max(0, front)) * (.85 + Math.sin(tNow * 3 + c.i) * .15); }
+        if (c.lb) { c.lb.position.set(x, -1.28 * sc, z + .5); c.lb.material.opacity = Math.max(0, front * 1.3 - .1) * ease; }
+      });
+    };
+  }
+
   /* ---------- poster SVG untuk mode hemat ---------- */
   function bodySVG() {
     return `<svg class="fx-svg holo-svg" viewBox="0 0 120 200" aria-hidden="true"><defs><linearGradient id="hsg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".95"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient></defs><g class="hs-body" fill="none" stroke="var(--neon)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="60" cy="22" rx="11" ry="13"/><path d="M60 35v8M38 52q22-12 44 0l-4 38q-18 8-36 0zM38 52l-12 30 -6 30M82 52l12 30 6 30M46 90q-6 40-4 70l-2 28M74 90q6 40 4 70l2 28M52 90h16"/></g><ellipse class="hs-ring" cx="60" cy="193" rx="34" ry="5" fill="none" stroke="var(--neon)" stroke-width="1.2"/><rect class="hs-scan" x="14" y="0" width="92" height="6" fill="url(#hsg)"/><g fill="#fff" class="hs-dots"><circle cx="40" cy="55" r="2.2"/><circle cx="80" cy="55" r="2.2"/><circle cx="60" cy="43" r="2"/><circle cx="46" cy="130" r="2"/><circle cx="74" cy="130" r="2"/></g></svg>`;
@@ -1244,11 +1359,13 @@ const FX = (() => {
     const ms = (data && data.months) || [], max = Math.max(1, ...ms.map(m => m.v)), n = ms.length || 1, W = 100 / n;
     return `<svg class="fx-svg wide" viewBox="0 0 100 52" preserveAspectRatio="none" aria-hidden="true">${ms.map((m, i) => { const h = Math.max(3, (m.v / max) * 36); const cur = i === n - 1; return `<rect x="${(i * W + W * .2).toFixed(1)}" y="${(42 - h).toFixed(1)}" width="${(W * .6).toFixed(1)}" height="${h.toFixed(1)}" rx="1.2" fill="${cur ? 'var(--neon)' : 'var(--line-2)'}"/><text x="${(i * W + W / 2).toFixed(1)}" y="50" text-anchor="middle" font-size="4.2" fill="var(--ink-3)">${m.l}</text>`; }).join('')}</svg>`;
   }
-  const poster = (el, v, data) => { el.innerHTML = '<div class="fx-poster"></div>' + (v === 'stats' ? statsSVG(data) : (v === 'logo' || v === 'barbell') ? logoSVG() : bodySVG()); };
+  function flamePoster(data) { const n = (data && data.n) || 0; return `<div class="fl-poster ${n ? 'lit' : 'dim'}"><i class="f3"></i><i class="f2"></i><i class="f1"></i><b class="em e1"></b><b class="em e2"></b><b class="em e3"></b></div>`; }
+  function medalsPoster(items) { return `<div class="mc-poster">${(items || []).slice(0, 7).map((m, i) => `<span class="mc ${m.got ? 'on' : ''}" style="--d:${i * .35}s"><i>${ic(m.icon)}</i></span>`).join('')}</div>`; }
+  const poster = (el, v, data) => { el.innerHTML = v === 'streak' ? flamePoster(data) : v === 'medals' ? medalsPoster(data) : '<div class="fx-poster"></div>' + (v === 'stats' ? statsSVG(data) : (v === 'logo' || v === 'barbell') ? logoSVG() : bodySVG()); };
 
   /* ---------- instance & loop ---------- */
   const resolve = v => v === 'login' ? (style === 'auto' ? 'logo' : style) : v === 'hero' ? (style === 'auto' ? 'body' : style) : v;
-  const BASE = { body: [9.4, .62], 'body-live': [9.4, .62], stats: [10, 1.55], logo: [9.6, .9], barbell: [9, .9] };
+  const BASE = { streak: [6.2, .9], medals: [7.6, 2.0], body: [9.4, .62], 'body-live': [9.4, .62], stats: [10, 1.55], logo: [9.6, .9], barbell: [9, .9] };
   function sizeInst(it) {
     const w = it.host.clientWidth || 160, h = it.host.clientHeight || 200;
     it.renderer.setSize(w, h, false); it.camera.aspect = w / h; it.camera.updateProjectionMatrix();
@@ -1256,19 +1373,19 @@ const FX = (() => {
   }
   function disposeInst(it) {
     try { it.scene.traverse(o => { if (o.geometry) o.geometry.dispose(); if (o.material) { const m = Array.isArray(o.material) ? o.material : [o.material]; m.forEach(x => { if (x.map) x.map.dispose(); x.dispose(); }); } }); } catch { }
-    if (it.io) it.io.disconnect();
+    if (it.io) it.io.disconnect(); if (it.cleanup) it.cleanup();
     try { it.renderer.dispose(); it.renderer.forceContextLoss(); if (it.renderer.domElement.parentNode) it.renderer.domElement.remove(); } catch { }
   }
   function attach(el, v, data) {
     if (!el) return; el._fxdata = data;
-    const req = v; v = resolve(v); if (!['stats', 'body-live', 'logo', 'barbell'].includes(v)) v = 'body';
+    const req = v; v = resolve(v); if (!['stats', 'body-live', 'logo', 'barbell', 'streak', 'medals'].includes(v)) v = 'body';
     if (!cfg().webgl || !window.THREE) { poster(el, v, data); el.dataset.fxreq = req; return; }
     try {
       const k = cfg(), T = THREE;
       const renderer = new T.WebGLRenderer({ antialias: k.aa, alpha: true, powerPreference: 'default' });
       renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, k.dpr));
       const it = { host: el, v, req, data, renderer, scene: new T.Scene(), camera: new T.PerspectiveCamera(v === 'stats' ? 42 : 36, 1, .1, 60), visible: true, anim: null, io: null };
-      if (v === 'stats') buildStats(it, data || {}); else if (v === 'logo') buildLogo(it); else if (v === 'barbell') buildBarbell(it); else buildBody(it, v === 'body-live');
+      if (v === 'stats') buildStats(it, data || {}); else if (v === 'streak') buildStreak(it, data || {}); else if (v === 'medals') buildMedals(it, data); else if (v === 'logo') buildLogo(it); else if (v === 'barbell') buildBarbell(it); else buildBody(it, v === 'body-live');
       el.innerHTML = ''; el.dataset.fxreq = req; el.appendChild(renderer.domElement); sizeInst(it);
       it.io = new IntersectionObserver(([e]) => { it.visible = e.isIntersecting; }, { threshold: 0 }); it.io.observe(el);
       insts.push(it); start();
@@ -1520,21 +1637,27 @@ function weekDots(list) {
 }
 
 /* ---------- lencana ---------- */
+const medalBox = items => { window.MEDAL_ITEMS = items; return '<div class="fx3d medalfx" id="medalfx"></div>'; };
+const medalItems = a => a.map(([icon, t, sub, got]) => ({ icon: got ? icon : 'lock', t, sub, got: !!got }));
 function medal(icon, title, sub, got) { return `<div class="medal ${got ? 'on' : ''}"><div class="mhex">${ic(got ? icon : 'lock')}</div><b>${esc(title)}</b><small>${esc(sub)}</small></div>`; }
-function medalsPT(list, extra) {
+function medalsPT(list, extra, fx) {
   const done = list.filter(s => s.status === 'completed').length, st = dayStreak(list);
   const out = [[10, 'Sesi 10'], [25, 'Sesi 25'], [50, 'Sesi 50'], [100, 'Sesi 100']].map(([n, t]) => medal('medal', t, done >= n ? 'Tercapai' : `${Math.max(n - done, 0)} lagi`, done >= n));
   out.push(medal('flame', '3 hari beruntun', st >= 3 ? 'Tercapai' : `Kini ${st} hari`, st >= 3 || extra.bestStreak >= 3));
   out.push(medal('bolt', 'Bulan produktif', extra.month >= 20 ? 'Tercapai' : `${extra.month}/20 sesi`, extra.month >= 20));
   out.push(medal('trophy', 'Tagihan nol', extra.clean ? 'Semua lunas' : 'Masih ada tagihan', extra.clean));
-  return `<div class="medals">${out.join('')}</div>`;
+  const items = [[10, 'Sesi 10'], [25, 'Sesi 25'], [50, 'Sesi 50'], [100, 'Sesi 100']].map(([n, t]) => ['medal', t, '', done >= n]);
+  items.push(['flame', '3 hari beruntun', '', st >= 3 || extra.bestStreak >= 3], ['bolt', 'Bulan produktif', '', extra.month >= 20], ['trophy', 'Tagihan nol', '', extra.clean]);
+  return (fx ? medalBox(medalItems(items)) : '') + `<div class="medals">${out.join('')}</div>`;
 }
-function medalsClient(list, paid) {
+function medalsClient(list, paid, fx) {
   const done = list.filter(s => s.status === 'completed').length, ws = weekStreak(list);
   const out = [[1, 'Sesi pertama'], [5, 'Sesi 5'], [10, 'Sesi 10'], [20, 'Sesi 20'], [50, 'Sesi 50']].map(([n, t]) => medal(n === 1 ? 'star' : 'medal', t, done >= n ? 'Tercapai' : `${n - done} lagi`, done >= n));
   out.push(medal('flame', '4 minggu rutin', ws >= 4 ? 'Tercapai' : `Kini ${ws} minggu`, ws >= 4));
   out.push(medal('trophy', 'Paket lunas', paid ? 'Tercapai' : 'Belum lunas', paid));
-  return `<div class="medals">${out.join('')}</div>`;
+  const items = [[1, 'Sesi pertama'], [5, 'Sesi 5'], [10, 'Sesi 10'], [20, 'Sesi 20'], [50, 'Sesi 50']].map(([n, t]) => [n === 1 ? 'star' : 'medal', t, '', done >= n]);
+  items.push(['flame', '4 minggu rutin', '', ws >= 4], ['trophy', 'Paket lunas', '', paid]);
+  return (fx ? medalBox(medalItems(items)) : '') + `<div class="medals">${out.join('')}</div>`;
 }
 const waLink = ph => { const d = String(ph || '').replace(/\D/g, ''); if (d.length < 8) return ''; return 'https://wa.me/' + (d.startsWith('0') ? '62' + d.slice(1) : d); };
 
@@ -1559,7 +1682,9 @@ function agoLabel(iso) {
 
 'use strict';
 /* ======================= Jadwal berulang, target RPE, konfirmasi latihan ======================= */
-const RPE_LEVELS = [[1, 'Ringan'], [2, 'Sedang'], [3, 'Berat'], [4, 'Sangat berat'], [5, 'Maksimal']];
+const RPE_LEVELS = [[1, 'Sangat ringan'], [2, 'Ringan'], [3, 'Ringan'], [4, 'Cukup ringan'], [5, 'Sedang'], [6, 'Cukup berat'], [7, 'Berat'], [8, 'Sangat berat'], [9, 'Hampir maksimal'], [10, 'Maksimal']];
+const RPE_HINT = { 1: 'Nyaris tanpa usaha', 2: 'Santai, bisa ngobrol bebas', 3: 'Santai, napas tetap normal', 4: 'Mulai terasa, masih nyaman', 5: 'Terasa kerja, sisa banyak repetisi', 6: 'Sisa sekitar 4 repetisi', 7: 'Sisa sekitar 3 repetisi', 8: 'Sisa sekitar 2 repetisi', 9: 'Sisa 1 repetisi', 10: 'Tanpa sisa, usaha maksimal' };
+const rpeHint = n => n ? `RPE ${n} · ${rpeLabel(n)} — ${RPE_HINT[n] || ''}` : 'Ketuk angka 1 (sangat ringan) sampai 10 (maksimal)';
 const rpeLabel = n => (RPE_LEVELS.find(x => x[0] === +n) || [])[1] || '';
 const DAYS_S = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
 const INDICATORS = [['rpe', 'RPE'], ['durasi', 'Durasi'], ['rating', 'Kepuasan klien'], ['catatan', 'Catatan']];
@@ -1572,10 +1697,10 @@ const indicatorsOf = s => { const sr = seriesOf(s); return sr && sr.indicators &
 const rpeBadge = n => n ? `<span class="badge rpe-t" title="Target RPE">RPE ${n} · ${esc(rpeLabel(n))}</span>` : '';
 
 /** Tombol RPE 1-5. selected boleh null. */
-function rpeButtons(id, selected) { return `<div class="rpe" id="${id}">${RPE_LEVELS.map(([n, l]) => `<button type="button" data-v="${n}" class="${+selected === n ? 'on' : ''}"><b>${n}</b><small>${l}</small></button>`).join('')}</div>`; }
+function rpeButtons(id, selected) { return `<div class="rpe rpe10" id="${id}">${RPE_LEVELS.map(([n, l]) => `<button type="button" data-v="${n}" aria-label="RPE ${n} ${l}" style="--i:${n / 10}" class="${+selected === n ? 'on' : ''}"><b>${n}</b></button>`).join('')}</div><div class="rpe-hint" id="${id}-h">${esc(rpeHint(+selected || null))}</div>`; }
 function bindRpe(root, id, onPick, allowClear) {
   const box = $('#' + id, root); const st = { v: (($('.on', box) || {}).dataset || {}).v ? +$('.on', box).dataset.v : null };
-  box.addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; const n = +b.dataset.v; st.v = (allowClear && st.v === n) ? null : n; $$('button', box).forEach(x => x.classList.toggle('on', +x.dataset.v === st.v)); if (onPick) onPick(st.v); });
+  box.addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; const n = +b.dataset.v; st.v = (allowClear && st.v === n) ? null : n; $$('button', box).forEach(x => x.classList.toggle('on', +x.dataset.v === st.v)); const h = $('#' + id + '-h', root); if (h) h.textContent = rpeHint(st.v); if (onPick) onPick(st.v); });
   return st;
 }
 
@@ -1949,10 +2074,10 @@ async function pgDashboard() {
     <div class="sec-h"><h3>Sesi hari ini</h3><a href="#/jadwal" class="small">Lihat jadwal</a></div>
     <div class="list" id="todayl">${todays.length ? todays.map(s => sessionRow(s)).join('') : '<div class="empty"><div class="eico">' + ic('dumb') + '</div><b>Tidak ada sesi hari ini</b>Jadwalkan lewat tombol + di tengah.</div>'}</div>
     ${upcoming.length ? `<div class="sec-h"><h3>7 hari ke depan</h3></div><div class="list">${upcoming.map(s => sessionRow(s, { date: true })).join('')}</div>` : ''}
-    <div class="card streak"><div class="row"><div class="flame">${ic('flame')}</div><div class="grow"><div class="big"><span class="num">${streak}</span> hari beruntun</div><div class="muted small">${streak ? 'Pertahankan, jangan putus hari ini.' : 'Selesaikan satu sesi untuk memulai runtutan.'}</div></div></div>${weekDots(S.sessions)}</div>
-    <div class="sec-h"><h3>Pencapaian</h3></div>${medalsPT(S.sessions, { month: countedMonth, clean: clients.length > 0 && piutang === 0, bestStreak: streak })}`,
+    <div class="card streak"><div class="row"><div class="flamefx" id="streakfx"></div><div class="grow"><div class="big"><span class="num">${streak}</span> hari beruntun</div><div class="muted small">${streak ? 'Pertahankan, jangan putus hari ini.' : 'Selesaikan satu sesi untuk memulai runtutan.'}</div></div></div>${weekDots(S.sessions)}</div>
+    <div class="sec-h"><h3>Pencapaian</h3></div>${medalsPT(S.sessions, { month: countedMonth, clean: clients.length > 0 && piutang === 0, bestStreak: streak }, true)}`,
     mount(v) {
-      FX.attach($('#herofx', v), 'hero'); FX.attach($('#statsfx', v), 'stats', studio); bindSessionActions(v);
+      FX.attach($('#herofx', v), 'hero'); FX.attach($('#statsfx', v), 'stats', studio); FX.attach($('#streakfx', v), 'streak', { n: streak }); FX.attach($('#medalfx', v), 'medals', window.MEDAL_ITEMS); bindSessionActions(v);
       $$('#acth button', v).forEach(b => b.onclick = () => { DASH.act = b.dataset.a; rerender(); });
       const a = $('[data-tab=reports]', v); if (a) a.addEventListener('click', () => { PAYSTATE.tab = 'reports'; });
     },
@@ -1975,13 +2100,13 @@ async function dashClient() {
     <div class="card today"><div class="row gap-l">${ring(total ? used / total : 0, { size: 96, stroke: 11, center: hasPost && !total ? '∞' : `${used}<span>/${total}</span>`, sub: 'sesi terpakai' })}
       <div class="grow"><div class="eyebrow">Paket saya</div><div class="big">${hasPost && !total ? 'Pascabayar aktif' : `Sisa ${remaining} sesi`}</div><div class="muted small">PT ${esc(trainerName(c.trainer_id))}</div></div></div>
       ${next ? `<div class="nextup"><div class="nx-time"><b>${esc(fmtTime(next.scheduled_at))}</b><small>${esc(fmtDate(next.scheduled_at))}</small></div><div class="grow"><div class="t">Sesi berikutnya</div><div class="d">${ic(progIcon(next.program_type), 'sm')} ${esc(next.program_type || 'Sesi PT')}${next.location ? ' · ' + esc(next.location) : ''}</div></div></div>` : ''}</div>
-    <div class="card streak"><div class="row"><div class="flame">${ic('flame')}</div><div class="grow"><div class="big"><span class="num">${ws}</span> minggu beruntun</div><div class="muted small">${ws ? 'Konsistensimu terjaga, lanjutkan.' : 'Hadir di sesi untuk memulai runtutan.'}</div></div></div>${weekDots(mine)}</div>
+    <div class="card streak"><div class="row"><div class="flamefx" id="streakfx"></div><div class="grow"><div class="big"><span class="num">${ws}</span> minggu beruntun</div><div class="muted small">${ws ? 'Konsistensimu terjaga, lanjutkan.' : 'Hadir di sesi untuk memulai runtutan.'}</div></div></div>${weekDots(mine)}</div>
     <div class="kpis"><a class="kpi" href="#/jadwal"><div class="k">Sesi selesai</div><div class="v num">${mine.filter(s => s.status === 'completed').length}</div><div class="s">seluruhnya</div></a>
       <a class="kpi" href="#/payments"><div class="k">Sisa tagihan</div><div class="v num">${rp(out)}</div><div class="s">${out ? 'lihat rincian' : 'lunas'}</div></a></div>
     <div class="sec-h"><h3>Paket saya</h3></div><div class="list">${pk.length ? pk.map(pkgCard).join('') : '<div class="empty"><b>Belum ada paket aktif</b></div>'}</div>
-    <div class="sec-h"><h3>Pencapaian</h3></div>${medalsClient(mine, out === 0 && pk.length > 0)}
+    <div class="sec-h"><h3>Pencapaian</h3></div>${medalsClient(mine, out === 0 && pk.length > 0, true)}
     <div class="sec-h"><h3>Riwayat terakhir</h3><a href="#/jadwal" class="small">Semua</a></div><div class="list">${hist.length ? hist.map(s => sessionRow(s, { date: true })).join('') : '<div class="empty">Belum ada sesi.</div>'}</div>`,
-    mount(v) { FX.attach($('#herofx', v), 'hero'); },
+    mount(v) { FX.attach($('#herofx', v), 'hero'); FX.attach($('#streakfx', v), 'streak', { n: ws }); FX.attach($('#medalfx', v), 'medals', window.MEDAL_ITEMS); },
   };
 }
 

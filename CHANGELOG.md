@@ -1,5 +1,11 @@
 # Riwayat versi — Elprian Training
 
+## v1.5.0 — 26 Nov 2026
+- Hari beruntun: api 3D dari partikel; makin panjang runtutan, makin besar dan terang. Belum ada runtutan: bara redup.
+- Pencapaian: karusel lencana koin 3D yang berputar dan bisa digeser dengan jari; lencana tercapai bercahaya merah, yang belum tampil abu dengan gembok.
+- Mode Hemat memakai animasi CSS (api berkedip, koin berputar) tanpa WebGL.
+- RPE memakai skala 1–10 (Target RPE, konfirmasi latihan, sesi berjalan).
+
 ## v1.4.2 — 25 Nov 2026
 - Beranda: jarak antara kartu hero, kartu angka (Klien aktif dst.), dan bagian bawah dibuat lebih lega.
 - Streak dan Pencapaian: ikon api, lencana, dan titik hari kini berwarna neon merah dengan ikon putih yang jelas; lencana belum tercapai tampil abu dengan gembok.
