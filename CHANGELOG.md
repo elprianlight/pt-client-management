@@ -1,5 +1,9 @@
 # Riwayat versi — Elprian Training
 
+## v1.5.1 — 26 Nov 2026
+- Pencapaian: karusel 3D diganti 3 gaya sederhana yang bisa dipilih langsung di Beranda: Lencana (kilau halus + cincin progres), Barbel (plat terpasang satu per satu, plat berikutnya berkedip), Jalur (garis perjalanan dengan progres menuju target berikutnya).
+- Api hari beruntun tetap 3D.
+
 ## v1.5.0 — 26 Nov 2026
 - Hari beruntun: api 3D dari partikel; makin panjang runtutan, makin besar dan terang. Belum ada runtutan: bara redup.
 - Pencapaian: karusel lencana koin 3D yang berputar dan bisa digeser dengan jari; lencana tercapai bercahaya merah, yang belum tampil abu dengan gembok.
