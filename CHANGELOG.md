@@ -1,5 +1,11 @@
 # Riwayat versi — Elprian Training
 
+## v1.6.0 — 27 Nov 2026
+- Fitur Jadwal berulang dihapus (form, daftar jadwal berulang, dan pembuatan sesi otomatis). Sesi yang sudah ada tidak berubah.
+- Lokasi latihan: dropdown 1 Park, Essence, Hang Lekir, atau Custom; pilihan terakhir diingat.
+- Program latihan: jendela pilih 8 program (Total Body, Upper Body, Lower Body, Circuit, Cardio, Hybrid, Muaythai, Mobility & Core) plus program custom.
+- Target RPE 1-10 dibuat ringkas dalam satu baris dengan label dan legenda warna.
+
 ## v1.5.1 — 26 Nov 2026
 - Pencapaian: karusel 3D diganti 3 gaya sederhana yang bisa dipilih langsung di Beranda: Lencana (kilau halus + cincin progres), Barbel (plat terpasang satu per satu, plat berikutnya berkedip), Jalur (garis perjalanan dengan progres menuju target berikutnya).
 - Api hari beruntun tetap 3D.
